@@ -12,6 +12,7 @@ import Typography from "@mui/material/Typography";
 import MatrixRainingCode from "../components/matrix-raining-effect/MatrixRainingEffect";
 import TextBox from "../components/text-box/TextBox";
 import CinematicTitle from "../components/cinematic-title/CinematicTitle";
+import LetterChargeEffect from "../components/letter-charge-effect/LetterChargeEffect";
 
 // i18n
 import { useTranslation } from "react-i18next";
@@ -135,6 +136,8 @@ const Login = () => {
         introDone && <MatrixRainingCode className="absolute inset-0" />
       }
 
+      {introDone && <LetterChargeEffect />}
+
       {/* INTRO OVERLAY */}
       <AnimatePresence mode="wait">
         {!introDone && (
@@ -161,7 +164,7 @@ const Login = () => {
           y: introDone ? 0 : 40,
         }}
         transition={{ duration: 0.8 }}
-        className="flex flex-col w-122 h-90 rounded-lg z-10"
+        className="flex flex-col w-122 h-90 rounded-lg z-30"
         style={{
           backgroundColor: "rgba(var(--tertiary-color-rgb),0.8)",
           border: "1px solid var(--primary-color)",
