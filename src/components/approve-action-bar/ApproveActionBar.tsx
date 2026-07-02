@@ -185,7 +185,7 @@ const ApproveActionBar = ({
           ? [
               data.approve_date ? dayjs(data.approve_date).format(dataDateFormat) : "-",
               data.user_group_name || "-",
-              data.detail || "-",
+              data.details || "-",
             ]
           : []),
       ],

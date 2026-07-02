@@ -4,6 +4,7 @@ import { useDropzone } from "react-dropzone";
 import ExcelJS from "exceljs";
 import { useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
+import dayjs from "dayjs";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -39,10 +40,16 @@ import {
 } from "../../constants/uploadStatus";
 
 // Utils
-import { isValidThaiID, buildOptions, formatPhone, formatThaiID, normalizeText } from "../../utils/commonFunctions";
+import { 
+  buildOptions, 
+  formatPhone, 
+  formatThaiID, 
+  normalizeText,
+  validateUserImportData
+} from "../../utils/commonFunctions";
 
 // Types
-import type { OptionType, NsbBk, NsbOrg, CreateUser } from "../../types/common";
+import type { OptionType, NsbBk, NsbOrg, CreateUser, UserDetail } from "../../types/common";
 import type { RootState } from "../../store/store";
 
 // i18n
@@ -106,6 +113,11 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     userGroup,
   } = useSelector(
     (state: RootState) => state.dropdown
+  );
+  const { 
+    user,
+  } = useSelector(
+    (state: RootState) => state.authUser
   );
 
   // Data
@@ -476,37 +488,32 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           const firstName = getCellValue(row, "table.header.first-name") || "";
           const lastName = getCellValue(row, "table.header.last-name") || "";
 
-          const isValidNationalId =
-            nationalId.length === 13 && isValidThaiID(nationalId);
+          const validation = validateUserImportData({
+            nationalId,
+            phoneNumber,
+            firstName,
+            lastName,
+            ouData,
+            t,
+          });
 
-          const isValidPhoneNumber =
-            /^\d{10}$/.test(phoneNumber) && phoneNumber.startsWith("0");
+          let errorDetail: string[] = [];
 
-          const isNameEmpty = !firstName;
-          const isLastNameEmpty = !lastName;
+          if (!bhData) {
+            errorDetail.push(t("text.invalid-bh"));
+          }
+          if (!bkData) {
+            errorDetail.push(t("text.invalid-bk"));
+          }
+          if (!orgData) {
+            errorDetail.push(t("text.invalid-org"));
+          }
 
-          if (
-            !isValidNationalId &&
-            !isValidPhoneNumber &&
-            isNameEmpty &&
-            isLastNameEmpty
-          ) {
+          if (validation.shouldSkip) {
             return null;
           }
 
-          const errorDetail: string[] = [];
-
-          if (!isValidNationalId) errorDetail.push(t("text.invalid-pid"));
-          if (!isValidPhoneNumber) errorDetail.push(t("text.invalid-phone"));
-          if (isNameEmpty) errorDetail.push(t("text.invalid-name"));
-          if (isLastNameEmpty) errorDetail.push(t("text.invalid-last-name"));
-
-          if (!ouData) errorDetail.push(t("text.invalid-agency"));
-          if (!bhData) errorDetail.push(t("text.invalid-bh"));
-          if (!bkData) errorDetail.push(t("text.invalid-bk"));
-          if (!orgData) errorDetail.push(t("text.invalid-org"));
-
-          const isInvalid = errorDetail.length > 0;
+          const isInvalid = validation.isInvalid || errorDetail.length > 0;
 
           return {
             prefixName:
@@ -567,7 +574,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             org_name_id: orgData?.org_code?.toString() || "",
 
             status: isInvalid ? SAVE_BUT_NOT_APPROVE_STATE : WAITING_STATE,
-            error: isInvalid ? errorDetail.join(", ") : "",
+            error: isInvalid ? validation.error || errorDetail.join(", ") : "",
             isSendToUnApprove: isInvalid,
             member_of_groups: null,
             police_profile_status:
@@ -746,7 +753,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     setIsUploading(true);
     setUploadData(true);
 
-    const sendToUnApprovedList: string[] = [];
+    const sendToUnApprovedList: UserDetail[] = [];
     const sendToUnApprovedIndexes: number[] = [];
 
     try {
@@ -788,10 +795,14 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           const createdUserId = res.data?.user_id;
 
           if (createdUserId && shouldSendToRejected) {
-            sendToUnApprovedList.push(createdUserId);
+            sendToUnApprovedList.push({
+              user_id: createdUserId,
+              details: data.error,
+            });
             sendToUnApprovedIndexes.push(index);
           }
 
+          if (shouldSendToRejected) continue;
           updateStatus(index, SUCCESS_STATE);
         } catch (error: any) {
           updateStatus(
@@ -807,8 +818,10 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
       if (sendToUnApprovedList.length > 0) {
         try {
           await approveUserApi({
-            user_id_list: sendToUnApprovedList,
+            users: sendToUnApprovedList,
             approve_status: "rejected",
+            approve_at: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+            approve_by: user?.user_id || "",
           });
         } catch (error: any) {
           sendToUnApprovedIndexes.forEach((index) => {
@@ -935,6 +948,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                 label={t("component.agency")}
                 placeholder={t("placeholder.agency")}
                 labelFontSize="16px"
+                disablePortal={true}
               />
 
               <AutoComplete
@@ -954,6 +968,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   required: t("text.text-required", { textField: t("component.user-group") }),
                 })}
                 error={!!errors.userGroup}
+                disablePortal={true}
               />
 
               <TextBox

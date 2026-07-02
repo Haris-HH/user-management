@@ -141,7 +141,8 @@
     "active-now-detail": "สามารถใช้งานได้ทันทีหลังจากได้รับการยืนยัน",
     "schedule-for-later": "Schedule for Later",
     "schedule-for-later-detail": "ตั้งวันที่ในอนาคตสำหรับการเปิดใช้งานโดยอัตโนมัติ",
-    "activation-date": "วันที่เปิดใช้งาน"
+    "activation-date": "วันที่เปิดใช้งาน",
+    "reason": "เหตุผล"
   },
   "component": {
     "pid": "เลขบัตรประชาชน",
@@ -252,7 +253,8 @@
       "can-visit-and-edit": "แก้ไข",
       "can-print": "พิมพ์",
       "end-date": "สิ้นสุดการใช้งาน (วัน)",
-      "life-date": "อายุการใช้งาน (วัน)"
+      "life-date": "อายุการใช้งาน (วัน)",
+      "last-login": "ใช้งานล่าสุด"
     }
   },
   "permission": {
@@ -344,7 +346,10 @@
     "create-success": "การสร้างข้อมูลผู้ใช้เสร็จสิ้น",
     "update-success": "การอัพเดทข้อมูลผู้ใช้เสร็จสิ้น",
     "update-status-success": "การอัพเดทสถานะผู้ใช้เสร็จสิ้น",
-    "update-status-failed": "การอัพเดทสถานะผู้ใช้ล้มเหลว"
+    "update-status-failed": "การอัพเดทสถานะผู้ใช้ล้มเหลว",
+    "invalid-data-detail": "ข้อมูลไม่ถูกต้อง<br />กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง",
+    "update-confirm": "ยืนยันการ Update ข้อมูล",
+    "suspend-confirm-detail": "ยืนยันการเปลี่ยนสถานะผู้ใช้งาน เป็น “Suspend”<br />ส่งผลให้ผู้ใช้งานรายนี้ ถูกระงับการใช้งาน"
   },
   "ui-program": {
     "log-management": "Log Management",

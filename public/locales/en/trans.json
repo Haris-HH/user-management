@@ -141,7 +141,8 @@
     "active-now-detail": "Immediate used upon confirmation.",
     "schedule-for-later": "Schedule for Later",
     "schedule-for-later-detail": "Set a future date for activation to trigger automatically.",
-    "activation-date": "Activation Date"
+    "activation-date": "Activation Date",
+    "reason": "Reason"
   },
   "component": {
     "pid": "PID",
@@ -252,7 +253,8 @@
       "can-visit-and-edit": "Edit",
       "can-print": "Print",
       "end-date": "End Date (Day)",
-      "life-date": "Life Date (Day)"
+      "life-date": "Life Date (Day)",
+      "last-login": "Last Login"
     }
   },
   "permission": {
@@ -342,7 +344,10 @@
     "deleted-failed": "Data deletion failed.",
     "deleted-success": "Data deletion complete.",
     "update-status-success": "User status update is complete.",
-    "update-status-failed": "User status update is failed."
+    "update-status-failed": "User status update is failed.",
+    "invalid-data-detail": "Invalid data!<br />Please check the data and try again.",
+    "update-confirm": "Confirm Update",
+    "suspend-confirm-detail": "Confirm changing the user status to “Suspend”<br />This will result in the user being suspended."
   },
   "ui-program": {
     "log-management": "Log Management",

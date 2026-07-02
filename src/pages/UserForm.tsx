@@ -60,7 +60,7 @@ import {
   formatPhone,
   normalizeText,
 } from "../utils/commonFunctions";
-import { PopupMessage, PopupMessageWithCancelAndDeny } from "../utils/popupMessage";
+import { PopupMessage, PopupMessageWithCancelAndDeny, PopupMessageWithCancel } from "../utils/popupMessage";
 
 // API
 import { getCameras, getBk, getOrg } from "../features/dropdown/api/DropdownApi";
@@ -111,8 +111,20 @@ const UserForm = () => {
 
   // State
   const [isLoading, setIsLoading] = useState(false);
-  const [activeStatus, setActiveStatus] = useState<FormData["status"]>(
-    editingUser?.account_status ?? "active"
+  const getActiveStatus = (
+    status?: string
+  ): FormData["status"] => {
+    switch (status) {
+      case "active":
+        return "active";
+      case "suspend":
+        return "suspend";
+      default:
+        return "inactive";
+    }
+  };
+  const [activeStatus, setActiveStatus] = useState<FormData["status"]>(() =>
+    getActiveStatus(editingUser?.active_status)
   );
 
   // Data
@@ -147,7 +159,7 @@ const UserForm = () => {
     end_date: "",
     life_date: "",
     status: editingUser?.account_status ?? "active",
-    detail: editingUser?.detail ?? "",
+    detail: editingUser?.details ?? "",
     sub_unit: editingUser?.sub_unit ?? [],
   });
 
@@ -175,6 +187,7 @@ const UserForm = () => {
     setError,
     clearErrors,
     reset,
+    trigger,
   } = useForm<FormData>();
 
   useEffect(() => {
@@ -198,7 +211,7 @@ const UserForm = () => {
       end_date: "",
       life_date: "",
       status: editingUser.account_status ?? "active",
-      detail: editingUser.detail ?? "",
+      detail: editingUser.details ?? "",
     });
 
     setPermissions(editingUser.permissions ?? {});
@@ -213,11 +226,13 @@ const UserForm = () => {
 
   useEffect(() => {
     return () => {
+      setIsLoading(true);
       const urls = tempUploadedUrlsRef.current;
 
       if (urls.length > 0) {
-        removeUpload({ urls }).catch(console.error);
+        removeUpload({ keys: urls }).catch(console.error);
       }
+      setIsLoading(false);
     };
   }, []);
 
@@ -375,6 +390,13 @@ const UserForm = () => {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    const status = getActiveStatus(editingUser?.active_status);
+
+    setActiveStatus(status);
+    setValue("status", status);
+  }, [editingUser, setValue]);
+
   const statusDescription = {
     active: t('placeholder.active'),
     inactive: t('placeholder.inactive'),
@@ -405,7 +427,7 @@ const UserForm = () => {
       formData.org !== (editingUser?.org_code ?? "") ||
       formData.permission !== (editingUser?.user_group_id ?? "") ||
       formData.status !== (editingUser?.account_status ?? "active") ||
-      formData.detail !== (editingUser?.detail ?? "")
+      formData.detail !== (editingUser?.details ?? "")
     );
   }, [formData, imageUrl, deletedImageUrls, tempUploadedUrls, editingUser]);
 
@@ -643,6 +665,20 @@ const UserForm = () => {
       }
 
       if (isEditMode && editingUser?.user_id) {
+        if (activeStatus === "suspend") {
+          const confirmSuspend = await PopupMessageWithCancel(
+            t("popup.update-confirm"),
+            t("popup.suspend-confirm-detail"),
+            t("button.confirm"),
+            t("button.cancel"),
+            "warning",
+          );
+          if (!confirmSuspend) {
+            setIsLoading(false);
+            return;
+          }
+        }
+
         const updatePayload: UpdateUser = {
           user_id: editingUser.user_id,
         };
@@ -665,8 +701,8 @@ const UserForm = () => {
         addChangedField(updatePayload, "phone", formData.phone.replaceAll("-", ""), editingUser.phone ?? "");
         addChangedField(updatePayload, "email", formData.email, editingUser.email ?? "");
         addChangedField(updatePayload, "ou_code", formData.agency, editingUser.ou_code ?? "");
-        addChangedField(updatePayload, "account_status", formData.status, editingUser.account_status ?? "active");
-        addChangedField(updatePayload, "detail", formData.detail, editingUser.detail ?? "");
+        addChangedField(updatePayload, "active_status", activeStatus, editingUser.active_status ?? "active");
+        addChangedField(updatePayload, "detail", formData.detail, editingUser.details ?? "");
         addChangedField(updatePayload, "sub_unit", formData.sub_unit, editingUser.sub_unit ?? []);
 
         if (JSON.stringify(permissions ?? {}) !== JSON.stringify(editingUser.permissions ?? {})) {
@@ -717,11 +753,11 @@ const UserForm = () => {
       const unusedTempImages = tempUploadedUrls.filter((image) => image !== imageUrl);
 
       if (unusedTempImages.length > 0) {
-        await removeUpload({ urls: unusedTempImages });
+        await removeUpload({ keys: unusedTempImages });
       }
 
       if (deletedImageUrls.length > 0) {
-        await removeUpload({ urls: deletedImageUrls });
+        await removeUpload({ keys: deletedImageUrls });
       }
 
       setTempUploadedUrls([]);
@@ -814,6 +850,7 @@ const UserForm = () => {
   };
 
   const handleCancelClick = async () => {
+    setIsLoading(true);
     if (!hasPageChange) {
       goBack();
       return;
@@ -835,11 +872,12 @@ const UserForm = () => {
 
     if (result.isDenied) {
       if (tempUploadedUrls.length > 0) {
-        await removeUpload({ urls: tempUploadedUrls });
+        await removeUpload({ keys: tempUploadedUrls });
       }
 
       goBack();
     }
+    setIsLoading(false);
   };
 
   const handleImageDelete = () => {
@@ -855,12 +893,6 @@ const UserForm = () => {
   const onChangeActiveStatus = (status: FormData["status"]) => {
     setActiveStatus(status);
 
-    setFormData((prev) => ({
-      ...prev,
-      status,
-      detail: status === "active" ? "" : prev.detail,
-    }));
-
     setValue("status", status, {
       shouldValidate: true,
       shouldDirty: true,
@@ -868,7 +900,11 @@ const UserForm = () => {
 
     if (status === "active") {
       setValue("detail", "");
+      handleTextChange("detail", "");
       clearErrors("detail");
+    } 
+    else {
+      trigger("detail");
     }
   };
 
@@ -1240,7 +1276,6 @@ const UserForm = () => {
                         textField: t("text.active-status"),
                       }),
                     })}
-                    value={activeStatus}
                   />
 
                   <FormHelperText>
@@ -1259,10 +1294,10 @@ const UserForm = () => {
                     error={!!errors.detail}
                     helperText={errors.detail?.message}
                     {...register("detail", {
-                      validate: (value) => {
+                      validate: (value = "") => {
                         if (activeStatus !== "active" && !value.trim()) {
                           return t("text.text-required", {
-                            textField: t("component.reason"),
+                            textField: t("text.reason"),
                           });
                         }
 

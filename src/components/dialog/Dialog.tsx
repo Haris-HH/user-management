@@ -37,6 +37,7 @@ const DialogComponent = ({
           sx: {
             width: width,
             borderRadius: "5px",
+            overflow: "visible",
           },
         }
       }}
@@ -65,7 +66,8 @@ const DialogComponent = ({
       </DialogTitle>
       <DialogContent
         sx={{
-          backgroundColor: "var(--tertiary-color)"
+          backgroundColor: "var(--tertiary-color)",
+          overflow: "visible",
         }}
       >
         {children}

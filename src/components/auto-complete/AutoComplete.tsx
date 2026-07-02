@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 // Material UI
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import Autocomplete from "@mui/material/Autocomplete";
 
 // i18n
 import { useTranslation } from "react-i18next";
@@ -41,9 +41,8 @@ type AutoCompleteProps = {
   helperText?: string;
   register?: any;
   freeSolo?: boolean;
+  disablePortal?: boolean;
 };
-
-const filter = createFilterOptions<OptionType>();
 
 const AutoComplete: React.FC<AutoCompleteProps> = ({
   id,
@@ -63,6 +62,7 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
   required = false,
   register,
   freeSolo = false,
+  disablePortal = false,
   ...props
 }) => {
   const { t } = useTranslation();
@@ -72,10 +72,12 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
   const inputValue = controlledInputValue ?? innerInputValue;
 
   const selectedValue = useMemo<AutoCompleteValue>(() => {
-    if (!value) return null;
+    if (value === null || value === undefined) {
+      return null;
+    }
 
     const matched = options.find(
-      (option) => String(option.value) === String(value)
+      option => String(option.value) === String(value)
     );
 
     return matched ?? (freeSolo ? String(value) : null);
@@ -84,13 +86,13 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
   useEffect(() => {
     if (controlledInputValue !== undefined) return;
 
-    if (!value) {
+    if (value === null || value === undefined) {
       setInnerInputValue("");
       return;
     }
 
     const matched = options.find(
-      (option) => String(option.value) === String(value)
+      option => String(option.value) === String(value)
     );
 
     setInnerInputValue(matched?.label ?? String(value));
@@ -189,7 +191,7 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
         freeSolo ? (
           <Autocomplete<OptionType, false, false, boolean>
             id={id}
-            disablePortal={false}
+            disablePortal={disablePortal}
             freeSolo={freeSolo}
             value={selectedValue}
             inputValue={inputValue}
@@ -365,7 +367,7 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
         ) : (
           <Autocomplete<OptionType, false, false, false>
             id={id}
-            disablePortal={false}
+            disablePortal={disablePortal}
             value={selectedValue as OptionType | null}
             onChange={handleSelectionChange}
             onInputChange={handleInputChange}

@@ -41,7 +41,7 @@ import ExcelIcon from "../assets/icons/excel.png";
 import EditIcon from "../assets/icons/pen.png";
 
 // Types
-import type { OptionType, User } from "../types/common";
+import type { OptionType, User, NsbBk, NsbOrg } from "../types/common";
 import type { Column } from "../hooks/useColumnItems";
 
 // Hooks
@@ -57,6 +57,7 @@ import { capitalizeWords, buildOptions, formatPhone, formatThaiID } from "../uti
 
 // API
 import { searchUserApi } from "../features/users/api/UsersApi";
+import { getBk, getOrg } from "../features/dropdown/api/DropdownApi";
 
 // Store
 import type { RootState } from "../store/store";
@@ -98,6 +99,8 @@ const ManageUser = () => {
   const [userData, setUserData] = useState<User[]>([]);
   const [memberChecked, setMemberChecked] = useState<string[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
+  const [bk, setBk] = useState<NsbBk[]>([]);
+  const [org, setOrg] = useState<NsbOrg[]>([]);
 
   // Pagination
   const [totalPages, setTotalPages] = useState(1);
@@ -118,7 +121,7 @@ const ManageUser = () => {
   });
 
   // Slice
-  const { agency, bh, bk, org, title, userGroup, status } = useSelector((state: RootState) => state.dropdown);
+  const { agency, bh, title, userGroup, status } = useSelector((state: RootState) => state.dropdown);
 
   const agencyOptions = useMemo(() => {
     const langKeyAgency = i18n.language === "th" ? "ou_abbr_th" : "ou_abbr_en";
@@ -132,7 +135,7 @@ const ManageUser = () => {
       : bh;
 
     return buildOptions(filteredBh, t("dropdown.all-bh"), langKeyBh, "bh_code");
-  }, [bh, i18n.language, formData.agency_id]);
+  }, [bh, i18n.language, formData.agency_id, i18n.isInitialized]);
 
   const bkOptions = useMemo(() => {
     const langKeyBk = i18n.language === "th" ? "bk_abbr_th" : "bk_abbr_en";
@@ -141,7 +144,7 @@ const ManageUser = () => {
       : bk;
 
     return buildOptions(filteredBk, t("dropdown.all-bk"), langKeyBk, "bk_code");
-  }, [bk, i18n.language, formData.bh_id]);
+  }, [bk, i18n.language, formData.bh_id, i18n.isInitialized]);
 
   const orgOptions = useMemo(() => {
     const langKeyOrg = i18n.language === "th" ? "org_abbr_th" : "org_abbr_en";
@@ -150,17 +153,17 @@ const ManageUser = () => {
       : org;
 
     return buildOptions(filteredOrg, t("dropdown.all-org"), langKeyOrg, "org_code");
-  }, [org, i18n.language, formData.bk_id]);
+  }, [org, i18n.language, formData.bk_id, i18n.isInitialized]);
 
   const userGroupOptions = useMemo(() => {
     const langKeyUserGroup = "group_name";
     return buildOptions(userGroup, t("dropdown.all-user-group"), langKeyUserGroup, "group_id");
-  }, [userGroup, i18n.language]);
+  }, [userGroup, i18n.language, i18n.isInitialized]);
 
   const statusOptions = useMemo(() => {
     const langKeyStatus = "name";
     return buildOptions(status, t("dropdown.all-status"), langKeyStatus, "code");
-  }, [status, i18n.language]);
+  }, [status, i18n.language, i18n.isInitialized]);
 
   const agencyMap = new Map(
     agency.map(item => [item.ou_code, item])
@@ -191,20 +194,68 @@ const ManageUser = () => {
     return agencyData?.ou_codename === "police" || false;
   }, [formData.agency_id])
 
+  const fetchBkList = useCallback(async (bhCode?: string) => {
+    try {
+      const params: Record<string, string> = {
+        limit: "100",
+        ...(bhCode && bhCode !== "0"
+          ? { bh_code: bhCode }
+          : {}),
+      };
+
+      const res = await getBk(params);
+      setBk(res.data ?? []);
+    } catch (error) {
+      setBk([]);
+    }
+  }, []);
+
+  const fetchOrgList = useCallback(async (bkCode?: string) => {
+    try {
+      const params: Record<string, string> = {
+        limit: "100",
+        ...(bkCode && bkCode !== "0"
+          ? { bk_code: bkCode }
+          : {}),
+      };
+
+      const res = await getOrg(params);
+      setOrg(res.data ?? []);
+    } catch (error) {
+      setOrg([]);
+    }
+  }, []);
+
   useEffect(() => {
-    setVisibleColumns(
-      columns.filter((column) => 
-        column.id !== "created_at" && 
-        column.id !== "approve_date" && 
-        column.id !== "un_approve_date" && 
-        column.id !== "un_approve_reason" && 
-        column.id !== "active_date_time" &&
-        column.id !== "active_status"
-    ));
+    fetchBkList(formData.bh_id);
+  }, [fetchBkList, formData.bh_id]);
+
+  useEffect(() => {
+    fetchOrgList(formData.bk_id);
+  }, [fetchOrgList, formData.bk_id]);
+
+  useEffect(() => {
+    const filtered = columns.filter(
+      (column) =>
+        column.id !== "created_at" &&
+        column.id !== "approve_date" &&
+        column.id !== "un_approve_date" &&
+        column.id !== "un_approve_reason" &&
+        column.id !== "active_date_time"
+    );
+
+    const first = ["actions", "edit", "id", "active_status", "last_login", "pid"];
+
+    setVisibleColumns([
+      ...first
+        .map((id) => filtered.find((column) => column.id === id))
+        .filter(Boolean) as Column[],
+      ...filtered.filter((column) => !first.includes(column.id)),
+    ]);
   }, [columns]);
 
   useEffect(() => {
-    fetchData();
+    fetchData(formData);
   }, []);
 
   const mapUserDataRows = useCallback((data: User[]) => {
@@ -244,14 +295,12 @@ const ManageUser = () => {
   }, [])
 
   const fetchData = useCallback(
-    async (pageData: number = page, limit: number = rowsPerPage) => {
+    async (filterData: FormData = formData, pageData: number = page, limit: number = rowsPerPage) => {
       try {
         setIsDataLoading(true);
 
         const res = await searchUserApi(undefined, {
-          filter: getFilterQuery(),
-          limit: limit.toString(),
-          page: pageData.toString(),
+          ...getFilters(filterData, pageData, limit),
         });
 
         setUserData(mapUserDataRows(res.data ?? []));
@@ -324,13 +373,16 @@ const ManageUser = () => {
   const handleChangePage = async (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
     event.preventDefault();
     setPage(newPage);
+    await fetchData(formData, newPage, rowsPerPage);
   };
 
   const handleChangeRowsPerPage = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setRowsPerPage(Number(event.target.value));
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
     setPage(0);
+    await fetchData(formData, 1, newRowsPerPage);
   };
 
   const onCheckMemberClick = useCallback(
@@ -411,47 +463,51 @@ const ManageUser = () => {
     });
   };
 
-  const getFilterQuery = useCallback(() => {
-    const filters = ["approve_status=approved"];
+  const getFilters = useCallback((formData: FormData, pageData: number, limit: number) => {
+    const filters: Record<string, string> = {
+      filter: `approve_status=approved`,
+      page: pageData.toString(),
+      limit: limit.toString(),
+    };
 
     if (formData.pid.trim()) {
-      filters.push(`idcard=${formData.pid.replace(/\D/g, "")}`);
+      filters.idcard = `*${formData.pid}*`;
     }
 
     if (formData.name.trim()) {
-      filters.push(`fullname=${formData.name.trim()}`);
+      filters.fullname = `*${formData.name.trim()}*`;
     }
 
     if (formData.agency_id) {
-      filters.push(`ou_code=${formData.agency_id}`);
+      filters.ou_code = formData.agency_id;
     }
 
     if (formData.bh_id !== "0") {
-      filters.push(`bh_code=${formData.bh_id}`);
+      filters.bh_code = formData.bh_id;
     }
 
     if (formData.bk_id !== "0") {
-      filters.push(`bk_code=${formData.bk_id}`);
+      filters.bk_code = formData.bk_id;
     }
 
     if (formData.org_id !== "0") {
-      filters.push(`org_code=${formData.org_id}`);
+      filters.org_code = formData.org_id;
     }
 
     if (formData.user_group_id !== "0") {
-      filters.push(`user_group_id=${formData.user_group_id}`);
+      filters.user_group_id = formData.user_group_id;
     }
 
     if (formData.status_id !== "0") {
-      filters.push(`active_status=${formData.status_id}`);
+      filters.active_status = formData.status_id;
     }
 
-    return filters.join(",");
+    return filters;
   }, [formData]);
 
   const handleSearchClick = async () => {
     setPage(1);
-    await fetchData(1, rowsPerPage);
+    await fetchData(formData, 1, rowsPerPage);
   };
 
   const handleClearClick = async () => {
@@ -556,6 +612,16 @@ const ManageUser = () => {
         return data.police_profile_status_datetime
           ? dayjs(data.police_profile_status_datetime).format(
               i18n.language === "th" ? "DD/MM/BBBB" : "DD/MM/YYYY"
+            )
+          : "-";
+
+      case "active_status":
+        return capitalizeWords(data.active_status) || "-";
+      
+      case "last_login":
+        return data.last_login
+          ? dayjs(data.last_login).format(
+              i18n.language === "th" ? "DD/MM/BBBB HH:mm:ss" : "DD/MM/YYYY HH:mm:ss"
             )
           : "-";
 

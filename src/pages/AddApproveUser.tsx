@@ -45,7 +45,7 @@ import SubAgency from '../components/sub-agency/SubAgency';
 import { useTranslation } from 'react-i18next';
 
 // Types
-import type { OptionType, User, NsbBk, NsbOrg } from "../types/common";
+import type { OptionType, User, NsbBk, NsbOrg, UpdateUser } from "../types/common";
 import type { Column } from "../hooks/useColumnItems";
 import type { ActivationConfirmData } from '../components/activation-modal/ActivationModal';
 
@@ -54,14 +54,14 @@ import useColumnItems from "../hooks/useColumnItems";
 import usePageTitle from "../hooks/usePageTitle";
 
 // API
-import { searchUserApi, deleteUserApi, approveUserApi } from "../features/users/api/UsersApi";
+import { searchUserApi, deleteUserApi, approveUserApi, updateUserApi } from "../features/users/api/UsersApi";
 import { getBk, getOrg } from "../features/dropdown/api/DropdownApi";
 
 // Icons
 import EditIcon from "../assets/icons/pen.png";
 
 // Utils
-import { buildOptions, formatPhone, formatThaiID, capitalizeWords } from "../utils/commonFunctions";
+import { buildOptions, formatPhone, formatThaiID, capitalizeWords, validateUserImportData } from "../utils/commonFunctions";
 import { PopupMessage } from "../utils/popupMessage";
 
 // Store
@@ -89,7 +89,6 @@ const AddApproveUser = () => {
   
   // State
   const [isAccordionOpen, setIsAccordionOpen] = useState(true);
-  const [toggle, setToggle] = useState<'schedule' | 'now'>('schedule');
   const [openApproveConfirmDialog, setOpenApproveConfirmDialog] = useState<boolean>(false);
   const [openImportDialog, setOpenImportDialog] = useState<boolean>(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
@@ -97,7 +96,6 @@ const AddApproveUser = () => {
 
   // Data
   const [tabValue, setTabValue] = useState(0);
-  const [approveDate, setApproveDate] = useState<Date>(dayjs().add(1, "day").toDate());
   const [visibleColumns, setVisibleColumns] = useState<Column[]>([]);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [userData, setUserData] = useState<User[]>([]);
@@ -123,6 +121,7 @@ const AddApproveUser = () => {
 
   // Slice
   const { agency, bh, title, userGroup } = useSelector((state: RootState) => state.dropdown);
+  const { user } = useSelector((state: RootState) => state.authUser);
 
   const agencyOptions = useMemo(() => {
     const langKeyAgency = i18n.language === "th" ? "ou_abbr_th" : "ou_abbr_en";
@@ -261,18 +260,18 @@ const AddApproveUser = () => {
 
   useEffect(() => {
     if (openImportDialog) return;
-    fetchData();
-  }, [tabValue, openImportDialog]);
+    fetchData(formData);
+  }, [
+    tabValue, 
+    openImportDialog,
+  ]);
 
   const fetchData = useCallback(
-    async () => {
+    async (filterData: FormData = formData, pageData: number = page, limit: number = rowsPerPage) => {
       try {
         setIsDataLoading(true);
-        const status = tabValue === 0 ? "pending" : tabValue === 1 ? "wait_approve" : "rejected"
         const res = await searchUserApi(undefined, {
-          filter: `approve_status=${status}`,
-          page: page.toString(),
-          limit: rowsPerPage.toString(),
+          ...getFilters(filterData, tabValue, pageData, limit),
         });
         setTotalPages(res?.pagination?.maxPage);
         const updated = res.data.map((data) => {
@@ -392,13 +391,16 @@ const AddApproveUser = () => {
   const handleChangePage = async (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
     event.preventDefault();
     setPage(newPage);
+    await fetchData(formData, newPage, rowsPerPage);
   };
 
   const handleChangeRowsPerPage = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setRowsPerPage(Number(event.target.value));
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
     setPage(0);
+    await fetchData(formData, 1, newRowsPerPage);
   };
 
   const handleClickAddUser = () => {
@@ -476,18 +478,47 @@ const AddApproveUser = () => {
   }
 
   const approveUser = async (status: string, approveData?: ActivationConfirmData) => {
-    setIsLoading(true);
+    
+    const { validUsers } = validateSelectedRejectedUsers();
+
+    if (validUsers.length === 0) {
+      await PopupMessage(
+        t("popup.update-status-failed"),
+        t("popup.invalid-data-detail"),
+        "error"
+      );
+      return;
+    }
+
     try {
+      setIsLoading(true);
       await approveUserApi({
-        user_id_list: userSelected,
+        users: validUsers.map((user) => ({
+          user_id: user.user_id,
+          details: "",
+        })),
         approve_status: status,
         ...(
-          status === "approved" && {
-            ...approveData,
-            approveDate: dayjs(approveData.approveDate).format("YYYY-MM-DD")
+          (status === "approved" || status === "wait_approve") && {
+            active_type: approveData?.activationTime === "now" ? "now" : "schedule",
+            auto_approve_at: dayjs(approveData.approveDate).format("YYYY-MM-DD")
           }
         ),
+        approve_by: user.user_id || "",
+        approve_at: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       });
+      if (approveData?.activationTime === "now") {
+        await Promise.all(
+          validUsers.map((userData) => {
+            const updatePayload: UpdateUser = {
+              user_id: userData.user_id,
+              active_status: "active",
+              active_by: user.user_id,
+            };
+            updateUserApi(updatePayload);
+          })
+        )
+      }
       await fetchData();
     }
     catch (error) {
@@ -592,18 +623,21 @@ const AddApproveUser = () => {
           : "-";
 
       case "approve_date":
-        return data.approve_date
-          ? dayjs(data.approve_date).format(
+        return data.active_datetime
+          ? dayjs(data.active_datetime).format(
               i18n.language === "th" ? "DD/MM/BBBB" : "DD/MM/YYYY"
             )
           : "-";
 
       case "un_approve_date":
-        return data.approve_date
-          ? dayjs(data.approve_date).format(
+        return data.approve_at
+          ? dayjs(data.approve_at).format(
               i18n.language === "th" ? "DD/MM/BBBB" : "DD/MM/YYYY"
             )
           : "-";
+
+      case "un_approve_reason":
+        return data.details || "-";
 
       default:
         return (data as any)[columnId] ?? "-";
@@ -628,6 +662,104 @@ const AddApproveUser = () => {
       sub_unit: [],
     });
   }
+
+  const getFilters = useCallback((formData: FormData, tabValue: number, pageData: number, limit: number) => {
+    const status = tabValue === 0 ? "pending" : tabValue === 1 ? "wait_approve" : "rejected"
+    const filters: Record<string, string> = {
+      filter: `approve_status=${status}`,
+      page: pageData.toString(),
+      limit: limit.toString(),
+    };
+
+    if (formData.pid.trim()) {
+      filters.idcard = `*${formData.pid.trim()}*`;
+    }
+
+    if (formData.name.trim()) {
+      filters.fullname = `*${formData.name.trim()}*`;
+    }
+
+    if (formData.agency_id !== "") {
+      filters.ou_code = formData.agency_id;
+    }
+
+    if (formData.bh_id !== "0") {
+      filters.bh_code = formData.bh_id;
+    }
+
+    if (formData.bk_id !== "0") {
+      filters.bk_code = formData.bk_id;
+    }
+
+    if (formData.org_id !== "0") {
+      filters.org_code = formData.org_id;
+    }
+
+    return filters;
+  }, [
+    formData.pid,
+    formData.name,
+    formData.agency_id,
+    formData.bh_id,
+    formData.bk_id,
+    formData.org_id,
+    formData.sub_unit,
+  ]);
+
+  const handleSearchClick = async () => {
+    await fetchData(formData);
+  }
+
+  const validateSelectedRejectedUsers = () => {
+    const validUsers: User[] = [];
+    const invalidUsers: Array<{
+      user: User;
+      error: string;
+    }> = [];
+
+    userData
+      .filter((user) => userSelected.includes(user.user_id))
+      .forEach((user) => {
+        const validation = validateUserImportData({
+          nationalId: user.idcard ?? "",
+          phoneNumber: user.phone ?? "",
+          firstName: user.firstname ?? "",
+          lastName: user.lastname ?? "",
+          ouData: user.ou_code,
+          t,
+        });
+
+        let errorDetail: string[] = [];
+
+        const isBhDataExist = user.bh_code ? bhMap.get(user.bh_code) : true;
+        const isBkDataExist = user.bk_code ? bkMap.get(user.bk_code) : true;
+        const isOrgDataExist = user.org_code ? orgMap.get(user.org_code) : true;
+        if (!isBhDataExist) {
+          errorDetail.push(t("text.invalid-bh"));
+        }
+        if (!isBkDataExist) {
+          errorDetail.push(t("text.invalid-bk"));
+        }
+        if (!isOrgDataExist) {
+          errorDetail.push(t("text.invalid-org"));
+        }
+
+        if (validation.isInvalid || errorDetail.length > 0) {
+          invalidUsers.push({
+            user,
+            error: validation.error || errorDetail.join(", "),
+          });
+        } 
+        else {
+          validUsers.push(user);
+        }
+      });
+
+    return {
+      validUsers,
+      invalidUsers,
+    };
+  };
 
   return (
     <section id='add-approve-user' className="flex flex-col h-full w-full p-2">
@@ -838,7 +970,7 @@ const AddApproveUser = () => {
                   }}
                   onClick={(event) => {
                     event.stopPropagation();
-                    // handleSearchClick();
+                    handleSearchClick();
                   }}
                 >
                   {t("button.search")}

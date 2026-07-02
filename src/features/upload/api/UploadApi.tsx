@@ -18,7 +18,7 @@ export const requestUpload = async (
 };
 
 export const removeUpload = async (
-  body: { urls: string[] }
+  body: { keys: string[] }
 ): Promise<DeleteFileResponse> => {
   return fetchClient<DeleteFileResponse>("/upload/remove", {
     method: "POST",

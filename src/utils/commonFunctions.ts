@@ -1,3 +1,6 @@
+// Types
+import type { ValidateUserDataParams } from "../types/common";
+
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
@@ -110,3 +113,52 @@ export const formatThaiID = (value: string | undefined) => {
 };
 
 export const normalizeText = (value: any) => value?.toString().trim().toLowerCase() ?? "";
+
+export const validateUserImportData = ({
+  nationalId = "",
+  phoneNumber = "",
+  firstName = "",
+  lastName = "",
+  ouData,
+  t,
+}: ValidateUserDataParams) => {
+  const isValidNationalId =
+    nationalId.length === 13 && isValidThaiID(nationalId);
+
+  const isValidPhoneNumber =
+    /^\d{10}$/.test(phoneNumber) && phoneNumber.startsWith("0");
+
+  const isNameEmpty = !firstName?.trim();
+  const isLastNameEmpty = !lastName?.trim();
+
+  const isEmptyRow =
+    !isValidNationalId &&
+    !isValidPhoneNumber &&
+    isNameEmpty &&
+    isLastNameEmpty;
+
+  if (isEmptyRow) {
+    return {
+      shouldSkip: true,
+      isInvalid: false,
+      errorDetail: [],
+      error: "",
+    };
+  }
+
+  const errorDetail: string[] = [];
+
+  if (!isValidNationalId) errorDetail.push(t("text.invalid-pid"));
+  if (!isValidPhoneNumber) errorDetail.push(t("text.invalid-phone"));
+  if (isNameEmpty) errorDetail.push(t("text.invalid-name"));
+  if (isLastNameEmpty) errorDetail.push(t("text.invalid-last-name"));
+
+  if (!ouData) errorDetail.push(t("text.invalid-agency"));
+
+  return {
+    shouldSkip: false,
+    isInvalid: errorDetail.length > 0,
+    errorDetail,
+    error: errorDetail.join(", "),
+  };
+};

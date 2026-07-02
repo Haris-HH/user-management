@@ -111,13 +111,14 @@ const HeaderCell = ({
 
   return (
     <TableCell
+      align="center"
       sx={{
         width,
         backgroundColor: "var(--primary-color)",
         color: "var(--tertiary-color)",
       }}
     >
-      <Box className="flex items-center gap-1">
+      <Box className="flex justify-center items-center gap-1">
         <span>{label}</span>
 
         {filter && (

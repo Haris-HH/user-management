@@ -30,6 +30,7 @@ export interface AddApproveData {
   latest_update_profile_date: string;
   pid: string;
   sub_agency: string[];
+  last_login: string;
   remark?: string;
 }
 
@@ -88,9 +89,15 @@ export interface User {
   approve_date: string | null;
   active_datetime: string | null;
   remark: string | null;
-  detail: string | null;
+  details: string | null;
   created_at: string;
+  active_at: string;
   updated_at: string;
+  approve_at: string;
+  approve_by: string;
+  active_status: string;
+  active_type: string;
+  active_by: string;
   sub_unit: string[];
 }
 
@@ -113,9 +120,18 @@ export interface CreateUser {
   permissions: GroupPermissions;
 }
 
+export interface UserDetail {
+  user_id: string;
+  details: string;
+}
+
 export interface ApproveUser {
-  user_id_list: string[];
+  users: UserDetail[];
   approve_status: string;
+  active_type?: string;
+  auto_approve_at?: string;
+  approve_by: string;
+  approve_at: string;
 }
 
 export interface UpdateUser {
@@ -137,6 +153,8 @@ export interface UpdateUser {
   org_code?: string;
   account_status?: string;
   detail?: string;
+  active_status?: string;
+  active_by?: string;
   permissions?: GroupPermissions;
   sub_unit?: string[];
 }
@@ -338,6 +356,7 @@ export interface Camera {
   route: string | null;
   address: string | null;
   police_region_id: number;
+  police_region_name?: string;
   police_station_id: number;
   police_station_name?: string;
   latitude: number;
@@ -431,4 +450,49 @@ export interface TopUsers {
   org_code: string;
   months: Record<string, number>;
   total: number;
+}
+
+export type ValidateUserDataParams = {
+  nationalId?: string;
+  phoneNumber?: string;
+  firstName?: string;
+  lastName?: string;
+  ouData?: unknown;
+  t: (key: string) => string;
+};
+
+export interface Checkpoint {
+  checkpoint_id: string;
+  checkpoint_name: string;
+  checkpoint_ip: string;
+  center_id: string;
+  center_ip: string;
+  project_id: string;
+  organization: string;
+  province_code: string;
+  district_code: string;
+  subdistrict_code: string;
+  route: string;
+  address: string;
+  police_region_id: number;
+  police_station_id: number;
+  latitude: number;
+  longitude: number;
+  serial_number: string;
+  license_key: string;
+  officer_title_id: number;
+  officer_firstname: string;
+  officer_lastname: string;
+  officer_position: string;
+  officer_phone: string;
+  visible: boolean;
+  active: boolean;
+  deleted: boolean;
+  alive: boolean;
+  last_online: string;
+  last_check: string;
+  response_ms: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string;
 }

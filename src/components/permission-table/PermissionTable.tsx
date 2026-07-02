@@ -357,8 +357,8 @@ const PermissionTable = ({
                             )}
 
                             {editPermissionCount > 0 && (
-                              <div className="bg-(--warning-color) px-2 py-1 rounded-sm">
-                                <p className="text-xs text-(--secondary-color)">
+                              <div className="bg-(--waiting-approve-bg-color) px-2 py-1 rounded-sm">
+                                <p className="text-xs text-(--tertiary-color)">
                                   {`${t(
                                     "table.header.can-visit-and-edit"
                                   )} : ${editPermissionCount}`}

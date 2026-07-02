@@ -109,6 +109,7 @@ const UpdateProfile = ({
                       options={dateOptions}
                       label=""
                       labelFontSize="16px"
+                      disablePortal={true}
                     />
                   </Box>
                   <span>{t('text.every-month')}</span>

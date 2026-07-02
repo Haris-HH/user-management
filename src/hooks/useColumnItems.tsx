@@ -177,6 +177,12 @@ const useColumnItems = () => {
         minWidth: 200,
         align: "center",
       },
+      {
+        id: "last_login",
+        label: t("table.header.last-login"),
+        minWidth: 200,
+        align: "center",
+      },
     ];
   }, [t, i18n.language, i18n.isInitialized]);
 };
