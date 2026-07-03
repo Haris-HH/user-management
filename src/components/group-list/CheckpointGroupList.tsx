@@ -27,11 +27,14 @@ const GroupList = () => {
   // State
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false);
 
+  const handleConfirm = (groupName: string) => {
+  };
+
   return (
     <section id='checkpoint-group-list'>
       <Box className="flex flex-col gap-2">
         <Box className="flex justify-between items-center">
-          <Typography component="span" style={{ color: "var(--tertiary-color)", fontWeight: 500 }}>
+          <Typography component="span" style={{ color: "var(--primary-color)", fontWeight: 500 }}>
             {t('text.checkpoint-list')}
           </Typography>
           <Button
@@ -130,6 +133,7 @@ const GroupList = () => {
           <AddGroup
             open={isAddGroupOpen}
             onClose={() => setIsAddGroupOpen(false)}
+            onConfirm={handleConfirm}
           />
         )
       }

@@ -21,6 +21,8 @@ import Paper from '@mui/material/Paper';
 import TablePagination from '@mui/material/TablePagination';
 import Stack from "@mui/material/Stack";
 import Collapse from "@mui/material/Collapse";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
 
 import FilterAltOutlinedIcon from "@mui/icons-material/FilterAltOutlined";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -93,6 +95,7 @@ const ManageUser = () => {
   const [openUpdateProfileDialog, setOpenUpdateProfileDialog] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   // Data
   const [visibleColumns, setVisibleColumns] = useState<Column[]>([]);
@@ -244,7 +247,7 @@ const ManageUser = () => {
         column.id !== "active_date_time"
     );
 
-    const first = ["actions", "edit", "id", "active_status", "last_login", "pid"];
+    const first = ["actions", "edit", "id", "account_status", "last_login", "pid"];
 
     setVisibleColumns([
       ...first
@@ -548,6 +551,7 @@ const ManageUser = () => {
         return (
           <Checkbox
             checked={memberChecked.includes(data.user_id)}
+            onClick={(event) => event.stopPropagation()}
             onChange={() => onCheckMemberClick(data.user_id)}
             sx={{ color: "var(--secondary-color)" }}
           />
@@ -561,7 +565,10 @@ const ManageUser = () => {
             src={EditIcon}
             width={15}
             height={15}
-            onClick={() => handleEdit(data)}
+            onClick={(event) => {
+              event.stopPropagation();
+              handleEdit(data);
+            }}
             alt="Edit"
           />
         );
@@ -615,8 +622,8 @@ const ManageUser = () => {
             )
           : "-";
 
-      case "active_status":
-        return capitalizeWords(data.active_status) || "-";
+      case "account_status":
+        return capitalizeWords(data.account_status) || "-";
       
       case "last_login":
         return data.last_login
@@ -631,6 +638,101 @@ const ManageUser = () => {
       default:
         return (data as any)[columnId] ?? "-";
     }
+  };
+
+  const getCellCopyValue = (
+    columnId: Column["id"],
+    data: User,
+    index: number
+  ) => {
+    if (columnId.startsWith("sub_agency_")) {
+      const subAgencyIndex = Number(columnId.replace("sub_agency_", ""));
+      return data.sub_unit?.[subAgencyIndex] || "-";
+    }
+
+    switch (columnId) {
+      case "actions":
+      case "edit":
+        return "";
+
+      case "id":
+        return String((page - 1) * rowsPerPage + index + 1);
+
+      case "pid":
+        return data.idcard || "-";
+
+      case "prefix":
+        return data.title || "-";
+
+      case "name":
+        return data.firstname || "-";
+
+      case "last_name":
+        return data.lastname || "-";
+
+      case "position":
+        return data.position || "-";
+
+      case "ou":
+        return data.ou_name || "-";
+
+      case "bh":
+        return data.bh_name || "-";
+
+      case "bk":
+        return data.bk_name || "-";
+
+      case "org":
+        return data.org_name || "-";
+
+      case "email":
+        return data.email || "-";
+
+      case "mobile":
+        return data.phone || "-";
+
+      case "user_group":
+        return data.user_group_name || "-";
+
+      case "update_profile_status":
+        return data.police_profile_status || "-";
+
+      case "latest_update_profile_date":
+        return data.police_profile_status_datetime
+          ? dayjs(data.police_profile_status_datetime).format(
+              i18n.language === "th" ? "DD/MM/BBBB" : "DD/MM/YYYY"
+            )
+          : "-";
+
+      case "account_status":
+        return capitalizeWords(data.active_status) || "-";
+
+      case "last_login":
+        return data.last_login
+          ? dayjs(data.last_login).format(
+              i18n.language === "th"
+                ? "DD/MM/BBBB HH:mm:ss"
+                : "DD/MM/YYYY HH:mm:ss"
+            )
+          : "-";
+
+      case "remark":
+        return data.remark || "-";
+
+      default:
+        return String((data as any)[columnId] ?? "-");
+    }
+  };
+
+  const handleCopy = async (value: string) => {
+    if (!value || value === "-") return;
+
+    await navigator.clipboard.writeText(value);
+    setIsAlertOpen(true);
+
+    setTimeout(() => {
+      setIsAlertOpen(false);
+    }, 1500)
   };
 
   return (
@@ -1013,6 +1115,13 @@ const ManageUser = () => {
                             py: 0.5,
                             textAlign: "center",
                           }}
+                          onClick={() => {
+                            const copyValue = getCellCopyValue(column.id, data, index);
+
+                            if (copyValue) {
+                              handleCopy(copyValue);
+                            }
+                          }}
                         >
                           <div className="w-full flex items-center justify-center">
                             {renderCellValue(column.id, data, index)}
@@ -1060,6 +1169,27 @@ const ManageUser = () => {
           />
         )
       }
+
+      <Snackbar
+        open={isAlertOpen}
+        autoHideDuration={2000}
+        onClose={() => setIsAlertOpen(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setIsAlertOpen(false)}
+          sx={{
+            color: "var(--primary-color)",
+            border: "1px solid var(--primary-color)",
+            backgroundColor: "var(--tertiary-color)",
+            "& .MuiSvgIcon-root": {
+              color: "var(--primary-color)",
+            }
+          }}
+        >
+          {t('text.copy-to-clipboard')}
+        </Alert>
+      </Snackbar>
     </section>
   )
 }

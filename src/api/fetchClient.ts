@@ -1,5 +1,8 @@
+// Class
+import { ApiError } from "../types/class";
+
 export interface FetchOptions extends RequestInit {
-  queryParams?: Record<string, string>;
+  queryParams?: any;
   skipAuth?: boolean;
   isFormData?: boolean;
   isStream?: boolean;
@@ -44,14 +47,30 @@ const processQueue = (error: unknown, token?: string) => {
   failedQueue = [];
 };
 
-const createHttpError = async (response: Response) => {
-  const text = await response.text();
+const createHttpError = async (
+  response: Response,
+  endpoint: string
+): Promise<ApiError> => {
+  let message = response.statusText;
 
-  const error = new Error(text || response.statusText);
+  try {
+    const data = await response.json();
 
-  (error as Error & { status?: number }).status = response.status;
+    message =
+      data?.message ||
+      data?.error ||
+      response.statusText;
+  } catch {
+    const text = await response.text().catch(() => "");
+    message = text || response.statusText;
+  }
 
-  return error;
+  return new ApiError({
+    endpoint,
+    statusCode: response.status,
+    success: false,
+    message,
+  });
 };
 
 // ==============================
@@ -109,7 +128,7 @@ const refreshTokenRequest = async (): Promise<{
   });
 
   if (!response.ok) {
-    throw await createHttpError(response);
+    throw await createHttpError(response, "/user-management/users/refresh");
   }
 
   return response.json();
@@ -212,7 +231,12 @@ export const fetchClient = async <T>(
     if ((response.status === 401 || response.status === 403) && !skipAuth) {
       if (retryCount >= 1) {
         window.dispatchEvent(new Event("force-logout"));
-        throw new Error("Too many retries");
+        throw new ApiError({
+          endpoint,
+          statusCode: 401,
+          success: false,
+          message: "Too many retries",
+        });
       }
 
       try {
@@ -234,7 +258,7 @@ export const fetchClient = async <T>(
     }
 
     if (!response.ok) {
-      throw await createHttpError(response);
+      throw await createHttpError(response, endpoint);
     }
 
     if (isStream) {

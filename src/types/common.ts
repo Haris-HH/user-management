@@ -25,7 +25,7 @@ export interface AddApproveData {
   un_approve_date: string;
   user_group: string;
   un_approve_reason: string;
-  active_status: number;
+  account_status: string;
   update_profile_status: string;
   latest_update_profile_date: string;
   pid: string;
@@ -152,7 +152,7 @@ export interface UpdateUser {
   bk_code?: string;
   org_code?: string;
   account_status?: string;
-  detail?: string;
+  details?: string;
   active_status?: string;
   active_by?: string;
   permissions?: GroupPermissions;
@@ -495,4 +495,38 @@ export interface Checkpoint {
   created_at: string;
   updated_at: string;
   deleted_at: string;
+}
+
+export interface ErrorRespond {
+  endpoint: string;
+  statusCode: number;
+  success: boolean;
+  message: string;
+}
+
+export interface WatchlistGroup {
+  group_id: string;
+  group_name: string;
+  description: string;
+  members: string[];
+  special_plates: string[];
+  watchlists: string[];
+  permissions: string[];
+  visible: boolean;
+  active: boolean;
+  deleted: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  deleted_by: string | null;
+}
+
+export interface CreateWatchlistGroup {
+  group_name: string;
+}
+
+export interface MembersWatchListGroupRequest {
+  group_id: string;
+  member_id_list: string[];
 }

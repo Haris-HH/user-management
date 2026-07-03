@@ -142,7 +142,8 @@
     "schedule-for-later": "Schedule for Later",
     "schedule-for-later-detail": "ตั้งวันที่ในอนาคตสำหรับการเปิดใช้งานโดยอัตโนมัติ",
     "activation-date": "วันที่เปิดใช้งาน",
-    "reason": "เหตุผล"
+    "reason": "เหตุผล",
+    "copy-to-clipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว"
   },
   "component": {
     "pid": "เลขบัตรประชาชน",
@@ -220,6 +221,9 @@
       "bk": "กองบังคับการ",
       "org": "กองกำกับการ",
       "sub-agency": "หน่วยงานย่อย {{number}}",
+      "bh-sub-agency": "กองบัญชาการ/หน่วยงานย่อย 1",
+      "bk-sub-agency": "กองบังคับการ/หน่วยงานย่อย 2",
+      "org-sub-agency": "กองกำกับการ/หน่วยงานย่อย 3",
       "email": "Email",
       "mobile": "เบอร์โทร",
       "register-date": "วันที่ลงทะเบียน",
@@ -230,7 +234,7 @@
       "user-group": "กลุ่มผู้ใช้งาน",
       "update-profile-status": "สถานะ Update Profile",
       "latest-update-profile-date": "Update Profile ล่าสุด",
-      "active-status": "สถานะการใช้งาน",
+      "account-status": "สถานะการใช้งาน",
       "usage-menu": "เมนูการใช้งาน",
       "show-menu": "แสดงเมนู",
       "edit-permission": "สิทธิ์การแก้ไข",
@@ -349,7 +353,15 @@
     "update-status-failed": "การอัพเดทสถานะผู้ใช้ล้มเหลว",
     "invalid-data-detail": "ข้อมูลไม่ถูกต้อง<br />กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง",
     "update-confirm": "ยืนยันการ Update ข้อมูล",
-    "suspend-confirm-detail": "ยืนยันการเปลี่ยนสถานะผู้ใช้งาน เป็น “Suspend”<br />ส่งผลให้ผู้ใช้งานรายนี้ ถูกระงับการใช้งาน"
+    "suspend-confirm-detail": "ยืนยันการเปลี่ยนสถานะผู้ใช้งาน เป็น “Suspend”<br />ส่งผลให้ผู้ใช้งานรายนี้ ถูกระงับการใช้งาน",
+    "duplicate-idcard": "เลขบัตรประชาชนซ้ำ",
+    "suspend-user": "ไม่สามารถเพิ่มข้อมูลได้ มีรายชื่อนี้อยู่ในระบบแล้ว<br />และอยู่ระหว่างถูกระงับการใช้งาน (Suspend) เนื่องจาก<br />“อยู่ระหว่างช่วยราชการที่หน่วยงานอื่น<br />และยังไม่ได้รับคำสั่งกลับมาประจำที่หน่วยงานเดิม”",
+    "create-watchlist-group-success": "การสร้างกลุ่มเสร็จสิ้น",
+    "create-watchlist-group-failed": "การสร้างกลุ่มล้มเหลว",
+    "add-user-success": "การเพิ่มข้อมูลผู้ใช้เสร็จสิ้น",
+    "add-user-failed": "การเพิ่มข้อมูลผู้ใช้ล้มเหลว",
+    "delete-user-success": "การลบข้อมูลผู้ใช้เสร็จสิ้น",
+    "delete-user-failed": "การลบข้อมูลผู้ใช้ล้มเหลว"
   },
   "ui-program": {
     "log-management": "Log Management",

@@ -1,4 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useSelector } from 'react-redux';
+
+// Store
+import type { RootState } from "../../store/store";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -17,6 +21,8 @@ import IconButton from "@mui/material/IconButton";
 // Components
 import SearchInput from "../search-input/SearchInput";
 import AddUser from "../add-user/AddUser";
+import TableSkeleton from '../table-skeleton/TableSkeleton';
+import LoadingScreen from '../loading-screen/LoadingScreen';
 
 // Icons
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -25,29 +31,55 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from "react-i18next";
 
 // Types
-import type { User } from "../../types/common";
+import type { User, NsbBk, NsbOrg, MembersWatchListGroupRequest } from "../../types/common";
 
 // Utils
 import { capitalizeWords, formatPhone } from "../../utils/commonFunctions";
+import { PopupMessage } from "../../utils/popupMessage";
+
+// API
+import { getUserApi } from "../../features/users/api/UsersApi";
+import { getBk, getOrg } from "../../features/dropdown/api/DropdownApi";
+import { addMembersWatchListGroups, deleteMembersWatchListGroups } from "../../features/core-data/api/CoreDataApi";
 
 interface FormData {
   search: string;
 }
 
-const UserList = () => {
+type Prop = {
+  userList: string[];
+  isDisable: boolean;
+  group_id: string | null;
+  onDataChange: () => void;
+}
+
+const UserList = ({
+  userList,
+  isDisable = true,
+  group_id,
+  onDataChange,
+}: Prop) => {
   // i18n
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // State
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Data
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  const [totalUser, setTotalUser] = useState(0);
+  const [bk, setBk] = useState<NsbBk[]>([]);
+  const [org, setOrg] = useState<NsbOrg[]>([]);
 
   // Form Data
   const [formData, setFormData] = useState<FormData>({
     search: "",
   });
+
+  // Slice
+  const { agency, bh, title, userGroup } = useSelector((state: RootState) => state.dropdown);
 
   const selectedUserIds = useMemo(
     () => selectedUsers.map((user) => user.user_id),
@@ -75,17 +107,181 @@ const UserList = () => {
     });
   }, [formData.search, selectedUsers]);
 
-  const handleSaveUsers = (users: User[]) => {
-    setSelectedUsers(users);
-    setIsAddUserOpen(false);
+  const agencyMap = new Map(
+    agency.map(item => [item.ou_code, item])
+  );
+
+  const bhMap = new Map(
+    bh.map(item => [item.bh_code, item])
+  );
+
+  const bkMap = new Map(
+    bk.map(item => [item.bk_code, item])
+  );
+
+  const orgMap = new Map(
+    org.map(item => [item.org_code, item])
+  );
+
+  const titleMap = new Map(
+    title.map(item => [item.id, item])
+  );
+
+  const userGroupMap = new Map(
+    userGroup.map(item => [item.group_id, item])
+  );
+
+  const fetchBkList = useCallback(async (bhCode?: string) => {
+    try {
+      const params: Record<string, string> = {
+        limit: "100",
+        ...(bhCode && bhCode !== "0"
+          ? { bh_code: bhCode }
+          : {}),
+      };
+
+      const res = await getBk(params);
+      setBk(res.data ?? []);
+    } catch (error) {
+      setBk([]);
+    }
+  }, []);
+
+  const fetchOrgList = useCallback(async (bkCode?: string) => {
+    try {
+      const params: Record<string, string> = {
+        limit: "100",
+        ...(bkCode && bkCode !== "0"
+          ? { bk_code: bkCode }
+          : {}),
+      };
+
+      const res = await getOrg(params);
+      setOrg(res.data ?? []);
+    } catch (error) {
+      setOrg([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchBkList();
+  }, [fetchBkList]);
+
+  useEffect(() => {
+    fetchOrgList();
+  }, [fetchOrgList]);
+
+  useEffect(() => {
+    fetchData();
+  }, [group_id, userList])
+
+  const fetchData = useCallback(
+    async () => {
+      if (userList.length === 0) {
+        setSelectedUsers([]);
+      }
+      try {
+        setIsDataLoading(true);
+        const res = await getUserApi({
+          page: "1",
+          limit: "100",
+          filter: `user_id=${userList.join("|")}`
+        });
+        setTotalUser(res?.pagination?.countAll ?? 0);
+        const updated = res.data.map((data) => {
+          const titleData = data.title_id ? titleMap.get(data.title_id) : null;
+          const titleName = titleData ? 
+                              i18n.language === "th" ? titleData.title_abbr_th : titleData.title_abbr_en
+                              : "-";
+          const agencyData = data.ou_code ? agencyMap.get(data.ou_code) : null;
+          const agencyName = agencyData ? 
+                              i18n.language === "th" ? agencyData.ou_abbr_th : agencyData.ou_abbr_en
+                              : "-";
+          const bhData = data.bh_code ? bhMap.get(data.bh_code) : null;
+          const bhName = bhData ? 
+                              i18n.language === "th" ? bhData.bh_abbr_th : bhData.bh_abbr_en
+                              : "-";
+          const bkData = data.bk_code ? bkMap.get(data.bk_code) : null;
+          const bkName = bkData ? 
+                              i18n.language === "th" ? bkData.bk_abbr_th : bkData.bk_abbr_en
+                              : "-";
+          const orgData = data.org_code ? orgMap.get(data.org_code) : null;
+          const orgName = orgData ? 
+                              i18n.language === "th" ? orgData.org_abbr_th : orgData.org_abbr_en
+                              : "-";
+          const userGroupData = data.user_group_id ? userGroupMap.get(data.user_group_id) : null;
+          return {
+            ...data,
+            title: titleName,
+            ou_name: agencyName,
+            bh_name: bhName,
+            bk_name: bkName,
+            org_name: orgName,
+            user_group_name: capitalizeWords(userGroupData?.group_name) ?? "-",
+          }
+        })
+        setSelectedUsers(updated);
+      }
+      catch (error) {
+        await PopupMessage(t("popup.fetch-error"), "", "error");
+        setTotalUser(0);
+      } 
+      finally {
+        setIsDataLoading(false);
+      }
+    },
+    [userList]
+  );
+
+  const handleSaveUsers = async (users: User[]) => {
+    try {
+      setIsAddUserOpen(false);
+      setIsLoading(true);
+      const body: MembersWatchListGroupRequest = {
+        group_id: group_id,
+        member_id_list: users.map((user) => user.user_id),
+      }
+      await addMembersWatchListGroups(body);
+      await PopupMessage(t("popup.add-user-success"), "", "success");
+      setSelectedUsers(users);
+      onDataChange();
+    }
+    catch (error) {
+      await PopupMessage(t("popup.add-user-failed"), "", "error");
+    }
+    finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
+    await deleteUser([userId]);
     setSelectedUsers((prev) => prev.filter((user) => user.user_id !== userId));
+    onDataChange();
   };
 
-  const handleDeleteAllUsers = () => {
+  const handleDeleteAllUsers = async () => {
+    await deleteUser(selectedUsers.map((user) => user.user_id));
     setSelectedUsers([]);
+    onDataChange();
+  }
+
+  const deleteUser = async (userId: string[]) => {
+    try {
+      setIsLoading(true);
+      const body: MembersWatchListGroupRequest = {
+        group_id: group_id,
+        member_id_list: userId,
+      }
+      await deleteMembersWatchListGroups(body);
+      await PopupMessage(t("popup.delete-user-success"), "", "success");
+    }
+    catch (error) {
+      await PopupMessage(t("popup.delete-user-failed"), "", "success");
+    }
+    finally {
+      setIsLoading(false);
+    }
   }
 
   const handleTextChange = (key: keyof typeof formData, value: string) => {
@@ -94,6 +290,7 @@ const UserList = () => {
 
   return (
     <section id="user-list">
+      { isLoading && <LoadingScreen /> }
       <Box className="flex flex-col gap-2">
         <Box className="flex justify-between items-center">
           <Typography
@@ -114,9 +311,16 @@ const UserList = () => {
                 backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
               },
               textTransform: "capitalize",
+              "&.Mui-disabled": {
+                backgroundColor: "var(--primary-color)",
+                color: "var(--tertiary-color)",
+                opacity: 0.5,
+                cursor: "not-allowed"
+              },
             }}
             startIcon={<AddIcon />}
             onClick={() => setIsAddUserOpen(true)}
+            disabled={isDisable}
           >
             {t("button.add-user-2")}
           </Button>
@@ -125,7 +329,7 @@ const UserList = () => {
         <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
           <Box className="flex justify-between items-center">
             <p className="text-[14px] text-(--secondary-color) font-medium">
-              {`${selectedUsers.length} ${t("text.list")}`}
+              {`${totalUser} ${t("text.list")}`}
             </p>
             <SearchInput 
               value={formData.search}
@@ -192,6 +396,9 @@ const UserList = () => {
               </TableHead>
 
               <TableBody>
+                {isDataLoading && (
+                  <TableSkeleton headerColumn={6} />
+                )}
                 {filterSelectedUsers.length > 0 ? (
                   filterSelectedUsers.map((user, index) => {
                     const fullName = capitalizeWords(
@@ -230,7 +437,13 @@ const UserList = () => {
                     );
                   })
                 ) : (
-                  <TableRow>
+                  <TableRow
+                    sx={{
+                      "& .MuiTableCell-root": {
+                        borderBottom: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                      }
+                    }}
+                  >
                     <TableCell colSpan={6} align="center" sx={{ color: "var(--secondary-color)" }}>
                       {t("text.no-data")}
                     </TableCell>

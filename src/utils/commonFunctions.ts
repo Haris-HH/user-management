@@ -1,5 +1,5 @@
 // Types
-import type { ValidateUserDataParams } from "../types/common";
+import type { ValidateUserDataParams, OptionType } from "../types/common";
 
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -161,4 +161,26 @@ export const validateUserImportData = ({
     errorDetail,
     error: errorDetail.join(", "),
   };
+};
+
+export const buildUniqueOptions = <
+  T,
+  K extends keyof T,
+  L extends keyof T
+>(
+  list: T[],
+  valueKey: K,
+  labelKey: L
+): OptionType[] => {
+  return Array.from(
+    new Map(
+      list.map((item) => [
+        String(item[valueKey]),
+        {
+          label: String(item[labelKey] ?? "-"),
+          value: String(item[valueKey]),
+        },
+      ])
+    ).values()
+  );
 };

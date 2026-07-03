@@ -38,6 +38,7 @@ import type {
   NsbBk,
   NsbOrg,
 } from "../types/common";
+import { ApiError } from "../types/class"; 
 
 // Hooks
 import usePermissionUiList from "../hooks/usePermissionUiList";
@@ -90,7 +91,7 @@ interface FormData {
   permission: string;
   end_date: string;
   life_date: string;
-  status: "active" | "inactive" | "suspend";
+  status: "active" | "inactive" | "suspended";
   detail: string;
   sub_unit: string[];
 }
@@ -117,14 +118,14 @@ const UserForm = () => {
     switch (status) {
       case "active":
         return "active";
-      case "suspend":
-        return "suspend";
+      case "suspended":
+        return "suspended";
       default:
         return "inactive";
     }
   };
   const [activeStatus, setActiveStatus] = useState<FormData["status"]>(() =>
-    getActiveStatus(editingUser?.active_status)
+    getActiveStatus(editingUser?.account_status)
   );
 
   // Data
@@ -391,7 +392,7 @@ const UserForm = () => {
   }, [fetchData]);
 
   useEffect(() => {
-    const status = getActiveStatus(editingUser?.active_status);
+    const status = getActiveStatus(editingUser?.account_status);
 
     setActiveStatus(status);
     setValue("status", status);
@@ -400,7 +401,7 @@ const UserForm = () => {
   const statusDescription = {
     active: t('placeholder.active'),
     inactive: t('placeholder.inactive'),
-    suspend: t('placeholder.suspend'),
+    suspended: t('placeholder.suspend'),
   };
 
   const currentDescription =
@@ -665,7 +666,7 @@ const UserForm = () => {
       }
 
       if (isEditMode && editingUser?.user_id) {
-        if (activeStatus === "suspend") {
+        if (activeStatus === "suspended") {
           const confirmSuspend = await PopupMessageWithCancel(
             t("popup.update-confirm"),
             t("popup.suspend-confirm-detail"),
@@ -701,8 +702,8 @@ const UserForm = () => {
         addChangedField(updatePayload, "phone", formData.phone.replaceAll("-", ""), editingUser.phone ?? "");
         addChangedField(updatePayload, "email", formData.email, editingUser.email ?? "");
         addChangedField(updatePayload, "ou_code", formData.agency, editingUser.ou_code ?? "");
-        addChangedField(updatePayload, "active_status", activeStatus, editingUser.active_status ?? "active");
-        addChangedField(updatePayload, "detail", formData.detail, editingUser.details ?? "");
+        addChangedField(updatePayload, "account_status", activeStatus, editingUser.account_status ?? "active");
+        addChangedField(updatePayload, "details", formData.detail, editingUser.details ?? "");
         addChangedField(updatePayload, "sub_unit", formData.sub_unit, editingUser.sub_unit ?? []);
 
         if (JSON.stringify(permissions ?? {}) !== JSON.stringify(editingUser.permissions ?? {})) {
@@ -765,7 +766,11 @@ const UserForm = () => {
       navigate(returnTo, { replace: true });
     } 
     catch (error) {
-      await PopupMessage(t("popup.save-error"), "", "error");
+      await PopupMessage(
+        t("popup.save-error"),
+        getApiErrorMessage(error, t),
+        "error"
+      );
     } 
     finally {
       setIsLoading(false);
@@ -914,6 +919,31 @@ const UserForm = () => {
       sub_unit: values,
     }));
   }
+
+  const getApiErrorMessage = (
+    error: unknown,
+    t: (key: string) => string
+  ) => {
+    if (!(error instanceof ApiError)) {
+      return "";
+    }
+
+    const { statusCode, message } = error.toJSON();
+
+    if (statusCode !== 409) {
+      return message || "";
+    }
+
+    if (message.includes("This ID card already exists")) {
+      return t("popup.duplicate-idcard");
+    }
+
+    if (message.includes("This ID card is suspended")) {
+      return t("popup.suspend-user");
+    }
+
+    return message || "";
+  };
 
   return (
     <section id="user-form" className="flex flex-col h-full w-full">
@@ -1263,7 +1293,7 @@ const UserForm = () => {
                     />
 
                     <FormControlLabel
-                      value="suspend"
+                      value="suspended"
                       control={<Radio />}
                       label={t("text.suspend")}
                     />

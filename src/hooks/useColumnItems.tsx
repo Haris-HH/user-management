@@ -166,8 +166,8 @@ const useColumnItems = () => {
         align: "center",
       },
       {
-        id: "active_status",
-        label: t("table.header.active-status"),
+        id: "account_status",
+        label: t("table.header.account-status"),
         minWidth: 160,
         align: "center",
       },

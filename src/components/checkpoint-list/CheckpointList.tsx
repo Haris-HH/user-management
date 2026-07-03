@@ -27,9 +27,6 @@ import { useTranslation } from 'react-i18next';
 // Types
 import type { Camera } from "../../types/common";
 
-// Utils
-import { capitalizeWords } from "../../utils/commonFunctions";
-
 interface FormData {
   search: string;
 }
@@ -95,7 +92,7 @@ const CheckpointList = () => {
     <section id='user-list'>
       <Box className="flex flex-col gap-2">
         <Box className="flex justify-between items-center">
-          <Typography component="span" style={{ color: "var(--tertiary-color)", fontWeight: 500 }}>
+          <Typography component="span" style={{ color: "var(--primary-color)", fontWeight: 500 }}>
             {t('text.user-list')}
           </Typography>
           <Button
@@ -248,7 +245,13 @@ const CheckpointList = () => {
                     );
                   })
                 ) : (
-                  <TableRow>
+                  <TableRow
+                    sx={{
+                      "& .MuiTableCell-root": {
+                        borderBottom: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                      }
+                    }}
+                  >
                     <TableCell colSpan={6} align="center" sx={{ color: "var(--secondary-color)" }}>
                       {t("text.no-data")}
                     </TableCell>

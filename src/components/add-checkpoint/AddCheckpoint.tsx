@@ -35,6 +35,7 @@ import { searchCameras, getCheckpoints } from "../../features/core-data/api/Core
 import {
   PopupMessage,
 } from "../../utils/popupMessage";
+import { buildUniqueOptions } from "../../utils/commonFunctions";
 
 // Types
 import type { Camera } from "../../types/common"; 
@@ -70,8 +71,8 @@ const AddCheckpoint = ({
   const [selectedProvince, setSelectedProvince] = useState<string[]>([]);
   const [selectedStation, setSelectedStation] = useState<string[]>([]);
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<string[]>([]);
-  const [rows, setRows] = useState<Camera[]>([]);
   const [checkpointChecked, setCheckpointChecked] = useState<string[]>([]);
+  const [rows, setRows] = useState<Camera[]>([]);
 
   // Pagination
   const [totalItems, setTotalItems] = useState(0);
@@ -91,6 +92,79 @@ const AddCheckpoint = ({
     () => new Set(selectedCheckpointIds),
     [selectedCheckpointIds]
   );
+
+  const areaOptions = useMemo(
+    () =>
+      buildUniqueOptions(
+        rows,
+        "police_region_id",
+        "police_region_name"
+      ),
+    [rows]
+  );
+
+  const provinceOptions = useMemo(
+    () =>
+      buildUniqueOptions(
+        rows,
+        "province_code",
+        "province_name"
+      ),
+    [rows]
+  );
+
+  const stationOptions = useMemo(
+    () =>
+      buildUniqueOptions(
+        rows,
+        "police_station_id",
+        "police_station_name"
+      ),
+    [rows]
+  );
+
+  const checkpointOptions = useMemo(
+    () =>
+      buildUniqueOptions(
+        rows,
+        "camera_id",
+        "camera_name"
+      ),
+    [rows]
+  );
+
+  const filterRows = useMemo(() => {
+    return rows.filter((row) => {
+      const matchArea =
+        selectedAreaRegion.length === 0 ||
+        selectedAreaRegion.includes(String(row.police_region_id));
+
+      const matchProvince =
+        selectedProvince.length === 0 ||
+        selectedProvince.includes(row.province_code);
+
+      const matchStation =
+        selectedStation.length === 0 ||
+        selectedStation.includes(String(row.police_station_id));
+
+      const matchCheckpoint =
+        selectedCheckpoint.length === 0 ||
+        selectedCheckpoint.includes(row.camera_id);
+
+      return (
+        matchArea &&
+        matchProvince &&
+        matchStation &&
+        matchCheckpoint
+      );
+    });
+  }, [
+    rows,
+    selectedAreaRegion,
+    selectedProvince,
+    selectedStation,
+    selectedCheckpoint,
+  ]);
 
   useEffect(() => {
     if (!open) return;
@@ -374,11 +448,11 @@ const AddCheckpoint = ({
                 }}
               >
                 <HeaderCell label={t("table.header.no")} width="5%" filter={false} />
-                <HeaderCell 
-                  label={t("table.header.area-region")} 
-                  width="10%" 
-                  option={[]}
-                  filter={true} 
+                <HeaderCell
+                  label={t("table.header.area-region")}
+                  width="10%"
+                  option={areaOptions}
+                  filter
                   selectedValues={selectedAreaRegion}
                   onChange={setSelectedAreaRegion}
                   openedFilter={openedFilter}
@@ -387,7 +461,7 @@ const AddCheckpoint = ({
                 <HeaderCell 
                   label={t("table.header.province")} 
                   width="10%" 
-                  option={[]}
+                  option={provinceOptions}
                   filter={true} 
                   selectedValues={selectedProvince}
                   onChange={setSelectedProvince}
@@ -397,7 +471,7 @@ const AddCheckpoint = ({
                 <HeaderCell 
                   label={t("table.header.station")} 
                   width="10%" 
-                  option={[]}
+                  option={stationOptions}
                   filter={true} 
                   selectedValues={selectedStation}
                   onChange={setSelectedStation}
@@ -407,7 +481,7 @@ const AddCheckpoint = ({
                 <HeaderCell 
                   label={t("table.header.checkpoint")} 
                   width="10%" 
-                  option={[]}
+                  option={checkpointOptions}
                   filter={true} 
                   selectedValues={selectedCheckpoint}
                   onChange={setSelectedCheckpoint}
@@ -431,8 +505,8 @@ const AddCheckpoint = ({
             <TableBody>
               {isDataLoading ? (
                   <TableSkeleton headerColumn={6} />
-                ) : rows.length > 0 ? (
-                  rows.map((row, index) => {
+                ) : filterRows.length > 0 ? (
+                  filterRows.map((row, index) => {
                     const isAlreadySelected = selectedCheckpointIdSet.has(row.camera_id);
                     const isChecked = checkpointChecked.includes(row.camera_id);
                     return (

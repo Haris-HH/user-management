@@ -142,7 +142,8 @@
     "schedule-for-later": "Schedule for Later",
     "schedule-for-later-detail": "Set a future date for activation to trigger automatically.",
     "activation-date": "Activation Date",
-    "reason": "Reason"
+    "reason": "Reason",
+    "copy-to-clipboard": "Copied to clipboard"
   },
   "component": {
     "pid": "PID",
@@ -220,6 +221,9 @@
       "bk": "Bk",
       "org": "Org",
       "sub-agency":"Sub Agency {{number}}",
+      "bh-sub-agency": "Bh / Sub Agency 1",
+      "bk-sub-agency": "Bk / Sub Agency 2",
+      "org-sub-agency": "Org / Sub Agency 3",
       "email": "Email",
       "mobile": "Mobile",
       "register-date": "Register Date",
@@ -230,7 +234,7 @@
       "user-group": "User Group",
       "update-profile-status": "Update Profile Status",
       "latest-update-profile-date": "Latest Update Profile Date",
-      "active-status": "Active Status",
+      "account-status": "Active Status",
       "usage-menu": "Usage Menu",
       "show-menu": "Show Menu",
       "edit-permission": "Edit Permission",
@@ -347,7 +351,15 @@
     "update-status-failed": "User status update is failed.",
     "invalid-data-detail": "Invalid data!<br />Please check the data and try again.",
     "update-confirm": "Confirm Update",
-    "suspend-confirm-detail": "Confirm changing the user status to “Suspend”<br />This will result in the user being suspended."
+    "suspend-confirm-detail": "Confirm changing the user status to “Suspend”<br />This will result in the user being suspended.",
+    "duplicate-idcard": "Duplicate national ID number.",
+    "suspend-user": "Unable to add information. This name is already in the system<br />and is currently suspended because<br />\"they are on temporary assignment at another agency<br />and have not yet received orders to return to their original agency.\"",
+    "create-watchlist-group-success": "Group creation is complete.",
+    "create-watchlist-group-failed": "Group creation is failed.",
+    "add-user-success": "User information addition is complete.",
+    "add-user-failed": "User information addition is failed.",
+    "delete-user-success": "User information deletion is complete.",
+    "delete-user-failed": "User information deletion is failed."
   },
   "ui-program": {
     "log-management": "Log Management",

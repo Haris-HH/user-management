@@ -352,14 +352,11 @@ const StatisticTopUsers = () => {
                 <TableHead>
                   <TableRow
                     sx={{
-                      backgroundColor: "var(--primary-color)",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 2,
                       height: 40,
                       "& th": {
+                        backgroundColor: "var(--primary-color)",
                         color: "var(--tertiary-color)",
-                        border: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                        border: "1px solid rgba(var(--secondary-color-rgb), 0.5)",
                         padding: "6px 8px",
                         fontWeight: 700,
                         whiteSpace: "nowrap",

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useForm } from "react-hook-form";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -18,11 +19,13 @@ interface FormData {
 type Props = {
   open: boolean;
   onClose: () => void;
+  onConfirm: (groupName: string) => void;
 }
 
 const AddGroup = ({ 
   open, 
   onClose,
+  onConfirm,
 }: Props) => {
   // i18n
   const { t } = useTranslation();
@@ -32,18 +35,40 @@ const AddGroup = ({
     groupName: "",
   });
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    setError,
+    clearErrors,
+    reset,
+    trigger,
+  } = useForm<FormData>();
+
   const handleTextChange = (key: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleConfirmClick = (data: FormData) => {
+    onConfirm(data.groupName);
+    handleClose();
+  }
+
+  const handleClose = () => {
+    reset();
+    setFormData({ groupName: "" });
+    onClose();
   };
 
   return (
     <Dialog
       open={open}
-      handleClose={onClose}
+      handleClose={handleClose}
       dialogTitle={t('dialog.add-group')}
       width="600px"
     >
-      <Box className="flex flex-col gap-4 pt-3">
+      <form className="flex flex-col gap-4 pt-3" onSubmit={handleSubmit(handleConfirmClick)}>
         <TextBox
           sx={{ marginTop: "5px" }}
           id="group-name"
@@ -54,6 +79,11 @@ const AddGroup = ({
           onChange={(event) =>
             handleTextChange("groupName", event.target.value)
           }
+          helperText={errors.groupName?.message?.toString() ?? ""}
+          register={register("groupName", {
+            required: t("text.text-required", { textField: t("component.group-name") }),
+          })}
+          error={!!errors.groupName}
         />
         <Box className='flex items-center justify-center gap-2'>
           <Button
@@ -70,10 +100,12 @@ const AddGroup = ({
               textTransform: "capitalize",
               boxShadow: "0px 3px 3px rgba(0, 0, 0, 0.2)",
             }}
+            onClick={handleClose}
           >
             {t('button.cancel')}
           </Button>
           <Button
+            type='submit'
             variant="contained"
             sx={{
               width: 130,
@@ -90,7 +122,7 @@ const AddGroup = ({
             {t('button.confirm')}
           </Button>
         </Box>
-      </Box>
+      </form>
     </Dialog>
   )
 }

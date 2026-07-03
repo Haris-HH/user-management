@@ -20,6 +20,7 @@ import type {
   Uploaded,
   DeleteFile,
   Checkpoint,
+  WatchlistGroup,
 } from "../types/common";
 
 export interface DropdownResponse {
@@ -79,6 +80,10 @@ export interface DeleteFileResponse extends BasicResponse<DeleteFile[]> {}
 export interface TopUsersResponse extends BasicResponse<TopUsers[]> {}
 
 export interface CheckpointResponse extends BasicResponse<Checkpoint[]> {}
+
+export interface CreateWatchlistGroupResponse extends BasicResponse<WatchlistGroup> {}
+
+export interface WatchlistGroupResponse extends BasicResponse<WatchlistGroup[]> {}
 
 export interface BasicResponse<T> {
   endpoint: string;

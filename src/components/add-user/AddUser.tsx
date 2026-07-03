@@ -41,6 +41,7 @@ const initialFormData: FormData = {
   bh: "",
   bk: "",
   org: "",
+  sub_unit: [],
 };
 
 type Props = {
@@ -399,13 +400,13 @@ const AddUser = ({
                   {t("table.header.agency")}
                 </TableCell>
                 <TableCell sx={{ width: "10%" }}>
-                  {t("table.header.bh")}
+                  {t("table.header.bh-sub-agency")}
                 </TableCell>
                 <TableCell sx={{ width: "10%" }}>
-                  {t("table.header.bk")}
+                  {t("table.header.bk-sub-agency")}
                 </TableCell>
                 <TableCell sx={{ width: "10%" }}>
-                  {t("table.header.org")}
+                  {t("table.header.org-sub-agency")}
                 </TableCell>
                 <TableCell sx={{ width: "10%" }}>
                   {t("table.header.mobile")}
@@ -441,7 +442,8 @@ const AddUser = ({
 
                   const isAlreadySelected = selectedUserIdSet.has(item.user_id);
                   const isChecked = memberChecked.includes(item.user_id);
-
+                  const agencyData = agency.find((a) => a.ou_code === item.ou_code);
+                  const internalPolice = agencyData?.ou_codename === "police" || false;
                   return (
                     <TableRow
                       key={item.user_id}
@@ -464,9 +466,9 @@ const AddUser = ({
                       <TableCell>{fullName || "-"}</TableCell>
                       <TableCell>{formatThaiID(item.idcard) || "-"}</TableCell>
                       <TableCell>{item.ou_name || "-"}</TableCell>
-                      <TableCell>{item.bh_name || "-"}</TableCell>
-                      <TableCell>{item.bk_name || "-"}</TableCell>
-                      <TableCell>{item.org_name || "-"}</TableCell>
+                      <TableCell>{internalPolice ? item.bh_name ?? "-" : item.sub_unit?.[0] ?? "-" }</TableCell>
+                      <TableCell>{internalPolice ? item.bk_name ?? "-" : item.sub_unit?.[1] ?? "-"}</TableCell>
+                      <TableCell>{internalPolice ? item.org_name ?? "-" : item.sub_unit?.[2] ?? "-"}</TableCell>
                       <TableCell>{formatPhone(item.phone) || "-"}</TableCell>
                       <TableCell>{item.user_group_name || "-"}</TableCell>
                       <TableCell align="center" sx={{ padding: 0 }}>

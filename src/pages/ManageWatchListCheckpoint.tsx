@@ -3,8 +3,7 @@ import Box from "@mui/material/Box";
 
 // Components
 import MainTitle from '../components/main-title/MainTitle';
-import GroupList from '../components/group-list/GroupList';
-import UserList from '../components/user-list/UserList';
+import ManageGroup from "../components/manage-group/ManageGroup";
 
 // i18n
 import { useTranslation } from 'react-i18next';
@@ -25,10 +24,7 @@ const ManageWatchListCheckpoint = () => {
         {/* Main Title */}
         <MainTitle title={t('pages.manage-watch-list-checkpoint')} />
 
-        <Box className="grid grid-cols-[30vw_1fr] gap-5">
-          <GroupList />
-          <UserList />
-        </Box>
+        <ManageGroup group_type="checkpoint" />
       </Box>
     </section>
   )

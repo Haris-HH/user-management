@@ -2,7 +2,6 @@
 import SearchIcon from '@mui/icons-material/Search';
 import InputBase from '@mui/material/InputBase';
 import { styled, alpha } from '@mui/material/styles';
-import { useState } from 'react';
 
 // i18n
 import { useTranslation } from 'react-i18next';
@@ -10,9 +9,9 @@ import { useTranslation } from 'react-i18next';
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: "rgba(var(--secondary-color-rgb), 0.8)",
+  backgroundColor: "var(--tertiary-color)",
   '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.70),
+    backgroundColor: "rgba(var(--secondary-color-rgb), 0.05)",
     borderBottomColor: "var(--primary-color)",
   },
   marginLeft: 0,
@@ -33,12 +32,12 @@ const SearchIconWrapper = styled('div')(() => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  right: 0,
+  right: 5,
   top: 0,
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
+  color: 'var(--secondary-color)',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 1),
     transition: theme.transitions.create('width'),
@@ -78,7 +77,7 @@ const SearchInput = ({
         onKeyDown={onKeyDown}
       />
       <SearchIconWrapper>
-        <SearchIcon sx={{ fontSize: "20px", color: "var(--tertiary-color)" }} />
+        <SearchIcon sx={{ fontSize: "20px", color: "rgba(var(--secondary-color-rgb), 0.5)" }} />
       </SearchIconWrapper>
     </Search>
   )

@@ -2,8 +2,7 @@ import { useState } from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
+import ButtonBase from "@mui/material/ButtonBase";
 import Checkbox from "@mui/material/Checkbox";
 import TableCell from "@mui/material/TableCell";
 import IconButton from "@mui/material/IconButton";
@@ -11,6 +10,10 @@ import ListItemText from "@mui/material/ListItemText";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import SearchIcon from "@mui/icons-material/Search";
 import InputBase from "@mui/material/InputBase";
+import Popper from "@mui/material/Popper";
+import Paper from "@mui/material/Paper";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import Grow from "@mui/material/Grow";
 
 // i18n
 import { useTranslation } from 'react-i18next';
@@ -49,25 +52,21 @@ const HeaderCell = ({
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const open = openedFilter === label;
-
-  const handleFilterClick = (
-    event: React.MouseEvent<HTMLElement>
-  ) => {
+  const handleFilterClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
-    event.preventDefault();
 
     if (openedFilter === label) {
-      setOpenedFilter(null);
+      setOpenedFilter?.(null);
       setAnchorEl(null);
-    } else {
-      setOpenedFilter(label);
-      setAnchorEl(event.currentTarget);
+      return;
     }
+
+    setOpenedFilter?.(label);
+    setAnchorEl(event.currentTarget);
   };
 
   const handleCloseFilter = () => {
-    setOpenedFilter(null);
+    setOpenedFilter?.(null);
     setAnchorEl(null);
   };
 
@@ -109,6 +108,34 @@ const HeaderCell = ({
     }
   };
 
+  const FilterItem = ({
+    children,
+    onClick,
+    disabled = false,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
+    <ButtonBase
+      disabled={disabled}
+      onClick={onClick}
+      sx={{
+        width: "100%",
+        minHeight: 36,
+        px: 1,
+        justifyContent: "flex-start",
+        color: "var(--primary-color)",
+        opacity: disabled ? 0.5 : 1,
+        ":hover": {
+          backgroundColor: "rgba(var(--primary-color-rgb), 0.1)",
+        }
+      }}
+    >
+      {children}
+    </ButtonBase>
+  );
+
   return (
     <TableCell
       align="center"
@@ -128,7 +155,7 @@ const HeaderCell = ({
             sx={{
               color:
                 selectedValues.length > 0
-                  ? "#1976d2"
+                  ? "var(--secondary-color)"
                   : "var(--tertiary-color)",
               padding: "4px",
             }}
@@ -138,83 +165,94 @@ const HeaderCell = ({
         )}
       </Box>
 
-      <Menu
+      <Popper
         anchorEl={anchorEl}
-        open={open}
-        onClose={handleCloseFilter}
-        disablePortal={true}
-        slotProps={{
-          paper: {
-            sx: {
-              mt: 1,
-              width: 180,
-              borderRadius: "6px",
-              overflow: "hidden",
-
-              "& .MuiMenu-list": {
-                padding: 0,
-              },
-            },
-          },
-        }}
+        open={Boolean(anchorEl) && openedFilter === label}
+        placement="bottom-start"
+        transition
+        sx={{ zIndex: 99999 }}
       >
-        <Box sx={{ px: 1, py: 1, borderBottom: "1px solid #ddd" }}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              px: 1,
-              height: 36,
-            }}
+        {({ TransitionProps }) => (
+          <Grow
+            {...TransitionProps}
+            timeout={100}
+            style={{ transformOrigin: "left top" }}
           >
-            <InputBase
-              placeholder={t("placeholder.search")}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              sx={{ flex: 1, fontSize: 14 }}
-            />
+            <Paper
+              sx={{
+                mt: 1,
+                width: 200,
+                borderRadius: 2,
+                overflow: "hidden",
+                backgroundColor: "var(--tertiary-color)",
+                color: "var(--primary-color)",
+              }}
+            >
+              <ClickAwayListener onClickAway={handleCloseFilter}>
+                <Box>
+                  <Box sx={{ px: 1, py: 1, borderBottom: "1px solid var(--primary-color)" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        border: "1px solid var(--primary-color)",
+                        borderRadius: "4px",
+                        px: 1,
+                        height: 36,
+                      }}
+                    >
+                      <InputBase
+                        placeholder={t("placeholder.search")}
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        sx={{ 
+                          flex: 1, 
+                          fontSize: 14,
+                          color: "var(--primary-color)",
+                        }}
+                      />
 
-            <SearchIcon sx={{ color: "#666", fontSize: 20 }} />
-          </Box>
-        </Box>
+                      <SearchIcon sx={{ color: "var(--primary-color)", fontSize: 20 }} />
+                    </Box>
+                  </Box>
 
-        <Box sx={{ maxHeight: 280, overflowY: "auto" }}>
-          {filteredOptions.length > 0 ? (
-            <>
-              <MenuItem 
-                onClick={handleSelectAll}
-                sx={{ py: 0 }}
-              >
-                <Checkbox 
-                  checked={allSelected} 
-                  size="small" 
-                />
-                <ListItemText primary={t("text.select-all")} sx={{ "& .MuiTypography-root": { fontSize: 14 } }} />
-              </MenuItem>
+                  <Box sx={{ maxHeight: 280, overflowY: "auto" }}>
+                    {filteredOptions.length > 0 ? (
+                      <>
+                        <FilterItem onClick={handleSelectAll}>
+                          <Checkbox checked={allSelected} size="small" sx={{ color: "var(--primary-color)" }} />
+                          <ListItemText
+                            primary={t("text.select-all")}
+                            sx={{ "& .MuiTypography-root": { fontSize: 14 } }}
+                          />
+                        </FilterItem>
 
-              {filteredOptions.map((item) => (
-                <MenuItem
-                  key={item.value}
-                  onClick={() => handleToggle(item.value)}
-                  sx={{ py: 0 }}
-                >
-                  <Checkbox 
-                    checked={selectedValues.includes(item.value)} 
-                    size="small"
-                  />
-                  <ListItemText primary={item.label} sx={{ "& .MuiTypography-root": { fontSize: 14 } }} />
-                </MenuItem>
-              ))}
-            </>
-          ) : (
-            <MenuItem disabled>
-              <ListItemText primary={t("text.data-not-found")} />
-            </MenuItem>
-          )}
-        </Box>
-      </Menu>
+                        {filteredOptions.map((item) => (
+                          <FilterItem key={item.value} onClick={() => handleToggle(item.value)}>
+                            <Checkbox
+                              checked={selectedValues.includes(item.value)}
+                              size="small"
+                              sx={{ color: "var(--primary-color)" }}
+                            />
+                            <ListItemText
+                              primary={item.label}
+                              sx={{ "& .MuiTypography-root": { fontSize: 14 } }}
+                            />
+                          </FilterItem>
+                        ))}
+                      </>
+                    ) : (
+                      <FilterItem disabled>
+                        <ListItemText primary={t("text.data-not-found")} />
+                      </FilterItem>
+                    )}
+                  </Box>
+                </Box>
+              </ClickAwayListener>
+            </Paper>
+          </Grow>
+        )}
+      </Popper>
     </TableCell>
   );
 };

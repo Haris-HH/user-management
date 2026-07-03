@@ -232,7 +232,7 @@ const AddApproveUser = () => {
         column.id !== "un_approve_date" && 
         column.id !== "un_approve_reason" &&
         column.id !== "active_date_time" &&
-        column.id !== "active_status" &&
+        column.id !== "account_status" &&
         column.id !== "remark"
       );
     }
@@ -241,7 +241,7 @@ const AddApproveUser = () => {
         column.id !== "un_approve_date" && 
         column.id !== "un_approve_reason" &&
         column.id !== "active_date_time" &&
-        column.id !== "active_status" &&
+        column.id !== "account_status" &&
         column.id !== "remark"
       );
     }
@@ -251,7 +251,7 @@ const AddApproveUser = () => {
         column.id !== "active_date_time" &&
         column.id !== "update_profile_status" &&
         column.id !== "latest_update_profile_date" &&
-        column.id !== "active_status" &&
+        column.id !== "account_status" &&
         column.id !== "remark"
       );
     }
@@ -512,7 +512,7 @@ const AddApproveUser = () => {
           validUsers.map((userData) => {
             const updatePayload: UpdateUser = {
               user_id: userData.user_id,
-              active_status: "active",
+              account_status: "active",
               active_by: user.user_id,
             };
             updateUserApi(updatePayload);

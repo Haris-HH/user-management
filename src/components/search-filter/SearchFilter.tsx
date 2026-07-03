@@ -9,6 +9,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import Dialog from "../dialog/Dialog";
 import TextBox from "../text-box/TextBox";
 import AutoComplete from "../auto-complete/AutoComplete";
+import SubAgency from '../sub-agency/SubAgency';
 
 // i18n
 import { useTranslation } from "react-i18next";
@@ -32,6 +33,7 @@ export interface FormData {
   bh: string;
   bk: string;
   org: string;
+  sub_unit: string[];
 }
 
 type Props = {
@@ -48,6 +50,7 @@ const initialFormData: FormData = {
   bh: "",
   bk: "",
   org: "",
+  sub_unit: [],
 };
 
 const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
@@ -119,6 +122,11 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
       ""
     );
   }, [org, i18n.language, t]);
+
+  const internalPolice: boolean = useMemo(() => {
+    const agencyData = agency.find((a) => a.ou_code === formData.agency);
+    return agencyData?.ou_codename === "police" || false;
+  }, [formData.agency])
 
   const fetchBkList = useCallback(async (bhCode: string) => {
     try {
@@ -225,6 +233,13 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
     setOrg([]);
   };
 
+  const handleSubAgencyChange = (values: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      sub_unit: values,
+    }));
+  };
+
   return (
     <Dialog
       open={open}
@@ -267,43 +282,55 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
           disablePortal
         />
 
-        <AutoComplete
-          id="bh-select"
-          sx={{ marginTop: "5px" }}
-          value={formData.bh}
-          onChange={(event, value) => handleDropdownChange(event, "bh", value)}
-          options={bhOptions}
-          label={t("component.bh")}
-          placeholder={t("placeholder.bh")}
-          labelFontSize="16px"
-          disablePortal
-        />
+        {internalPolice && (
+          <>
+            <AutoComplete
+              id="bh-select"
+              sx={{ marginTop: "5px" }}
+              value={formData.bh}
+              onChange={(event, value) =>
+                handleDropdownChange(event, "bh", value)
+              }
+              options={bhOptions}
+              label={t("component.bh")}
+              placeholder={t("placeholder.bh")}
+              labelFontSize="16px"
+              disabled={formData.agency === ""}
+            />
 
-        <AutoComplete
-          id="bk-select"
-          sx={{ marginTop: "5px" }}
-          value={formData.bk}
-          onChange={(event, value) => handleDropdownChange(event, "bk", value)}
-          options={bkOptions}
-          label={t("component.bk")}
-          placeholder={t("placeholder.bk")}
-          labelFontSize="16px"
-          disabled={!formData.bh}
-          disablePortal
-        />
+            <AutoComplete
+              id="bk-select"
+              sx={{ marginTop: "5px" }}
+              value={formData.bk}
+              onChange={(event, value) =>
+                handleDropdownChange(event, "bk", value)
+              }
+              options={bkOptions}
+              label={t("component.bk")}
+              placeholder={t("placeholder.bk")}
+              labelFontSize="16px"
+              disabled={formData.bh === "0"}
+            />
 
-        <AutoComplete
-          id="org-select"
-          sx={{ marginTop: "5px" }}
-          value={formData.org}
-          onChange={(event, value) => handleDropdownChange(event, "org", value)}
-          options={orgOptions}
-          label={t("component.org")}
-          placeholder={t("placeholder.org")}
-          labelFontSize="16px"
-          disabled={!formData.bk}
-          disablePortal
-        />
+            <AutoComplete
+              id="org-select"
+              sx={{ marginTop: "5px" }}
+              value={formData.org}
+              onChange={(event, value) =>
+                handleDropdownChange(event, "org", value)
+              }
+              options={orgOptions}
+              label={t("component.org")}
+              placeholder={t("placeholder.org")}
+              labelFontSize="16px"
+              disabled={formData.bk === "0"}
+            />
+          </>
+        )}
+
+        {!internalPolice && formData.agency !== "" && (
+          <SubAgency onChange={handleSubAgencyChange} />
+        )}
 
         <div className="col-span-3 flex items-center justify-center pt-5 gap-2">
           <Button

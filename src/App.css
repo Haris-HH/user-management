@@ -11,7 +11,7 @@ body .swal2-backdrop-show {
 }
 
 .custom-swal-popup {
-  border: 1px solid var(--primary-color);
+  border: 1px solid rgba(var(--primary-color-rgb), 0.35);
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(var(--tertiary-color-rgb),0.25);
   background-color: var(--tertiary-color);
