@@ -35,16 +35,11 @@ import { LANGUAGES } from "../constants/language";
 // i18n
 import { useTranslation } from "react-i18next";
 
-// API
-import { logoutApi } from "../features/login/api/LoginApi";
-import { clearAuthUser } from "../features/auth-user/api/AuthUserSlice";
-
 // Utils
-import { PopupMessage, PopupMessageWithCancel } from "../utils/popupMessage";
+import { PopupMessageWithCancel } from "../utils/popupMessage";
 
 // Store
 import type { RootState } from "../store/store";
-import { useAppDispatch } from "../store/hooks";
 
 // Hook
 import { useTheme } from "../hooks/useTheme";
@@ -53,8 +48,6 @@ import { useForceLogout } from "../hooks/useForceLogout";
 dayjs.extend(buddhistEra);
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const { forceLogout } = useForceLogout();
 
   const version = __APP_VERSION__;

@@ -65,8 +65,8 @@ const StatisticTopUsers = () => {
   const [topUsersData, setTopUsersData] = useState<TopUsersResponse | null>(null);
   
   // Constants
-  const TOP_INTERNAL_VALUE = 1;
-  const TOP_EXTERNAL_VALUE = 1;
+  const TOP_INTERNAL_VALUE = 5000;
+  const TOP_EXTERNAL_VALUE = 3000;
   const MONTH_RANGE = 3;
 
   // Pagination

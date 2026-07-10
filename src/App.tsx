@@ -44,15 +44,20 @@ import { useTranslation } from "react-i18next";
 
 // Hooks
 import { useForceLogout } from "./hooks/useForceLogout";
+import { useSse } from "./hooks/useSse";
 
 function App() {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const { forceLogout } = useForceLogout();
 
+  // i18n
   const { i18n } = useTranslation();
 
+  // Redux
   const { user } = useSelector((state: RootState) => state.authUser);
+
+  const enabled = Boolean(localStorage.getItem("accessToken") ?? false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -106,6 +111,16 @@ function App() {
       window.removeEventListener("force-logout", handleForceLogout);
     };
   }, [forceLogout]);
+
+  const handleAutoLogout = async () => {
+    await forceLogout(true);
+  }
+
+  useSse(
+    "force-logout",
+    handleAutoLogout,
+    enabled
+  );
 
   return (
     <Routes>

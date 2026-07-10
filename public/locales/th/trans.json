@@ -143,7 +143,12 @@
     "schedule-for-later-detail": "ตั้งวันที่ในอนาคตสำหรับการเปิดใช้งานโดยอัตโนมัติ",
     "activation-date": "วันที่เปิดใช้งาน",
     "reason": "เหตุผล",
-    "copy-to-clipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว"
+    "copy-to-clipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "telegram-description": "ทั้ง Bot Token และ Chat ID จำเป็นต้องใช้เมื่อเปิดใช้งาน Telegram",
+    "discord-description": "ป้อน URL ของ Webhook สำหรับช่อง Discord ที่ต้องการรับการแจ้งเตือน",
+    "notification-integration-optional": "การตั้งค่า Telegram และ Discord เป็นตัวเลือก คุณสามารถตั้งค่าอย่างใดอย่างหนึ่ง ทั้งสองอย่าง หรือไม่ตั้งค่าเลยก็ได้"
   },
   "component": {
     "pid": "เลขบัตรประชาชน",
@@ -172,7 +177,10 @@
     "main-month": "เดือนหลัก",
     "document-name": "ชื่อเอกสารที่นำเข้า",
     "title": "คำนำหน้า",
-    "sub-agency": "หน่วยงานย่อย {{number}}"
+    "sub-agency": "หน่วยงานย่อย {{number}}",
+    "bot-token": "Bot Token",
+    "chat-id": "Chat ID",
+    "webhook-url": "Webhook URL"
   },
   "placeholder": {
     "pid": "เลขบัตรประชาชน",
@@ -204,7 +212,10 @@
     "active": "กรณีบันทึกเหตุผลของการ Active หรือการแก้ไขข้อมูลต่างๆ ในหน้านี้",
     "inactive": "เหตุผลของการ Inactive",
     "suspend": "กรณีบันทึกเหตุผลของการ Suspend หรือการแก้ไขข้อมูลต่างๆ ในหน้านี้",
-    "sub-agency": "หน่วยงานย่อย {{number}}"
+    "sub-agency": "หน่วยงานย่อย {{number}}",
+    "bot-token": "••••••••••••••••••••••",
+    "chat-id": "-100123456789",
+    "webhook-url": "http://discord.com/api/webhooks/..."
   },
   "table": {
     "header": {
@@ -361,7 +372,11 @@
     "add-user-success": "การเพิ่มข้อมูลผู้ใช้เสร็จสิ้น",
     "add-user-failed": "การเพิ่มข้อมูลผู้ใช้ล้มเหลว",
     "delete-user-success": "การลบข้อมูลผู้ใช้เสร็จสิ้น",
-    "delete-user-failed": "การลบข้อมูลผู้ใช้ล้มเหลว"
+    "delete-user-failed": "การลบข้อมูลผู้ใช้ล้มเหลว",
+    "add-checkpoint-success": "การเพิ่มข้อมูลด่านเสร็จสิ้น",
+    "add-checkpoint-failed": "การเพิ่มข้อมูลด่านล้มเหลว",
+    "delete-checkpoint-success": "การลบข้อมูลด่านเสร็จสิ้น",
+    "delete-checkpoint-failed": "การลบข้อมูลด่านล้มเหลว"
   },
   "ui-program": {
     "log-management": "Log Management",
@@ -371,5 +386,11 @@
   "helperText": {
     "please-input-pid": "กรุณากรอกหมายเลขบัตรประชาชน",
     "please-input-password": "กรุณากรอกรหัสผ่าน"
+  },
+  "validation": {
+    "group-name-max-length": "ชื่อกลุ่มต้องไม่เกิน 100 ตัวอักษร",
+    "telegram-chat-id-required": "ต้องระบุ Chat ID เมื่อมีการใส่ Bot Token",
+    "telegram-bot-token-required": "ต้องระบุ Bot Token เมื่อมีการระบุ Chat ID",
+    "invalid-url": "URL นี้ไม่ถูกต้อง"
   }
 }

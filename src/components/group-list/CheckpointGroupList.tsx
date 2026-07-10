@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -16,22 +16,151 @@ import Paper from '@mui/material/Paper';
 // Components
 import SearchInput from '../search-input/SearchInput';
 import AddGroup from "../add-group/AddGroup";
+import TableSkeleton from "../table-skeleton/TableSkeleton";
+import LoadingScreen from '../loading-screen/LoadingScreen';
 
 // i18n
 import { useTranslation } from 'react-i18next';
 
-const GroupList = () => {
+// Types
+import type { WatchlistGroup } from "../../types/common";
+import type { AddGroupFormData } from "../add-group/AddGroup";
+
+// Icons
+import DeleteIcon from '@mui/icons-material/Delete';
+
+// API
+import { 
+  getWatchListGroups,
+  deleteWatchListGroups,
+  createWatchListGroups,
+} from "../../features/core-data/api/CoreDataApi";
+
+// Utils
+import { PopupMessage } from "../../utils/popupMessage";
+
+interface FormData {
+  search: string;
+}
+
+type Prop = {
+  onSelectChanged: (group: WatchlistGroup) => void;
+  refreshKey: number;
+}
+
+const GroupList = ({
+  onSelectChanged,
+  refreshKey,
+}: Prop) => {
   // i18n
   const { t } = useTranslation();
 
   // State
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleConfirm = (groupName: string) => {
+  // Data
+  const [watchListData, setWatchListData] = useState<WatchlistGroup[]>([]);
+  const [totalWatchList, setTotalWatchList] = useState(0);
+  const [selectedGroup, setSelectedGroup] = useState<WatchlistGroup | null>(null);
+
+  // Form Data
+  const [formData, setFormData] = useState<FormData>({
+    search: "",
+  });
+
+  const filterWatchlistGroup = useMemo(() => {
+    const search = formData.search.trim().toLowerCase();
+
+    if (!search) return watchListData;
+
+    return watchListData.filter((item) =>
+      item.group_name?.toLowerCase().includes(search)
+    );
+  }, [watchListData, formData.search]);
+
+  const fetchData = useCallback(
+    async () => {
+      try {
+        setIsDataLoading(true);
+
+        const res = await getWatchListGroups({
+          filter: `deleted=false`,
+          limit: "100",
+          page: "1"
+        });
+
+        setWatchListData(res.data ?? []);
+        setTotalWatchList(res.pagination?.countAll ?? 0);
+      } 
+      catch (error) {
+        setWatchListData([]);
+        setTotalWatchList(0);
+      } 
+      finally {
+        setIsDataLoading(false);
+      }
+    },
+    [refreshKey]
+  );
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleDeleteWatchlistGroup = async (groupId: string) => {
+    try {
+      setIsLoading(true);
+      const param = {
+        group_ids: [groupId]
+      }
+      await deleteWatchListGroups(param);
+      await PopupMessage(t("popup.deleted-success"), "", "success");
+      await fetchData();
+    }
+    catch (error) {
+      await PopupMessage(t("popup.deleted-failed"), "", "error");
+    }
+    finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTextChange = (key: keyof typeof formData, value: string) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleConfirm = (data: AddGroupFormData) => {
+    createNewGroup(data.groupName);
+  };
+
+  const createNewGroup = async (groupName: string) => {
+    try {
+      setIsLoading(true);
+      const body = {
+        group_name: groupName,
+      }
+      await createWatchListGroups(body);
+      await PopupMessage(t("popup.create-watchlist-group-success"), "", "success");
+      await fetchData();
+    }
+    catch (error) {
+      await PopupMessage(t("popup.create-watchlist-group-failed"), "", "error");
+    }
+    finally {
+      setIsLoading(false);
+    }
+  }
+
+  const handleSelectChange = (group: WatchlistGroup) => {
+    setSelectedGroup(group);
+    onSelectChanged(group);
   };
 
   return (
     <section id='checkpoint-group-list'>
+      { isLoading && <LoadingScreen /> }
       <Box className="flex flex-col gap-2">
         <Box className="flex justify-between items-center">
           <Typography component="span" style={{ color: "var(--primary-color)", fontWeight: 500 }}>
@@ -57,7 +186,7 @@ const GroupList = () => {
         </Box>
         <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
           <Box className="flex justify-between items-center">
-            <p className='text-[14px] text-(--secondary-color) font-medium'>{`${0} ${t('text.list')}`}</p>
+            <p className='text-[14px] text-(--secondary-color) font-medium'>{`${totalWatchList} ${t('text.list')}`}</p>
             <SearchInput />
           </Box>
           <TableContainer
@@ -122,7 +251,29 @@ const GroupList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                
+                {isDataLoading ? (
+                  <TableSkeleton headerColumn={4} />
+                ) : filterWatchlistGroup.length > 0 ? (
+                  filterWatchlistGroup.map((item, index) => {
+                    return (
+                      <div></div>
+                    )
+                  })
+                ) : (
+                  <TableRow
+                    sx={{
+                      "& .MuiTableCell-root": {
+                        backgroundColor: "var(--tertiary-color)",
+                        color: "var(--secondary-color)",
+                        borderBottom: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                      },
+                    }}
+                  >
+                    <TableCell colSpan={4} align="center">
+                      {t("text.no-data")}
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>

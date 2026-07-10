@@ -663,48 +663,57 @@ const AddApproveUser = () => {
     });
   }
 
-  const getFilters = useCallback((formData: FormData, tabValue: number, pageData: number, limit: number) => {
-    const status = tabValue === 0 ? "pending" : tabValue === 1 ? "wait_approve" : "rejected"
-    const filters: Record<string, string> = {
-      filter: `approve_status=${status}`,
-      page: pageData.toString(),
-      limit: limit.toString(),
-    };
+  const getFilters = useCallback(
+    (
+      formData: FormData,
+      tabValue: number,
+      page: number,
+      limit: number
+    ): Record<string, string> => {
+      const statusMap = ["pending", "wait_approve", "rejected"] as const;
 
-    if (formData.pid.trim()) {
-      filters.idcard = `*${formData.pid.trim()}*`;
-    }
+      const filters: Record<string, string> = {
+        filter: `approve_status=${statusMap[tabValue] ?? "pending"}`,
+        page: String(page),
+        limit: String(limit),
+      };
 
-    if (formData.name.trim()) {
-      filters.fullname = `*${formData.name.trim()}*`;
-    }
+      const pid = formData.pid.trim();
+      const name = formData.name.trim();
+      const subUnits = formData.sub_unit.filter(Boolean);
 
-    if (formData.agency_id !== "") {
-      filters.ou_code = formData.agency_id;
-    }
+      if (pid) {
+        filters.idcard = `*${pid}*`;
+      }
 
-    if (formData.bh_id !== "0") {
-      filters.bh_code = formData.bh_id;
-    }
+      if (name) {
+        filters.fullname = `*${name}*`;
+      }
 
-    if (formData.bk_id !== "0") {
-      filters.bk_code = formData.bk_id;
-    }
+      if (formData.agency_id) {
+        filters.ou_code = formData.agency_id;
+      }
 
-    if (formData.org_id !== "0") {
-      filters.org_code = formData.org_id;
-    }
+      if (formData.bh_id !== "0") {
+        filters.bh_code = formData.bh_id;
+      }
 
-    return filters;
-  }, [
-    formData.pid,
-    formData.name,
-    formData.agency_id,
-    formData.bh_id,
-    formData.bk_id,
-    formData.org_id,
-    formData.sub_unit,
-  ]);
+      if (formData.bk_id !== "0") {
+        filters.bk_code = formData.bk_id;
+      }
+
+      if (formData.org_id !== "0") {
+        filters.org_code = formData.org_id;
+      }
+
+      if (subUnits.length > 0) {
+        filters.sub_unit_list = subUnits.join(",");
+      }
+
+      return filters;
+    },
+    []
+  );
 
   const handleSearchClick = async () => {
     await fetchData(formData);

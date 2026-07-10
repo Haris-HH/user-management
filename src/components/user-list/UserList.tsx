@@ -40,7 +40,10 @@ import { PopupMessage } from "../../utils/popupMessage";
 // API
 import { getUserApi } from "../../features/users/api/UsersApi";
 import { getBk, getOrg } from "../../features/dropdown/api/DropdownApi";
-import { addMembersWatchListGroups, deleteMembersWatchListGroups } from "../../features/core-data/api/CoreDataApi";
+import { 
+  addMembersWatchListGroups, 
+  deleteMembersWatchListGroups,
+} from "../../features/core-data/api/CoreDataApi";
 
 interface FormData {
   search: string;

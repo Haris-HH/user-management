@@ -473,11 +473,15 @@ const ManageUser = () => {
       limit: limit.toString(),
     };
 
-    if (formData.pid.trim()) {
+    const pid = formData.pid.trim();
+    const name = formData.name.trim();
+    const subUnits = formData.sub_unit.filter(Boolean);
+
+    if (pid) {
       filters.idcard = `*${formData.pid}*`;
     }
 
-    if (formData.name.trim()) {
+    if (name) {
       filters.fullname = `*${formData.name.trim()}*`;
     }
 
@@ -503,6 +507,10 @@ const ManageUser = () => {
 
     if (formData.status_id !== "0") {
       filters.active_status = formData.status_id;
+    }
+
+    if (subUnits.length > 0) {
+      filters.sub_unit_list = subUnits.join(",");
     }
 
     return filters;

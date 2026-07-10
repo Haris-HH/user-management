@@ -21,6 +21,7 @@ const MainTitle = ({ title }: Props) => {
         textShadow: `5px 3px 5px var(--tertiary-color)`,
         overflow: "hidden",
         width: "fit-content",
+        transition: "ease 0.5s"
       }}
     >
       {/* Title Text */}

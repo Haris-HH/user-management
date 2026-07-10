@@ -21,6 +21,7 @@ import type {
   DeleteFile,
   Checkpoint,
   WatchlistGroup,
+  WatchListIdInUser,
 } from "../types/common";
 
 export interface DropdownResponse {
@@ -66,6 +67,8 @@ export interface PositionResponse extends BasicResponse<Position[]> {}
 export interface CreatePositionResponse extends BasicResponse<Position> {}
 
 export interface UserGroupResponse extends BasicResponse<UserGroup[]> {}
+
+export interface WatchListIdInUserResponse extends BasicResponse<WatchListIdInUser[]> {}
 
 export interface CameraResponse extends BasicResponse<Camera[]> {}
 

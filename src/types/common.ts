@@ -99,6 +99,9 @@ export interface User {
   active_type: string;
   active_by: string;
   sub_unit: string[];
+  special_plates: string[];
+  watchlists: string[];
+  checkpoints: string[];
 }
 
 export interface CreateUser {
@@ -510,6 +513,7 @@ export interface WatchlistGroup {
   description: string;
   members: string[];
   special_plates: string[];
+  checkpoints: string[];
   watchlists: string[];
   permissions: string[];
   visible: boolean;
@@ -529,4 +533,11 @@ export interface CreateWatchlistGroup {
 export interface MembersWatchListGroupRequest {
   group_id: string;
   member_id_list: string[];
+}
+
+export interface WatchListIdInUser {
+  user_id: string;
+  special_plates?: string[];
+  watchlists?: string[];
+  checkpoints?: string[];
 }

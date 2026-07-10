@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 
 // Types
 import type { WatchlistGroup } from "../../types/common";
+import type { AddGroupFormData } from "../add-group/AddGroup";
 
 // Icons
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -88,7 +89,7 @@ const GroupList = ({
         setIsDataLoading(true);
 
         const res = await getWatchListGroups({
-          filter: `group_type=${group_type}`,
+          filter: `group_type=${group_type},deleted=false`,
           limit: "100",
           page: "1"
         });
@@ -133,16 +134,25 @@ const GroupList = ({
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleConfirm = (groupName: string) => {
-    createNewGroup(groupName);
+  const handleConfirm = (data: AddGroupFormData) => {
+    createNewGroup(data);
   };
 
-  const createNewGroup = async (groupName: string) => {
+  const createNewGroup = async (data: AddGroupFormData) => {
     try {
       setIsLoading(true);
       const body = {
-        group_name: groupName,
+        group_name: data.groupName,
         group_type,
+        ...( data.botToken &&
+          { telegram_token: data.botToken }
+        ),
+        ...( data.chatId &&
+          { telegram_chat_id: data.chatId }
+        ),
+        ...( data.webHookUrl &&
+          { discord_webhook_url: data.webHookUrl }
+        )
       }
       await createWatchListGroups(body);
       await PopupMessage(t("popup.create-watchlist-group-success"), "", "success");

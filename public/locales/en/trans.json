@@ -143,7 +143,12 @@
     "schedule-for-later-detail": "Set a future date for activation to trigger automatically.",
     "activation-date": "Activation Date",
     "reason": "Reason",
-    "copy-to-clipboard": "Copied to clipboard"
+    "copy-to-clipboard": "Copied to clipboard",
+    "telegram": "Telegram",
+    "discord": "Discord",
+    "telegram-description": "Both the bot token and chat ID are required when Telegram is enabled.",
+    "discord-description": "Enter the webhook URL for the Discord channel that should receive notifications.",
+    "notification-integration-optional": "Telegram and Discord settings are optional. You may configure either one, both, or neither."
   },
   "component": {
     "pid": "PID",
@@ -172,7 +177,10 @@
     "main-month": "Main Month",
     "document-name": "Document Name",
     "title": "Title",
-    "sub-agency": "Sub Agency {{number}}"
+    "sub-agency": "Sub Agency {{number}}",
+    "bot-token": "Bot Token",
+    "chat-id": "Chat ID",
+    "webhook-url": "Webhook URL"
   },
   "placeholder": {
     "pid": "PID",
@@ -204,7 +212,10 @@
     "active": "This page is used to record the reasons for activating or modifying information.",
     "inactive": "Reasons for being inactive.",
     "suspend": "This page is for recording the reasons for suspension or modifications to information.",
-    "sub-agency": "Sub Agency {{number}}"
+    "sub-agency": "Sub Agency {{number}}",
+    "bot-token": "••••••••••••••••••••••",
+    "chat-id": "-100123456789",
+    "webhook-url": "http://discord.com/api/webhooks/..."
   },
   "table": {
     "header": {
@@ -359,7 +370,11 @@
     "add-user-success": "User information addition is complete.",
     "add-user-failed": "User information addition is failed.",
     "delete-user-success": "User information deletion is complete.",
-    "delete-user-failed": "User information deletion is failed."
+    "delete-user-failed": "User information deletion is failed.",
+    "add-checkpoint-success": "Checkpoint information addition is complete.",
+    "add-checkpoint-failed": "Checkpoint information addition is failed.",
+    "delete-checkpoint-success": "Checkpoint information deletion is complete.",
+    "delete-checkpoint-failed": "Checkpoint information deletion is failed."
   },
   "ui-program": {
     "log-management": "Log Management",
@@ -369,5 +384,11 @@
   "helperText": {
     "please-input-pid": "Please input pid",
     "please-input-password": "Please input password"
+  },
+  "validation": {
+    "group-name-max-length": "Group name must not exceed 100 characters.",
+    "telegram-chat-id-required": "Chat ID is required when a bot token is provided.",
+    "telegram-bot-token-required": "Bot token is required when a chat ID is provided.",
+    "invalid-url": "The URL is not valid."
   }
 }

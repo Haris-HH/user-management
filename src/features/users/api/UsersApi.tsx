@@ -2,8 +2,20 @@
 import { fetchClient } from "../../../api/fetchClient";
 
 // Types
-import type { UserResponse, UserGroupResponse, UserCreateResponse } from "../../../types/response";
-import type { CreateUserGroup, UserGroup, CreateUser, UpdateUser, ApproveUser } from "../../../types/common";
+import type { 
+  UserResponse, 
+  UserGroupResponse, 
+  UserCreateResponse,
+  WatchListIdInUserResponse,
+} from "../../../types/response";
+import type { 
+  CreateUserGroup, 
+  UserGroup, 
+  CreateUser, 
+  UpdateUser, 
+  ApproveUser, 
+  WatchListIdInUser,
+} from "../../../types/common";
 
 export const getUserApi = async (param?: Record<string, string>) => {
   return fetchClient<UserResponse>("/user-management/users/get", {
@@ -75,5 +87,47 @@ export const deleteUserGroup = async (ids: string[]) => {
     queryParams: {
       group_ids: ids.toString()
     },
+  });
+}
+
+export const addListSpecialPlates = async (body: WatchListIdInUser) => {
+  return fetchClient<WatchListIdInUserResponse>("/user-management/users/special-plates/add", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const removeListSpecialPlates = async (body: WatchListIdInUser) => {
+  return fetchClient<WatchListIdInUserResponse>("/user-management/users/special-plates/remove", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const addListWatchlists = async (body: WatchListIdInUser) => {
+  return fetchClient<WatchListIdInUserResponse>("/user-management/users/watchlists/add", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const removeListWatchlists = async (body: WatchListIdInUser) => {
+  return fetchClient<WatchListIdInUserResponse>("/user-management/users/watchlists/remove", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const addListCheckpoints = async (body: WatchListIdInUser) => {
+  return fetchClient<WatchListIdInUserResponse>("/user-management/users/checkpoints/add", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const removeListCheckpoints = async (body: WatchListIdInUser) => {
+  return fetchClient<WatchListIdInUserResponse>("/user-management/users/checkpoints/remove", {
+    method: "POST",
+    body: JSON.stringify(body),
   });
 }
