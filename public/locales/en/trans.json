@@ -18,7 +18,8 @@
     "manage-watch-list-plate": "Manage Watch List - Plate",
     "manage-watch-list-checkpoint": "Manage Watch List - Checkpoint",
     "manage-checkpoint-group": "Manage Checkpoints",
-    "statistics": "Usage statistics"
+    "statistics": "Usage statistics",
+    "manage-lpr-center-group": "LPR Center Permission Groups"
   },
   "dock": {
     "home": "Home",
@@ -35,7 +36,8 @@
     "manage-watch-list-plate": "Manage Watch List - Plate",
     "manage-watch-list-checkpoint": "Manage Watch List - Checkpoint",
     "manage-checkpoint-group": "Manage Checkpoints",
-    "statistics": "Top users"
+    "statistics": "Top users",
+    "manage-lpr-center-group": "LPR Center Permission Groups"
   },
   "button": {
     "login": "Login",
@@ -68,7 +70,18 @@
     "add-user-group": "Add User Group",
     "add": "Add",
     "not-save": "Not save",
-    "active": "Active"
+    "active": "Active",
+    "reset": "Reset",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "assign": "Assign",
+    "assign-user": "Assign User",
+    "remove-from-group": "Remove from group",
+    "close": "Close",
+    "manage-groups": "Manage Groups",
+    "cancel-changes": "Cancel Changes",
+    "save-changes": "Save Changes",
+    "remove-selected": "Remove Selected"
   },
   "text": {
     "app-version": "App Version",
@@ -148,7 +161,15 @@
     "discord": "Discord",
     "telegram-description": "Both the bot token and chat ID are required when Telegram is enabled.",
     "discord-description": "Enter the webhook URL for the Discord channel that should receive notifications.",
-    "notification-integration-optional": "Telegram and Discord settings are optional. You may configure either one, both, or neither."
+    "notification-integration-optional": "Telegram and Discord settings are optional. You may configure either one, both, or neither.",
+    "selected-count": "{{count}} selected",
+    "selected-permission-count": "{{count}} of {{total}} permissions selected",
+    "unsaved-changes": "Unsaved changes",
+    "no-description": "No description",
+    "assigned-users": "Assigned Users",
+    "assigned-users-of": "Users assigned to {{group}}",
+    "select-group-first": "Please select a permission group first",
+    "missing-base-groups": "Missing base group(s): {{groups}} — create them in User Group Management"
   },
   "component": {
     "pid": "PID",
@@ -178,9 +199,12 @@
     "document-name": "Document Name",
     "title": "Title",
     "sub-agency": "Sub Agency {{number}}",
+    "only-sub-agency": "Sub Agency",
     "bot-token": "Bot Token",
     "chat-id": "Chat ID",
-    "webhook-url": "Webhook URL"
+    "webhook-url": "Webhook URL",
+    "full-name": "Full Name",
+    "group": "Permission Group"
   },
   "placeholder": {
     "pid": "PID",
@@ -213,9 +237,11 @@
     "inactive": "Reasons for being inactive.",
     "suspend": "This page is for recording the reasons for suspension or modifications to information.",
     "sub-agency": "Sub Agency {{number}}",
+    "only-sub-agency": "Sub Agency",
     "bot-token": "••••••••••••••••••••••",
     "chat-id": "-100123456789",
-    "webhook-url": "http://discord.com/api/webhooks/..."
+    "webhook-url": "http://discord.com/api/webhooks/...",
+    "group": "Select a permission group"
   },
   "table": {
     "header": {
@@ -231,7 +257,7 @@
       "bh": "Bh",
       "bk": "Bk",
       "org": "Org",
-      "sub-agency":"Sub Agency {{number}}",
+      "sub-agency": "Sub Agency {{number}}",
       "bh-sub-agency": "Bh / Sub Agency 1",
       "bk-sub-agency": "Bk / Sub Agency 2",
       "org-sub-agency": "Org / Sub Agency 3",
@@ -269,12 +295,15 @@
       "can-print": "Print",
       "end-date": "End Date (Day)",
       "life-date": "Life Date (Day)",
-      "last-login": "Last Login"
+      "last-login": "Last Login",
+      "username": "Username",
+      "action": "Action"
     }
   },
   "permission": {
     "ui": {
       "log-management": {
+        "name": "Log Management",
         "log-management": "Log Management",
         "chart-internal-police": "Chart Internal Police",
         "chart-internal-nsb": "Chart Internal NSB",
@@ -294,6 +323,7 @@
         "statistic-search-log-plate": "Statistic Search Log Plate"
       },
       "user-management": {
+        "name": "User Management",
         "user-management": "User Management",
         "add-approve-user": "Add/Approve Users",
         "user-group-management": "Permission Management",
@@ -302,8 +332,16 @@
         "manage-watch-list-plate": "Manage Watch List - Plate",
         "manage-watch-list-checkpoint": "Manage Watch List - Checkpoint",
         "manage-checkpoint-group": "Manage Checkpoints",
-        "statistics": "Top users"
-      }
+        "statistics": "Top users",
+        "manage-lpr-center-group": "LPR Center Permission Groups"
+      },
+      "lpr-center": {
+        "name": "LPR Center"
+      },
+      "lpr-license-plate": {
+        "name": "LPR License Plate"
+      },
+      "menu-section-label": "{{index}}. {{menu}}"
     }
   },
   "dialog": {
@@ -312,7 +350,9 @@
     "add-user": "Add User",
     "search-condition": "Search Condition",
     "add-checkpoint": "Add Checkpoint",
-    "import-file": "Import File"
+    "import-file": "Import File",
+    "assign-user": "Assign Users to LPR Center Group",
+    "manage-groups": "Manage Groups"
   },
   "tabs": {
     "pending": "Pending",
@@ -374,7 +414,35 @@
     "add-checkpoint-success": "Checkpoint information addition is complete.",
     "add-checkpoint-failed": "Checkpoint information addition is failed.",
     "delete-checkpoint-success": "Checkpoint information deletion is complete.",
-    "delete-checkpoint-failed": "Checkpoint information deletion is failed."
+    "delete-checkpoint-failed": "Checkpoint information deletion is failed.",
+    "save-success-title": "Saved successfully",
+    "save-failed": "Could not save permissions",
+    "load-group-failed": "Could not load permission groups",
+    "unsaved-changes-title": "Unsaved changes",
+    "unsaved-changes-message": "Switching group will discard your unsaved changes. Continue?",
+    "save-permission-title": "Confirm saving permissions",
+    "save-permission-message": "Save the LPR Center permissions for group {{group}}?",
+    "assign-user-title": "Confirm assignment",
+    "assign-user-message": "Assign {{count}} user(s) to group {{group}}?",
+    "assign-user-success": "Users assigned successfully",
+    "assign-user-failed": "Could not assign users to the group",
+    "already-assigned": "The selected users are already in this group",
+    "remove-user-title": "Confirm removal",
+    "remove-user-message": "Remove {{name}} from group {{group}}? The user account will not be deleted.",
+    "remove-user-success": "User removed from group",
+    "remove-user-failed": "Could not remove the user from the group",
+    "remove-users-title": "Confirm removal",
+    "remove-users-message": "Remove {{count}} member(s) from group {{group}}? The user accounts will not be deleted.",
+    "create-group-title": "Confirm group creation",
+    "create-group-message": "Create group \"{{group}}\"?",
+    "create-group-success": "Group created successfully",
+    "create-group-failed": "Could not create the group",
+    "group-name-required": "Please enter a group name",
+    "group-name-duplicate": "A group with this name already exists",
+    "delete-group-title": "Confirm deletion",
+    "delete-group-message": "Delete group \"{{group}}\"? This cannot be undone.",
+    "delete-group-success": "Group deleted successfully",
+    "delete-group-failed": "Could not delete the group"
   },
   "ui-program": {
     "log-management": "Log Management",
@@ -390,5 +458,85 @@
     "telegram-chat-id-required": "Chat ID is required when a bot token is provided.",
     "telegram-bot-token-required": "Bot token is required when a chat ID is provided.",
     "invalid-url": "The URL is not valid."
+  },
+  "lpr-center-page": {
+    "select-group-hint": "Select a group to manage its permissions and members.",
+    "group-details": "Group Details",
+    "group-details-hint": "Manage the group name and description.",
+    "group-name": "Group Name",
+    "description": "Description",
+    "permissions": "Permissions",
+    "permissions-of": "Permissions: {{group}}",
+    "permissions-hint": "Grant view or edit access per menu, and toggle print rights.",
+    "permissions-moved-hint": "LPR Center permissions are configured on the permission management page, under UI permission > LPR Center.",
+    "col-menu": "System Menus",
+    "col-view": "View",
+    "col-edit": "Edit",
+    "col-print": "Print",
+    "legend-view-edit": "View / Edit",
+    "total-granted": "Total Permissions Granted",
+    "group-members": "Group Members",
+    "members-of": "Members of {{group}}",
+    "search-members": "Search members...",
+    "select-all-members": "Select All Members",
+    "manage-groups-hint": "Add new groups or remove custom ones. System and base groups are protected.",
+    "existing-groups": "Existing Groups",
+    "create-new-group": "Create New Group",
+    "new-group-placeholder": "New group name",
+    "badge-base": "Base",
+    "no-groups": "No groups available"
+  },
+  "lpr-center": {
+    "base-group": {
+      "investigation": "Investigation Department",
+      "user": "User",
+      "admin": "Admin"
+    }
+  },
+  "lpr-center-permission": {
+    "news": "News / System Announcements",
+    "lpr-find": "License Plate Search",
+    "lpr-cond": "Conditional Search",
+    "lpr-ba": "Before / After Checkpoint",
+    "face-find": "Face Search",
+    "face-by-face": "Search by Face",
+    "face-by-plate": "Search by Plate Number",
+    "veh-analysis": "Vehicle Analysis",
+    "va-fake": "Fake Plate",
+    "va-clone": "Cloned Plate",
+    "va-convoy": "Vehicle Analysis by Plate (Convoy)",
+    "va-by-ck": "Vehicle Analysis by Checkpoint",
+    "lpr-watch": "Watchlist",
+    "wl-manage": "Manage Watched Vehicles",
+    "analysis": "Data Analysis",
+    "map": "Investigation Map",
+    "graph": "Relationship Analysis",
+    "maps": "Map",
+    "wl-map": "Map",
+    "heat-map": "Heat Map",
+    "sysadmin": "System Administration",
+    "a-ck": "Manage Checkpoints / Cameras",
+    "news-mgmt": "Manage News / Announcements"
+  },
+  "lpr-license-plate-permission": {
+    "lpr-find": "License Plate Search",
+    "lpr-cond": "Conditional Search",
+    "lpr-ba": "Before / After Checkpoint",
+    "face-find": "Face Search",
+    "face-by-face": "Search by Face",
+    "face-by-plate": "Search by Plate Number",
+    "veh-analysis": "Vehicle Analysis",
+    "va-fake": "Fake Plate",
+    "va-clone": "Cloned Plate",
+    "va-convoy": "Vehicle Analysis by Plate (Convoy)",
+    "va-by-ck": "Vehicle Analysis by Checkpoint",
+    "tools": "Tools",
+    "ck-map": "Checkpoint Map",
+    "vdo-request": "Request Archived Video",
+    "admin": "Admin",
+    "vdo-request-list": "Archived Video Requests",
+    "access-request": "Submit Access Request",
+    "web-admin": "Website Administration",
+    "news-mgmt": "Manage Announcements"
   }
 }

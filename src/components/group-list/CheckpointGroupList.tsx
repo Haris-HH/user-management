@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -12,6 +12,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import IconButton from "@mui/material/IconButton";
 
 // Components
 import SearchInput from '../search-input/SearchInput';
@@ -23,7 +24,7 @@ import LoadingScreen from '../loading-screen/LoadingScreen';
 import { useTranslation } from 'react-i18next';
 
 // Types
-import type { WatchlistGroup } from "../../types/common";
+import type { CheckpointGroup } from "../../types/common";
 import type { AddGroupFormData } from "../add-group/AddGroup";
 
 // Icons
@@ -31,9 +32,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 // API
 import { 
-  getWatchListGroups,
-  deleteWatchListGroups,
-  createWatchListGroups,
+  createCameraGroup,
+  deleteCameraGroup,
+  getCameraGroup,
 } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -43,15 +44,17 @@ interface FormData {
   search: string;
 }
 
-type Prop = {
-  onSelectChanged: (group: WatchlistGroup) => void;
+type Props = {
+  onSelectChanged: (group: CheckpointGroup | null) => void;
+  selectedGroupId: string | null;
   refreshKey: number;
-}
+};
 
 const GroupList = ({
   onSelectChanged,
+  selectedGroupId,
   refreshKey,
-}: Prop) => {
+}: Props) => {
   // i18n
   const { t } = useTranslation();
 
@@ -61,75 +64,71 @@ const GroupList = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Data
-  const [watchListData, setWatchListData] = useState<WatchlistGroup[]>([]);
-  const [totalWatchList, setTotalWatchList] = useState(0);
-  const [selectedGroup, setSelectedGroup] = useState<WatchlistGroup | null>(null);
+  const [groupList, setGroupList] = useState<CheckpointGroup[]>([]);
+  const [totalGroup, setTotalGroup] = useState(0);
 
   // Form Data
   const [formData, setFormData] = useState<FormData>({
     search: "",
   });
 
-  const filterWatchlistGroup = useMemo(() => {
-    const search = formData.search.trim().toLowerCase();
+  const selectedGroupIdRef = useRef(selectedGroupId);
+  const onSelectChangedRef = useRef(onSelectChanged);
 
-    if (!search) return watchListData;
+  useEffect(() => {
+    selectedGroupIdRef.current = selectedGroupId;
+  }, [selectedGroupId]);
 
-    return watchListData.filter((item) =>
-      item.group_name?.toLowerCase().includes(search)
+  useEffect(() => {
+    onSelectChangedRef.current = onSelectChanged;
+  }, [onSelectChanged]);
+
+  const filteredGroups = useMemo(() => {
+    const keyword = formData.search.trim().toLowerCase();
+
+    if (!keyword) return groupList;
+
+    return groupList.filter((group) =>
+      group.group_name?.toLowerCase().includes(keyword)
     );
-  }, [watchListData, formData.search]);
+  }, [formData.search, groupList]);
 
-  const fetchData = useCallback(
-    async () => {
-      try {
-        setIsDataLoading(true);
+  const fetchData = useCallback(async () => {
+    try {
+      setIsDataLoading(true);
 
-        const res = await getWatchListGroups({
-          filter: `deleted=false`,
-          limit: "100",
-          page: "1"
-        });
+      const response = await getCameraGroup({
+        limit: "100",
+        page: "1",
+      });
 
-        setWatchListData(res.data ?? []);
-        setTotalWatchList(res.pagination?.countAll ?? 0);
-      } 
-      catch (error) {
-        setWatchListData([]);
-        setTotalWatchList(0);
-      } 
-      finally {
-        setIsDataLoading(false);
+      const groups = response.data ?? [];
+
+      setGroupList(groups);
+      setTotalGroup(response.pagination?.countAll ?? 0);
+
+      const currentSelectedGroupId = selectedGroupIdRef.current;
+
+      if (currentSelectedGroupId) {
+        const refreshedSelectedGroup =
+          groups.find(
+            (group) => group.group_id === currentSelectedGroupId
+          ) ?? null;
+
+        onSelectChangedRef.current(refreshedSelectedGroup);
       }
-    },
-    [refreshKey]
-  );
+    } catch {
+      setGroupList([]);
+      setTotalGroup(0);
+      onSelectChangedRef.current(null);
+    } finally {
+      setIsDataLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
-
-  const handleDeleteWatchlistGroup = async (groupId: string) => {
-    try {
-      setIsLoading(true);
-      const param = {
-        group_ids: [groupId]
-      }
-      await deleteWatchListGroups(param);
-      await PopupMessage(t("popup.deleted-success"), "", "success");
-      await fetchData();
-    }
-    catch (error) {
-      await PopupMessage(t("popup.deleted-failed"), "", "error");
-    }
-    finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleTextChange = (key: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  };
+  }, [fetchData, refreshKey]);
 
   const handleConfirm = (data: AddGroupFormData) => {
     createNewGroup(data.groupName);
@@ -141,11 +140,11 @@ const GroupList = ({
       const body = {
         group_name: groupName,
       }
-      await createWatchListGroups(body);
+      await createCameraGroup(body);
       await PopupMessage(t("popup.create-watchlist-group-success"), "", "success");
       await fetchData();
     }
-    catch (error) {
+    catch {
       await PopupMessage(t("popup.create-watchlist-group-failed"), "", "error");
     }
     finally {
@@ -153,9 +152,40 @@ const GroupList = ({
     }
   }
 
-  const handleSelectChange = (group: WatchlistGroup) => {
-    setSelectedGroup(group);
-    onSelectChanged(group);
+  const handleDeleteGroup = async (groupId: string) => {
+    try {
+      setIsLoading(true);
+
+      await deleteCameraGroup([groupId]);
+
+      if (selectedGroupIdRef.current === groupId) {
+        selectedGroupIdRef.current = null;
+        onSelectChangedRef.current(null);
+      }
+
+      await PopupMessage(
+        t("popup.deleted-success"),
+        "",
+        "success"
+      );
+
+      await fetchData();
+    } catch {
+      await PopupMessage(
+        t("popup.deleted-failed"),
+        "",
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTextChange = (key: keyof FormData, value: string) => {
+    setFormData((previous) => ({
+      ...previous,
+      [key]: value,
+    }));
   };
 
   return (
@@ -186,8 +216,13 @@ const GroupList = ({
         </Box>
         <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
           <Box className="flex justify-between items-center">
-            <p className='text-[14px] text-(--secondary-color) font-medium'>{`${totalWatchList} ${t('text.list')}`}</p>
-            <SearchInput />
+            <p className='text-[14px] text-(--secondary-color) font-medium'>{`${totalGroup} ${t('text.list')}`}</p>
+            <SearchInput
+              value={formData.search}
+              onChange={(event) =>
+                handleTextChange("search", event.target.value)
+              }
+            />
           </Box>
           <TableContainer
             component={Paper}
@@ -253,12 +288,68 @@ const GroupList = ({
               <TableBody>
                 {isDataLoading ? (
                   <TableSkeleton headerColumn={4} />
-                ) : filterWatchlistGroup.length > 0 ? (
-                  filterWatchlistGroup.map((item, index) => {
-                    return (
-                      <div></div>
-                    )
-                  })
+                ) : filteredGroups.length > 0 ? (
+                  filteredGroups.map((group, index) => (
+                    <TableRow
+                      key={group.group_id}
+                      hover
+                      selected={selectedGroupId === group.group_id}
+                      onClick={() => onSelectChanged(group)}
+                      sx={{
+                        cursor: "pointer",
+                        "&:hover td": {
+                          backgroundColor:
+                            "rgba(var(--primary-color-rgb), 0.08)",
+                        },
+                        "&.Mui-selected td": {
+                          backgroundColor:
+                            "rgba(var(--primary-color-rgb), 0.2)",
+                        },
+                        "&.Mui-selected:hover td": {
+                          backgroundColor:
+                            "rgba(var(--primary-color-rgb), 0.25)",
+                        },
+                        "& .MuiTableCell-root": {
+                          color: "var(--secondary-color)",
+                          borderBottom:
+                            "1px solid var(--primary-color)",
+                        },
+                      }}
+                    >
+                      <TableCell align="center">
+                        {index + 1}
+                      </TableCell>
+
+                      <TableCell align="center">
+                        {group.group_name || "-"}
+                      </TableCell>
+
+                      <TableCell align="center">
+                        {Array.isArray(group.cameras)
+                          ? group.cameras.length
+                          : 0}
+                      </TableCell>
+
+                      <TableCell align="center">
+                        <IconButton
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void handleDeleteGroup(group.group_id);
+                          }}
+                        >
+                          <DeleteIcon
+                            sx={{
+                              fontSize: 20,
+                              color: "var(--trash-active-icon)",
+                              "&:hover": {
+                                transform: "scale(1.3)",
+                              },
+                            }}
+                          />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : (
                   <TableRow
                     sx={{

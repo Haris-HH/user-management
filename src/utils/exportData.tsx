@@ -1,4 +1,4 @@
-import ExcelJS from "exceljs";
+import type ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
 type ColumnStyle = {
@@ -23,7 +23,14 @@ export const exportExcel = async <T,>({
   mapRow,
   columnStyles = {},
 }: ExportExcelParams<T>) => {
-  const workbook = new ExcelJS.Workbook();
+  /*
+    exceljs is a large dependency that is only needed once the user actually
+    exports, so it is loaded on demand instead of shipping in the initial
+    bundle. This function was already async, so callers are unaffected.
+  */
+  const { Workbook } = await import("exceljs");
+
+  const workbook = new Workbook();
   const sheet = workbook.addWorksheet(sheetName);
 
   // Header

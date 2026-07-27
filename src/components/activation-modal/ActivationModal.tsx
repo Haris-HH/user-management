@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dayjs from "dayjs";
 
 // Material UI
@@ -47,12 +47,19 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
   const [activationTime, setActivationTime] = useState<ActivationTime>("now");
   const [approveDate, setApproveDate] = useState<Date>(defaultApproveDate());
 
-  useEffect(() => {
+  // Reset the form back to its defaults whenever the dialog transitions to
+  // closed. Adjusting state during render (rather than in an effect) avoids
+  // an extra render pass and a synchronous setState-in-effect.
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+
     if (!open) {
       setActivationTime("now");
       setApproveDate(defaultApproveDate());
     }
-  }, [open]);
+  }
 
   const handleConfirm = () => {
     onConfirm({

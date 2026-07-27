@@ -2,9 +2,80 @@ import { useMemo } from "react";
 
 // i18n
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 
 // Types
-import type { PermissionUiList } from "../types/common";
+import type {
+  PermissionMenuNode,
+  PermissionUiGroup,
+  PermissionUiList,
+} from "../types/common";
+
+// Constants
+import {
+  LPR_CENTER_PERMISSION_TREE,
+  LPR_CENTER_UI_KEY,
+} from "../constants/lprCenterPermissions";
+import {
+  LPR_LICENSE_PLATE_PERMISSION_TREE,
+  LPR_LICENSE_PLATE_UI_KEY,
+} from "../constants/lprLicensePlatePermissions";
+
+/*
+  Which level of a menu tree is actually granted:
+
+  - "leaf"      each leaf is its own permission and a parent is only a heading
+                over them (LPR Center - lpr-center-web derives a parent's
+                visibility from its children).
+  - "top-level" a top-level menu is granted as a whole and its children are
+                shown for context only (LPR License Plate).
+*/
+type MenuGranularity = "leaf" | "top-level";
+
+/*
+  Flattens a menu tree into PermissionTable rows while keeping its shape: the
+  top level is numbered, deeper nodes are indented one level per depth. Rows
+  that are not granted at `granularity` are emitted as label rows - no controls,
+  and PermissionTable keeps their keys out of groups/prints - so the persisted
+  keys stay a 1:1 match with the consuming app's nav node ids.
+*/
+const buildMenuGroupList = (
+  nodes: readonly PermissionMenuNode[],
+  t: TFunction,
+  granularity: MenuGranularity,
+  depth = 0
+): PermissionUiGroup[] =>
+  nodes.flatMap((node, index) => {
+    // Only the top level is numbered; children read as bullets under it.
+    const label =
+      depth === 0
+        ? t("permission.ui.menu-section-label", {
+            index: index + 1,
+            menu: t(node.labelKey),
+          })
+        : t(node.labelKey);
+
+    const hasChildren = Boolean(node.children && node.children.length > 0);
+
+    const isPermission =
+      granularity === "top-level" ? depth === 0 : !hasChildren;
+
+    const row: PermissionUiGroup = {
+      key: node.key,
+      name: label,
+      active: false,
+      edit: false,
+      depth,
+      ...(isPermission ? {} : { is_label: true }),
+    };
+
+    if (!hasChildren) return [row];
+
+    return [
+      row,
+      ...buildMenuGroupList(node.children ?? [], t, granularity, depth + 1),
+    ];
+  });
 
 const usePermissionUiList = () => {
   const { t, i18n } = useTranslation();
@@ -124,6 +195,12 @@ const usePermissionUiList = () => {
             edit: false,
           },
           {
+            key: "manage-lpr-center-group",
+            name: t("permission.ui.user-management.manage-lpr-center-group"),
+            active: false,
+            edit: false,
+          },
+          {
             key: "manage-user",
             name: t("permission.ui.user-management.manage-user"),
             active: false,
@@ -161,7 +238,25 @@ const usePermissionUiList = () => {
           },
         ],
       },
+      {
+        key: LPR_CENTER_UI_KEY,
+        name: t("permission.ui.lpr-center.name"),
+        group_list: buildMenuGroupList(LPR_CENTER_PERMISSION_TREE, t, "leaf"),
+      },
+      {
+        key: LPR_LICENSE_PLATE_UI_KEY,
+        name: t("permission.ui.lpr-license-plate.name"),
+        group_list: buildMenuGroupList(
+          LPR_LICENSE_PLATE_PERMISSION_TREE,
+          t,
+          "top-level"
+        ),
+      },
     ],
+    // Translations load asynchronously over XHR, so language and the
+    // initialised flag are kept as explicit deps to guarantee the labels are
+    // rebuilt once the bundle arrives, even if `t` keeps its identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [t, i18n.language, i18n.isInitialized]
   );
 };

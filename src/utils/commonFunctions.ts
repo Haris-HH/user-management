@@ -43,18 +43,28 @@ export const capitalizeWords = (text: string) => {
   return text.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export const buildOptions = (
-  list: any[],
+/*
+  Generic over the source element so interface-typed lists (NsbOu[],
+  UserGroup[], ...) can be passed directly; TypeScript does not treat an
+  interface as assignable to Record<string, unknown>, so a non-generic
+  parameter would force a cast at every call site.
+*/
+export const buildOptions = <T extends object>(
+  list: ReadonlyArray<T>,
   defaultLabel: string,
   label: string = "name",
   value: string = "code",
   isAll: boolean = true,
   allValue: string = "0",
-) => {
-  const options = list.map((item) => ({
-    label: item[label],
-    value: item[value],
-  }));
+): OptionType[] => {
+  const options = list.map((item) => {
+    const record = item as Record<string, unknown>;
+
+    return {
+      label: String(record[label] ?? ""),
+      value: String(record[value] ?? ""),
+    };
+  });
 
   return isAll
     ? [{ label: defaultLabel, value: allValue }, ...options]
@@ -112,7 +122,8 @@ export const formatThaiID = (value: string | undefined) => {
   return `${digits.slice(0, 1)}-${digits.slice(1, 5)}-${digits.slice(5, 10)}-${digits.slice(10, 12)}-${digits.slice(12)}`;
 };
 
-export const normalizeText = (value: any) => value?.toString().trim().toLowerCase() ?? "";
+export const normalizeText = (value: unknown): string =>
+  value?.toString().trim().toLowerCase() ?? "";
 
 export const validateUserImportData = ({
   nationalId = "",

@@ -55,28 +55,38 @@ function App() {
   const { i18n } = useTranslation();
 
   // Redux
-  const { user } = useSelector((state: RootState) => state.authUser);
+  const userId = useSelector((state: RootState) => state.authUser.user?.user_id);
 
-  const enabled = Boolean(localStorage.getItem("accessToken") ?? false);
+  const enabled = Boolean(localStorage.getItem("accessToken"));
 
+  /*
+    Restore the persisted language. Theme restoration used to live here too,
+    reading a legacy "theme" key that nothing writes any more; when a stale
+    value survived it overwrote the --primary-color variables that
+    ThemeProvider had just applied from "wd2-theme". ThemeProvider is now the
+    single owner of the theme CSS variables.
+  */
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
     const savedLanguage = localStorage.getItem("language");
 
-    if (savedLanguage) {
-      i18n.changeLanguage(JSON.parse(savedLanguage).code);
-    }
+    if (!savedLanguage) return;
 
-    if (savedTheme) {
-      const theme = JSON.parse(savedTheme);
+    try {
+      const { code } = JSON.parse(savedLanguage) as { code?: string };
 
-      document.documentElement.style.setProperty("--primary-color", theme.primary);
-      document.documentElement.style.setProperty("--primary-color-rgb", theme.rgb);
+      if (code) i18n.changeLanguage(code);
+    } catch (error) {
+      console.error("Invalid persisted language:", error);
     }
   }, [i18n]);
 
+  /*
+    Masterdata is keyed off the user id rather than the user object so that
+    an unrelated profile update (which replaces the object) does not refire
+    all twelve reference-data requests.
+  */
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     dispatch(fetchArea({ limit: "100" }));
     dispatch(fetchAgency({ limit: "100" }));
@@ -90,7 +100,7 @@ function App() {
     dispatch(fetchUserGroup({ limit: "100" }));
     dispatch(fetchPoliceStation({ limit: "100" }));
     dispatch(fetchStatus());
-  }, [user, dispatch]);
+  }, [userId, dispatch]);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");

@@ -14,9 +14,12 @@ export const useForceLogout = () => {
         if (callApi) {
           await logoutApi();
         }
-      } 
-      catch {
-      } 
+      }
+      catch (error) {
+        // The session is being torn down regardless, so a failing logout
+        // call must not block the local cleanup below.
+        console.error("Logout request failed:", error);
+      }
       finally {
         dispatch(clearAuthUser());
 

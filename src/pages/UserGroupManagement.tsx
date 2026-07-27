@@ -42,13 +42,16 @@ import { useTranslation } from "react-i18next";
 import type { RootState } from "../store/store";
 
 // API
-import { getCameras } from "../features/dropdown/api/DropdownApi";
+import { getCameras, getPoliceStation } from "../features/dropdown/api/DropdownApi";
 import {
   createUserGroup,
   updateUserGroup,
   getUserGroup,
   deleteUserGroup,
 } from "../features/users/api/UsersApi";
+import {
+  getCameraGroup,
+} from "../features/core-data/api/CoreDataApi";
 
 // Utils
 import { PopupMessage, PopupMessageWithCancelAndDeny } from "../utils/popupMessage";
@@ -64,13 +67,47 @@ type EditableUserGroup = UserGroup & {
   isNew?: boolean;
 };
 
+// A group is a permanently-locked "base" group by name, regardless of what
+// the backend reports for `locked`. Pure and stateless - safe to hoist out of
+// the component so it isn't redefined (and re-evaluated identically) on
+// every render.
+const isBaseUserGroup = (groupName: string) => {
+  const normalized = groupName.toLowerCase();
+  return normalized === "admin" || normalized === "user";
+};
+
+// Pure transform, no dependency on component state/props - hoisted so it has
+// a stable identity and doesn't need to be listed in any hook's deps array.
+const normalizeUserGroups = (rows: UserGroup[]): EditableUserGroup[] => {
+  return rows
+    .map((ug) => ({
+      ...ug,
+      permissions: ug.permissions ?? {},
+      locked: ug.locked ?? isBaseUserGroup(ug.group_name),
+      isNew: false,
+    }))
+    .sort((a, b) => a.group_id.localeCompare(b.group_id));
+};
+
 const UserGroupManagement = () => {
   const permissionUiList = usePermissionUiList();
 
   const { t, i18n } = useTranslation();
   usePageTitle(t("pages.user-group-management"));
 
-  const [isLoading, setIsLoading] = useState(false);
+  // A ref-counted loading flag: fetchUserGroups() and fetchData() both run
+  // (and can be in flight) independently, so a plain boolean would let
+  // whichever of the two finished first hide the loading screen while the
+  // other was still fetching. Counting concurrent operations keeps the
+  // overlay up until all of them have settled.
+  const [loadingCount, setLoadingCount] = useState(0);
+  const isLoading = loadingCount > 0;
+  const beginLoading = useCallback(() => setLoadingCount((c) => c + 1), []);
+  const endLoading = useCallback(
+    () => setLoadingCount((c) => Math.max(0, c - 1)),
+    []
+  );
+
   const [permissionOptions, setPermissionOptions] = useState<OptionType[]>([]);
   const [checkpointData, setCheckpointData] = useState<CameraInCheckpoint[]>([]);
   const [permissionRows, setPermissionRows] = useState<EditableUserGroup[]>([]);
@@ -80,9 +117,9 @@ const UserGroupManagement = () => {
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [searchText, setSearchText] = useState("");
 
-  const { area, policeStation, province, userGroup } = useSelector(
-    (state: RootState) => state.dropdown
-  );
+  const area = useSelector((state: RootState) => state.dropdown.area);
+  const province = useSelector((state: RootState) => state.dropdown.province);
+  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
 
   const {
     control,
@@ -97,24 +134,9 @@ const UserGroupManagement = () => {
     },
   });
 
-  const normalizeUserGroups = (rows: UserGroup[]): EditableUserGroup[] => {
-    return rows.map((ug) => {
-      const isBaseUserGroup =
-        ug.group_name.toLowerCase() === "admin" ||
-        ug.group_name.toLowerCase() === "user";
-
-      return {
-        ...ug,
-        permissions: ug.permissions ?? {},
-        locked: ug.locked ?? isBaseUserGroup,
-        isNew: false,
-      };
-    }).sort((a, b) => { return a.group_id.localeCompare(b.group_id) });
-  };
-
   const fetchUserGroups = useCallback(async () => {
     try {
-      setIsLoading(true);
+      beginLoading();
 
       const res = await getUserGroup();
 
@@ -132,60 +154,140 @@ const UserGroupManagement = () => {
       setPermissionOptions(
         buildOptions(rows, "", "group_name", "group_id", false)
       );
-    } 
-    catch (error) {
-      await PopupMessage(t("popup.fetch-error"), "", "error");
-    } 
-    finally {
-      setIsLoading(false);
     }
-  }, [t]);
+    catch {
+      await PopupMessage(t("popup.fetch-error"), "", "error");
+    }
+    finally {
+      endLoading();
+    }
+  }, [t, beginLoading, endLoading]);
 
   const fetchData = useCallback(async () => {
     try {
-      setIsLoading(true);
+      beginLoading();
 
-      const updated = await Promise.all(
-        area.map(async (a) => {
-          const res = await getCameras({
-            filter: `police_region_id=${a.id}`,
-          });
+      const cameraGroupResponse = await getCameraGroup({
+        filter: "deleted=false",
+      });
 
-          const updatedCamera = res.data.map((c) => {
-            const policeStationData = policeStation.find(
-              (ps) => ps.id === c.police_station_id
-            );
+      const cameraGroups = cameraGroupResponse?.data ?? [];
 
-            const provinceData = province.find(
-              (p) => p.province_code === c.province_code
-            );
+      const allCameraIds = [
+        ...new Set(
+          cameraGroups.flatMap((group) => group.cameras ?? [])
+        ),
+      ];
 
-            return {
-              ...c,
-              police_station_name: policeStationData?.station_name ?? "-",
+      if (allCameraIds.length === 0) {
+        setCheckpointData(
+          cameraGroups.map((group) => ({
+            ...group,
+            camera_list: [],
+          }))
+        );
+
+        return;
+      }
+
+      const cameraResponse = await getCameras({
+        filter: `camera_id=${allCameraIds.join("|")}`,
+      });
+
+      const cameras = cameraResponse?.data ?? [];
+
+      const allPoliceStationIds = [
+        ...new Set(
+          cameras
+            .map((camera) => camera.police_station_id)
+            .filter(
+              (stationId): stationId is number =>
+                Boolean(stationId)
+            )
+        ),
+      ];
+
+      const policeStationResponse =
+        allPoliceStationIds.length > 0
+          ? await getPoliceStation({
+              filter: `id=${allPoliceStationIds.join("|")}`,
+            })
+          : { data: [] };
+
+      const policeStationMap = new Map(
+        (policeStationResponse?.data ?? []).map((station) => [
+          station.id,
+          station,
+        ])
+      );
+
+      const policeRegionMap = new Map(
+        area.map((item) => [item.id, item])
+      );
+
+      const provinceMap = new Map(
+        province.map((item) => [item.province_code, item])
+      );
+
+      const cameraMap = new Map(
+        cameras.map((camera) => {
+          const policeStationData = policeStationMap.get(
+            camera.police_station_id
+          );
+
+          const provinceData = provinceMap.get(
+            camera.province_code
+          );
+
+          const policeRegionData = policeRegionMap.get(
+            camera.police_region_id
+          );
+
+          return [
+            camera.camera_id,
+            {
+              ...camera,
+              police_region_name:
+                i18n.language === "th"
+                  ? policeRegionData?.title_abbr_th ?? "-"
+                  : policeRegionData?.title_abbr_en ?? "-",
+              police_station_name:
+                policeStationData?.station_name ?? "-",
               province_name:
                 i18n.language === "th"
                   ? provinceData?.name_th ?? "-"
                   : provinceData?.name_en ?? "-",
-            };
-          });
-
-          return {
-            ...a,
-            camera_list: updatedCamera,
-          };
+            },
+          ];
         })
       );
 
+      const updated = cameraGroups.map((cameraGroup) => ({
+        ...cameraGroup,
+        camera_list: (cameraGroup.cameras ?? [])
+          .map((cameraId) => cameraMap.get(cameraId))
+          .filter(
+            (
+              camera
+            ): camera is NonNullable<typeof camera> =>
+              Boolean(camera)
+          ),
+      }));
+
       setCheckpointData(updated);
-    } 
-    catch (error) {
-      await PopupMessage(t("popup.fetch-error"), "", "error");
-    } 
-    finally {
-      setIsLoading(false);
     }
-  }, [area, policeStation, province, i18n.language, t]);
+    catch {
+      await PopupMessage(t("popup.fetch-error"), "", "error");
+    }
+    finally {
+      endLoading();
+    }
+    // `area` is read (via policeRegionMap) but was previously missing from
+    // this array: fetchData kept closing over whatever `area` was on first
+    // render, so if the dropdown thunk resolved after this ran, checkpoint
+    // rows would show "-" for the police region forever until something else
+    // re-triggered a fetch.
+  }, [area, province, i18n.language, t, beginLoading, endLoading]);
 
   useEffect(() => {
     fetchUserGroups();
@@ -196,18 +298,12 @@ const UserGroupManagement = () => {
   }, [fetchData]);
 
   useEffect(() => {
-    const updated: EditableUserGroup[] = userGroup.map((ug) => {
-      const isBaseUserGroup =
-        ug.group_name.toLowerCase() === "admin" ||
-        ug.group_name.toLowerCase() === "user";
-
-      return {
-        ...ug,
-        permissions: ug.permissions ?? {},
-        locked: isBaseUserGroup,
-        isNew: false,
-      };
-    });
+    const updated: EditableUserGroup[] = userGroup.map((ug) => ({
+      ...ug,
+      permissions: ug.permissions ?? {},
+      locked: isBaseUserGroup(ug.group_name),
+      isNew: false,
+    }));
 
     setPermissionRows(updated);
     setOriginalPermissionRows(updated);
@@ -305,12 +401,16 @@ const UserGroupManagement = () => {
 
   const handleSaveAll = async () => {
     try {
-      setIsLoading(true);
+      beginLoading();
+
+      // Map built once instead of an O(n) Array#find() per row (was O(n*m)
+      // across all permission rows for every save).
+      const originalRowsById = new Map(
+        originalPermissionRows.map((row) => [row.group_id, row])
+      );
 
       const changedRows = permissionRows.filter((row) => {
-        const originalRow = originalPermissionRows.find(
-          (original) => original.group_id === row.group_id
-        );
+        const originalRow = originalRowsById.get(row.group_id);
 
         if (!originalRow) return true;
 
@@ -345,13 +445,12 @@ const UserGroupManagement = () => {
 
       await PopupMessage(t("popup.save-success"), "", "success");
       await fetchUserGroups();
-    } 
-    catch (error) {
-      setIsLoading(false);
+    }
+    catch {
       await PopupMessage(t("popup.save-error"), "", "error");
-    } 
+    }
     finally {
-      setIsLoading(false);
+      endLoading();
     }
   };
 
@@ -404,7 +503,7 @@ const UserGroupManagement = () => {
         return;
       }
 
-      setIsLoading(true);
+      beginLoading();
 
       await deleteUserGroup([groupId]);
       await fetchUserGroups();
@@ -414,16 +513,16 @@ const UserGroupManagement = () => {
         t("popup.deleted-success"),
         "success"
       );
-    } 
-    catch (error) {
+    }
+    catch {
       await PopupMessage(
         "",
         t("popup.deleted-failed"),
         "error"
       );
-    } 
+    }
     finally {
-      setIsLoading(false);
+      endLoading();
     }
   };
 
@@ -440,7 +539,7 @@ const UserGroupManagement = () => {
             boxShadow: "1px 1px 5px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <Box className="flex flex-col flex-1 gap-5 p-6">
+          <Box className="flex flex-col gap-5 p-6">
             <form onSubmit={handleSubmit(handleAddPermission)}>
               <Box className="flex flex-col md:flex-row gap-5 items-start">
                 <Box className="flex-1">
@@ -573,7 +672,7 @@ const UserGroupManagement = () => {
             </form>
           </Box>
 
-          <Box className="px-6 pb-6 flex-1">
+          <Box className="px-6 pb-4 shrink-0">
             <Box className="border border-(--primary-color) rounded-lg overflow-hidden bg-(--tertiary-color)">
               <Box className="px-5 py-4 bg-(--tertiary-color) flex items-center justify-between border-b border-(--primary-color)">
                 <Typography sx={{ fontWeight: 600, color: "var(--primary-color)" }}>

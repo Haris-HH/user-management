@@ -13,6 +13,7 @@ export const mockWatchlistGroup: WatchlistGroupResponse = {
     "description": "Example description",
     "members": ["example"],
     "special_plates": ["example"],
+    "checkpoints": ["example"],
     "watchlists": ["example"],
     "permissions": ["example"],
     "visible": true,

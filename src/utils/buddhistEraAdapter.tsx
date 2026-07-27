@@ -5,9 +5,8 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 Dayjs.locale("th");
 
 export default class buddhistEraAdapter extends AdapterDayjs {
-  constructor({ locale, formats }: any) {
-    super({ locale, formats });
-  }
+  // The base constructor is inherited as-is; the previous override only
+  // forwarded { locale, formats } and dropped any other adapter options.
 
   formatByString = (date: DayjsType, format: string): string => {
     const d = Dayjs(date);

@@ -1,21 +1,133 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 // Material UI
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
+import type { AutocompleteRenderInputParams } from "@mui/material/Autocomplete";
+import type { UseFormRegisterReturn } from "react-hook-form";
 
 // i18n
 import { useTranslation } from "react-i18next";
 
-export type OptionType = {
-  value: string;
-  label: string;
-  inputValue?: string;
-  [key: string]: any;
-};
+// Types
+import type { OptionType } from "../../types/common";
+
+export type { OptionType };
 
 type AutoCompleteValue = OptionType | string | null;
+
+/*
+  The freeSolo and non-freeSolo Autocompletes render with the same visual
+  styling apart from the error border width, so the shared sx is built once
+  here instead of being duplicated across both branches.
+*/
+const buildFieldSx = (labelFontSize: string, errorBorderWidth: string) => ({
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "5px",
+
+    "& fieldset": {
+      borderColor: "var(--primary-color)",
+    },
+
+    "&.Mui-error fieldset": {
+      borderColor: "#d32f2f",
+      borderWidth: errorBorderWidth,
+    },
+
+    "&:hover fieldset": {
+      borderColor: "var(--primary-color)",
+    },
+
+    "&.Mui-focused fieldset": {
+      borderColor: "var(--primary-color)",
+    },
+  },
+
+  backgroundColor: "var(--tertiary-color)",
+
+  "& .MuiInputBase-root": {
+    minHeight: "30px",
+    padding: "2px 8px",
+    fontSize: labelFontSize,
+    color: "var(--primary-color)",
+  },
+
+  "& .MuiInputBase-input": {
+    height: "25px",
+    padding: "0 !important",
+    backgroundColor: "var(--tertiary-color) !important",
+    color: "var(--primary-color)",
+  },
+
+  "& .MuiSvgIcon-root": {
+    color: "var(--primary-color)",
+  },
+
+  "& .MuiOutlinedInput-root.Mui-disabled": {
+    backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
+    cursor: "not-allowed",
+
+    "& fieldset": {
+      borderColor: "rgba(var(--primary-color-rgb), 0.7) !important",
+    },
+  },
+
+  "& .MuiInputBase-input.Mui-disabled": {
+    color: "rgba(var(--primary-color-rgb), 0.7) !important",
+    WebkitTextFillColor: "rgba(var(--primary-color-rgb), 0.7) !important",
+    backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
+    cursor: "not-allowed",
+  },
+
+  "& .MuiInputBase-root.Mui-disabled": {
+    color: "var(--primary-color) !important",
+  },
+});
+
+const BASE_PAPER_SX = {
+  backgroundColor: "var(--tertiary-color) !important",
+  color: "var(--primary-color) !important",
+  border: "1px solid var(--primary-color)",
+
+  "& .MuiAutocomplete-listbox": {
+    backgroundColor: "var(--tertiary-color) !important",
+    padding: 0,
+  },
+
+  "& .MuiAutocomplete-option": {
+    color: "var(--primary-color) !important",
+    backgroundColor: "var(--tertiary-color) !important",
+  },
+
+  "& .MuiAutocomplete-option:hover, & .Mui-focused": {
+    backgroundColor: "rgba(var(--primary-color-rgb), 0.2) !important",
+  },
+
+  "& .MuiAutocomplete-option[aria-selected='true']": {
+    backgroundColor: "var(--primary-color) !important",
+    color: "var(--tertiary-color) !important",
+  },
+
+  "& .MuiAutocomplete-noOptions": {
+    color: "var(--primary-color) !important",
+    backgroundColor: "var(--tertiary-color) !important",
+  },
+};
+
+// freeSolo additionally neutralises the nested outlined-input border.
+const FREE_SOLO_PAPER_SX = {
+  ...BASE_PAPER_SX,
+
+  "& .MuiOutlinedInput-root": {
+    border: "1px solid var(--primary-color)",
+    borderRadius: "5px",
+  },
+
+  "& .MuiOutlinedInput-notchedOutline": {
+    border: "none !important",
+  },
+};
 
 type AutoCompleteProps = {
   id?: string;
@@ -39,7 +151,7 @@ type AutoCompleteProps = {
   title?: string;
   error?: boolean;
   helperText?: string;
-  register?: any;
+  register?: Partial<UseFormRegisterReturn>;
   freeSolo?: boolean;
   disablePortal?: boolean;
 };
@@ -67,42 +179,54 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const [innerInputValue, setInnerInputValue] = useState("");
-
-  const inputValue = controlledInputValue ?? innerInputValue;
+  const matchedOption = useMemo(
+    () =>
+      value === null || value === undefined
+        ? undefined
+        : options.find((option) => String(option.value) === String(value)),
+    [options, value]
+  );
 
   const selectedValue = useMemo<AutoCompleteValue>(() => {
     if (value === null || value === undefined) {
       return null;
     }
 
-    const matched = options.find(
-      option => String(option.value) === String(value)
-    );
+    return matchedOption ?? (freeSolo ? String(value) : null);
+  }, [matchedOption, value, freeSolo]);
 
-    return matched ?? (freeSolo ? String(value) : null);
-  }, [options, value, freeSolo]);
+  /*
+    Text shown for the current value. Resolving it depends on `options`
+    because they often load after the value is set, and only then can the
+    code be displayed as its human-readable label.
+  */
+  const resolvedLabel =
+    value === null || value === undefined
+      ? ""
+      : matchedOption?.label ?? String(value);
 
-  useEffect(() => {
-    if (controlledInputValue !== undefined) return;
+  const [innerInputValue, setInnerInputValue] = useState(resolvedLabel);
+  const [syncedLabel, setSyncedLabel] = useState(resolvedLabel);
 
-    if (value === null || value === undefined) {
-      setInnerInputValue("");
-      return;
-    }
+  /*
+    Re-sync during render instead of in an effect. The previous effect ran on
+    every change of the `options` identity, so a parent that rebuilt its
+    options array inline while the user was typing reset the box back to the
+    selected label and discarded the keystrokes. Comparing against the last
+    synced label re-syncs only when the label genuinely changes.
+  */
+  if (controlledInputValue === undefined && resolvedLabel !== syncedLabel) {
+    setSyncedLabel(resolvedLabel);
+    setInnerInputValue(resolvedLabel);
+  }
 
-    const matched = options.find(
-      option => String(option.value) === String(value)
-    );
-
-    setInnerInputValue(matched?.label ?? String(value));
-  }, [value, options, controlledInputValue]);
+  const inputValue = controlledInputValue ?? innerInputValue;
 
   const handleSelectionChange = (
     event: React.SyntheticEvent<Element, Event>,
     newValue: AutoCompleteValue
   ) => {
-    let formattedValue: OptionType | null = null;
+    let formattedValue: OptionType | null;
 
     if (typeof newValue === "string") {
       formattedValue = {
@@ -120,7 +244,7 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
 
     onChange(event, formattedValue);
 
-    register?.onChange({
+    register?.onChange?.({
       target: {
         name: register.name,
         value: formattedValue?.value ?? "",
@@ -142,7 +266,7 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
     onInputChange?.(event, newInputValue);
 
     if (freeSolo) {
-      register?.onChange({
+      register?.onChange?.({
         target: {
           name: register.name,
           value: newInputValue,
@@ -154,6 +278,14 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
       onChange(event, null);
     }
   };
+
+  const fieldSx = useMemo(
+    () => ({
+      ...buildFieldSx(labelFontSize, freeSolo ? "2px" : "1px"),
+      ...sx,
+    }),
+    [labelFontSize, freeSolo, sx]
+  );
 
   const renderHighlightedText = (label: string, searchValue: string) => {
     if (!searchValue) return label;
@@ -174,6 +306,39 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
     );
   };
 
+
+  const commonProps = {
+    id,
+    disablePortal,
+    options,
+    onChange: handleSelectionChange,
+    onInputChange: handleInputChange,
+    disabled,
+    title: title || "",
+    noOptionsText: t("text.data-not-found"),
+    renderInput: (params: AutocompleteRenderInputParams) => (
+      <TextField
+        {...params}
+        error={error}
+        helperText={helperText}
+        placeholder={placeholder || ""}
+      />
+    ),
+    renderOption: (
+      optionProps: React.HTMLAttributes<HTMLLIElement> & { key: React.Key },
+      option: OptionType,
+      state: { inputValue: string }
+    ) => {
+      const { key, ...otherProps } = optionProps;
+
+      return (
+        <li {...otherProps} key={key}>
+          {renderHighlightedText(option.label, state.inputValue)}
+        </li>
+      );
+    },
+  };
+
   return (
     <div className="flex flex-col w-full">
       <Typography
@@ -190,14 +355,10 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
       {
         freeSolo ? (
           <Autocomplete<OptionType, false, false, boolean>
-            id={id}
-            disablePortal={disablePortal}
-            freeSolo={freeSolo}
+            {...commonProps}
+            freeSolo
             value={selectedValue}
             inputValue={inputValue}
-            onChange={handleSelectionChange}
-            onInputChange={handleInputChange}
-            options={options}
             getOptionLabel={(option) => {
               if (typeof option === "string") return option;
               return option.inputValue ?? option.label ?? "";
@@ -212,7 +373,6 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
 
               return String(option.value) === String(selected.value);
             }}
-            noOptionsText={t("text.data-not-found")}
             filterOptions={(optionList, params) => {
               const searchValue = params.inputValue.trim().toLowerCase();
 
@@ -224,7 +384,7 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
                 (option) => option.label.toLowerCase() === searchValue
               );
 
-              if (freeSolo && searchValue !== "" && !exists) {
+              if (searchValue !== "" && !exists) {
                 return [
                   {
                     value: params.inputValue.trim(),
@@ -236,269 +396,25 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
 
               return filtered;
             }}
-            disabled={disabled}
-            title={title || ""}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "5px",
-
-                "& fieldset": {
-                  borderColor: "var(--primary-color)",
-                },
-
-                "&.Mui-error fieldset": {
-                  borderColor: "#d32f2f",
-                  borderWidth: "2px",
-                },
-
-                "&:hover fieldset": {
-                  borderColor: "var(--primary-color)",
-                },
-
-                "&.Mui-focused fieldset": {
-                  borderColor: "var(--primary-color)",
-                },
-              },
-
-              backgroundColor: "var(--tertiary-color)",
-
-              "& .MuiInputBase-root": {
-                minHeight: "30px",
-                padding: "2px 8px",
-                fontSize: labelFontSize,
-                color: "var(--primary-color)",
-              },
-
-              "& .MuiInputBase-input": {
-                height: "25px",
-                padding: "0 !important",
-                backgroundColor: "var(--tertiary-color) !important",
-                color: "var(--primary-color)",
-              },
-
-              "& .MuiSvgIcon-root": {
-                color: "var(--primary-color)",
-              },
-
-              "& .MuiOutlinedInput-root.Mui-disabled": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
-                cursor: "not-allowed",
-
-                "& fieldset": {
-                  borderColor: "rgba(var(--primary-color-rgb), 0.7) !important",
-                },
-              },
-
-              "& .MuiInputBase-input.Mui-disabled": {
-                color: "rgba(var(--primary-color-rgb), 0.7) !important",
-                WebkitTextFillColor: "rgba(var(--primary-color-rgb), 0.7) !important",
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
-                cursor: "not-allowed",
-              },
-
-              "& .MuiInputBase-root.Mui-disabled": {
-                color: "var(--primary-color) !important",
-              },
-
-              ...sx,
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                error={error}
-                helperText={helperText}
-                placeholder={placeholder || ""}
-              />
-            )}
-            renderOption={(props, option, { inputValue }) => {
-              const { key, ...otherProps } = props;
-
-              return (
-                <li {...otherProps} key={key}>
-                  {renderHighlightedText(option.label, inputValue)}
-                </li>
-              );
-            }}
-            slotProps={{
-              paper: {
-                sx: {
-                  backgroundColor: "var(--tertiary-color) !important",
-                  color: "var(--primary-color) !important",
-                  border: "1px solid var(--primary-color)",
-                  
-                  "& .MuiOutlinedInput-root": {
-                    border: "1px solid var(--primary-color)",
-                    borderRadius: "5px",
-                  },
-
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    border: "none !important",
-                  },
-
-                  "& .MuiAutocomplete-listbox": {
-                    backgroundColor: "var(--tertiary-color) !important",
-                    padding: 0,
-                  },
-
-                  "& .MuiAutocomplete-option": {
-                    color: "var(--primary-color) !important",
-                    backgroundColor: "var(--tertiary-color) !important",
-                  },
-
-                  "& .MuiAutocomplete-option:hover, & .Mui-focused": {
-                    backgroundColor:
-                      "rgba(var(--primary-color-rgb), 0.2) !important",
-                  },
-
-                  "& .MuiAutocomplete-option[aria-selected='true']": {
-                    backgroundColor: "var(--primary-color) !important",
-                    color: "var(--tertiary-color) !important",
-                  },
-
-                  "& .MuiAutocomplete-noOptions": {
-                    color: "var(--primary-color) !important",
-                    backgroundColor: "var(--tertiary-color) !important",
-                  },
-                },
-              },
-            }}
+            sx={fieldSx}
+            slotProps={{ paper: { sx: FREE_SOLO_PAPER_SX } }}
             {...props}
           />
         ) : (
           <Autocomplete<OptionType, false, false, false>
-            id={id}
-            disablePortal={disablePortal}
+            {...commonProps}
             value={selectedValue as OptionType | null}
-            onChange={handleSelectionChange}
-            onInputChange={handleInputChange}
-            options={options}
             getOptionLabel={(option) => option.label ?? ""}
             isOptionEqualToValue={(option, selected) =>
               String(option.value) === String(selected.value)
             }
-            noOptionsText={t("text.data-not-found")}
             filterOptions={(optionList, params) =>
               optionList.filter((option) =>
                 option.label.toLowerCase().includes(params.inputValue.toLowerCase())
               )
             }
-            disabled={disabled}
-            title={title || ""}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "5px",
-
-                "& fieldset": {
-                  borderColor: "var(--primary-color)",
-                },
-
-                "&.Mui-error fieldset": {
-                  borderColor: "#d32f2f",
-                  borderWidth: "1px",
-                },
-
-                "&:hover fieldset": {
-                  borderColor: "var(--primary-color)",
-                },
-
-                "&.Mui-focused fieldset": {
-                  borderColor: "var(--primary-color)",
-                },
-              },
-
-              backgroundColor: "var(--tertiary-color)",
-
-              "& .MuiInputBase-root": {
-                minHeight: "30px",
-                padding: "2px 8px",
-                fontSize: labelFontSize,
-                color: "var(--primary-color)",
-              },
-
-              "& .MuiInputBase-input": {
-                height: "25px",
-                padding: "0 !important",
-                backgroundColor: "var(--tertiary-color) !important",
-                color: "var(--primary-color)",
-              },
-
-              "& .MuiSvgIcon-root": {
-                color: "var(--primary-color)",
-              },
-
-              "& .MuiOutlinedInput-root.Mui-disabled": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
-                cursor: "not-allowed",
-
-                "& fieldset": {
-                  borderColor: "rgba(var(--primary-color-rgb), 0.7) !important",
-                },
-              },
-
-              "& .MuiInputBase-input.Mui-disabled": {
-                color: "rgba(var(--primary-color-rgb), 0.7) !important",
-                WebkitTextFillColor: "rgba(var(--primary-color-rgb), 0.7) !important",
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
-                cursor: "not-allowed",
-              },
-
-              "& .MuiInputBase-root.Mui-disabled": {
-                color: "var(--primary-color) !important",
-              },
-
-              ...sx,
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                error={error}
-                helperText={helperText}
-                placeholder={placeholder || ""}
-              />
-            )}
-            renderOption={(props, option, { inputValue }) => {
-              const { key, ...otherProps } = props;
-
-              return (
-                <li {...otherProps} key={key}>
-                  {renderHighlightedText(option.label, inputValue)}
-                </li>
-              );
-            }}
-            slotProps={{
-              paper: {
-                sx: {
-                  backgroundColor: "var(--tertiary-color) !important",
-                  color: "var(--primary-color) !important",
-                  border: "1px solid var(--primary-color)",
-
-                  "& .MuiAutocomplete-listbox": {
-                    backgroundColor: "var(--tertiary-color) !important",
-                    padding: 0,
-                  },
-
-                  "& .MuiAutocomplete-option": {
-                    color: "var(--primary-color) !important",
-                    backgroundColor: "var(--tertiary-color) !important",
-                  },
-
-                  "& .MuiAutocomplete-option:hover, & .Mui-focused": {
-                    backgroundColor:
-                      "rgba(var(--primary-color-rgb), 0.2) !important",
-                  },
-
-                  "& .MuiAutocomplete-option[aria-selected='true']": {
-                    backgroundColor: "var(--primary-color) !important",
-                    color: "var(--tertiary-color) !important",
-                  },
-
-                  "& .MuiAutocomplete-noOptions": {
-                    color: "var(--primary-color) !important",
-                    backgroundColor: "var(--tertiary-color) !important",
-                  },
-                },
-              },
-            }}
+            sx={fieldSx}
+            slotProps={{ paper: { sx: BASE_PAPER_SX } }}
             {...props}
           />
         )

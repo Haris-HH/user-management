@@ -1,81 +1,115 @@
 // Types
-import type { TopUsersType } from "../types/common";
+import type { TopUsers } from "../types/common";
 import type { TopUsersResponse } from "../types/response";
 
-export const mockTopInternalUsersType: TopUsersType[] = [
+/*
+  These fixtures previously described a long-removed shape: they were
+  annotated as TopUsersResponse but carried { messages, results, ... } while
+  the endpoint (and StatisticTopUsers) actually read BasicResponse.data, so
+  the Top Users chart rendered empty whenever VITE_IS_DEV was set. The same
+  people and monthly usage figures are kept, remapped onto the real
+  TopUsers shape.
+*/
+const mockTopInternalUsersData: TopUsers[] = [
   {
-    nation_number: "3440299987644",
-    prename_id: 1,
-    fullname: "กิตติเดช ห้าวหาญ",
-    first_name: "กิตติเดช",
-    last_name: "ห้าวหาญ",
+    rank: 1,
+    user_id: "3440299987644",
+    title_id: 1,
+    title: "นาย",
+    firstname: "กิตติเดช",
+    lastname: "ห้าวหาญ",
+    idcard: "3440299987644",
     phone: "0998978576",
-    ad_ou: 1,
-    usageData: [
-      { usageMonthYear: "2026-04", usageCount: 3500 },
-      { usageMonthYear: "2026-03", usageCount: 2500 },
-      { usageMonthYear: "2026-02", usageCount: 5050 }
-    ]
+    username: "3440299987644",
+    ou_code: "00",
+    ou_name: "สำนักงานตำรวจแห่งชาติ",
+    org_code: "00010000",
+    months: {
+      "2026-04": 3500,
+      "2026-03": 2500,
+      "2026-02": 5050,
+    },
+    total: 11050,
   },
   {
-    nation_number: "1440276788123",
-    prename_id: 1,
-    fullname: "สมศักดิ์ บุญหาญ",
-    first_name: "สมศักดิ์",
-    last_name: "บุญหาญ",
+    rank: 2,
+    user_id: "1440276788123",
+    title_id: 1,
+    title: "นาย",
+    firstname: "สมศักดิ์",
+    lastname: "บุญหาญ",
+    idcard: "1440276788123",
     phone: "0818000573",
-    ad_ou: 1,
-    usageData: [
-      { usageMonthYear: "2026-04", usageCount: 2450 },
-      { usageMonthYear: "2026-03", usageCount: 1750 },
-      { usageMonthYear: "2026-02", usageCount: 5000 }
-    ]
-  }
-]
+    username: "1440276788123",
+    ou_code: "00",
+    ou_name: "สำนักงานตำรวจแห่งชาติ",
+    org_code: "00010000",
+    months: {
+      "2026-04": 2450,
+      "2026-03": 1750,
+      "2026-02": 5000,
+    },
+    total: 9200,
+  },
+];
 
-export const mockTopExternalUsersType: TopUsersType[] = [
+const mockTopExternalUsersData: TopUsers[] = [
   {
-    nation_number: "3440299987678",
-    prename_id: 1,
-    fullname: "อดิสร ศิริพจนา",
-    first_name: "อดิสร",
-    last_name: "ศิริพจนา",
+    rank: 1,
+    user_id: "3440299987678",
+    title_id: 1,
+    title: "นาย",
+    firstname: "อดิสร",
+    lastname: "ศิริพจนา",
+    idcard: "3440299987678",
     phone: "0998978876",
-    ad_ou: 1,
-    usageData: [
-      { usageMonthYear: "2026-04", usageCount: 6500 },
-      { usageMonthYear: "2026-03", usageCount: 6750 },
-      { usageMonthYear: "2026-02", usageCount: 7700 }
-    ]
+    username: "3440299987678",
+    ou_code: "00",
+    ou_name: "สำนักงานตำรวจแห่งชาติ",
+    org_code: "00010000",
+    months: {
+      "2026-04": 6500,
+      "2026-03": 6750,
+      "2026-02": 7700,
+    },
+    total: 20950,
   },
   {
-    nation_number: "1440276789998",
-    prename_id: 1,
-    fullname: "ชาติชาย พงษ์ศรี",
-    first_name: "ชาติชาย",
-    last_name: "พงษ์ศรี",
+    rank: 2,
+    user_id: "1440276789998",
+    title_id: 1,
+    title: "นาย",
+    firstname: "ชาติชาย",
+    lastname: "พงษ์ศรี",
+    idcard: "1440276789998",
     phone: "0998978876",
-    ad_ou: 1,
-    usageData: [
-      { usageMonthYear: "2026-04", usageCount: 5450 },
-      { usageMonthYear: "2026-03", usageCount: 6000 },
-      { usageMonthYear: "2026-02", usageCount: 7150 }
-    ]
-  }
-]
+    username: "1440276789998",
+    ou_code: "00",
+    ou_name: "สำนักงานตำรวจแห่งชาติ",
+    org_code: "00010000",
+    months: {
+      "2026-04": 5450,
+      "2026-03": 6000,
+      "2026-02": 7150,
+    },
+    total: 18600,
+  },
+];
 
 export const mockTopInternalUsers: TopUsersResponse = {
-  messages: "",
-  results: mockTopInternalUsersType,
-  status: "ok",
-  total_matches: 2,
-  total: 1
-}
+  endpoint: "/api/v0/log-management/access-logs/statistics/user-max-access",
+  message: "OK",
+  statusCode: 200,
+  status: "Successful",
+  success: true,
+  data: mockTopInternalUsersData,
+};
 
 export const mockTopExternalUsers: TopUsersResponse = {
-  messages: "",
-  results: mockTopExternalUsersType,
-  status: "ok",
-  total_matches: 2,
-  total: 1
-}
+  endpoint: "/api/v0/log-management/access-logs/statistics/user-max-access",
+  message: "OK",
+  statusCode: 200,
+  status: "Successful",
+  success: true,
+  data: mockTopExternalUsersData,
+};

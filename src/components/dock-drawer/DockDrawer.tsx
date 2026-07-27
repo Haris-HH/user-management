@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import IconButton from "@mui/material/IconButton";
@@ -45,6 +45,13 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
       handleSubMenuClose();
     }, 250);
   };
+
+  /*
+    MainLayout unmounts the dock on the home route, which can happen while a
+    close timer is still pending; without this the callback would still fire
+    against an unmounted component.
+  */
+  useEffect(() => clearCloseTimer, []);
 
   const handleSubMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -117,7 +124,7 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
               }
             }}
             onClick={() => {
-              if (item.subMenu?.length) return;
+              if (item.subMenu?.length || !item.path) return;
 
               navigate(item.path);
               handleCloseDock();

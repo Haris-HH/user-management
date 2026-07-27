@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 
 // Material UI
 import Table from "@mui/material/Table";
@@ -25,9 +25,81 @@ import type {
   CameraInCheckpoint,
   GroupPermissions,
   PermissionUiGroup,
+  PermissionMode,
 } from "../../types/common";
 
-type PermissionMode = "none" | "active" | "edit";
+// A single ui[uiKey] entry of GroupPermissions, e.g. { enabled, groups, prints }.
+type UiPermissionEntry = NonNullable<GroupPermissions["ui"]>[string];
+
+// One pass over a ui's group_list instead of the 6 separate .every()/.filter()
+// passes the previous implementation did (each of which re-derived the same
+// lookups) - same results, O(m) instead of O(6m) per ui block.
+type UiGroupSummary = {
+  allActiveChecked: boolean;
+  allEditChecked: boolean;
+  allPrintChecked: boolean;
+  activeCount: number;
+  editCount: number;
+  noneCount: number;
+};
+
+// Label rows are context for the rows around them, not permissions - they hold
+// no mode and must stay out of every count, select-all and persisted map.
+const isPermissionRow = (group: PermissionUiGroup) => group.is_label !== true;
+
+const summarizeUiGroups = (
+  groupList: PermissionUiGroup[],
+  groups: Record<string, PermissionMode> | undefined,
+  prints: Record<string, boolean> | undefined
+): UiGroupSummary => {
+  let total = 0;
+
+  let activeCount = 0;
+  let editCount = 0;
+  let noneCount = 0;
+  let printCount = 0;
+
+  for (const group of groupList) {
+    if (!isPermissionRow(group)) continue;
+
+    total += 1;
+
+    const mode = groups?.[group.key] ?? "none";
+
+    if (mode === "active") activeCount += 1;
+    else if (mode === "edit") editCount += 1;
+    else noneCount += 1;
+
+    if (prints?.[group.key] === true) printCount += 1;
+  }
+
+  return {
+    allActiveChecked: total > 0 && activeCount === total,
+    allEditChecked: total > 0 && editCount === total,
+    allPrintChecked: total > 0 && printCount === total,
+    activeCount,
+    editCount,
+    noneCount,
+  };
+};
+
+// Builds the immutable ui[uiKey] update shared by every mutation below:
+// keep the rest of `permissions` and the rest of `ui` untouched, replace only
+// uiKey's entry with { ...old entry, ...patch }.
+const mergeUiEntry = (
+  permissions: GroupPermissions,
+  uiKey: string,
+  patch: Partial<UiPermissionEntry>
+): GroupPermissions => ({
+  ...permissions,
+  ui: {
+    ...(permissions.ui ?? {}),
+    [uiKey]: {
+      ...(permissions.ui?.[uiKey] ?? {}),
+      ...patch,
+    },
+  },
+});
 
 type Props = {
   permissionUiList: PermissionUiList[];
@@ -44,7 +116,7 @@ const PermissionTable = ({
   disabled = false,
   onPermissionsChange,
 }: Props) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const [openAccordion, setOpenAccordion] = useState<Record<number, boolean>>(
     {}
@@ -54,11 +126,7 @@ const PermissionTable = ({
     Record<number, boolean>
   >({});
 
-  const getUiKey = (ui: PermissionUiList) => ui.key;
-
-  const getGroupKey = (group: PermissionUiGroup) => group.key;
-
-  const getUiPermission = (uiKey: string) => {
+  const getUiPermission = (uiKey: string): UiPermissionEntry => {
     return permissions.ui?.[uiKey] ?? {};
   };
 
@@ -70,45 +138,31 @@ const PermissionTable = ({
     return getUiPermission(uiKey).prints?.[groupKey] === true;
   };
 
-  const getPermissionMode = (
-    uiKey: string,
-    groupKey: string
-  ): PermissionMode => {
-    return getUiPermission(uiKey).groups?.[groupKey] ?? "none";
-  };
-
   const updatePermissions = (updated: GroupPermissions) => {
     if (disabled) return;
     onPermissionsChange(updated);
   };
 
-  const handleToggleAccordion = (index: number) => {
+  // No external deps - stable identity across renders (permissions changes
+  // on every edit, so handlers that touch it can't be usefully memoized).
+  const handleToggleAccordion = useCallback((index: number) => {
     setOpenAccordion((prev) => ({
       ...prev,
       [index]: !(prev[index] ?? false),
     }));
-  };
+  }, []);
 
-  const handleToggleCheckpointAccordion = (index: number) => {
+  const handleToggleCheckpointAccordion = useCallback((index: number) => {
     setOpenCheckpointAccordion((prev) => ({
       ...prev,
       [index]: !(prev[index] ?? false),
     }));
-  };
+  }, []);
 
   const handleToggleUiEnabled = (uiKey: string) => {
     const nextEnabled = !isUiEnabled(uiKey);
 
-    const updated: GroupPermissions = {
-      ...permissions,
-      ui: {
-        ...(permissions.ui ?? {}),
-        [uiKey]: {
-          ...(permissions.ui?.[uiKey] ?? {}),
-          enabled: nextEnabled,
-        },
-      },
-    };
+    const updated = mergeUiEntry(permissions, uiKey, { enabled: nextEnabled });
 
     if (!nextEnabled) {
       delete updated.ui?.[uiKey]?.enabled;
@@ -125,105 +179,102 @@ const PermissionTable = ({
     updatePermissions(updated);
   };
 
+  /*
+    Clicking the level a row already has clears it back to "none". Without this
+    a radio pair is a one-way door: once a level is picked there is no way to
+    revoke the permission again short of switching the whole ui off.
+  */
   const handleSelectPermission = (
     uiKey: string,
     groupKey: string,
     mode: PermissionMode
   ) => {
-    updatePermissions({
-      ...permissions,
-      ui: {
-        ...(permissions.ui ?? {}),
-        [uiKey]: {
-          ...(permissions.ui?.[uiKey] ?? {}),
-          groups: {
-            ...(permissions.ui?.[uiKey]?.groups ?? {}),
-            [groupKey]: mode,
-          },
+    const current = permissions.ui?.[uiKey]?.groups?.[groupKey] ?? "none";
+
+    updatePermissions(
+      mergeUiEntry(permissions, uiKey, {
+        groups: {
+          ...(permissions.ui?.[uiKey]?.groups ?? {}),
+          [groupKey]: current === mode ? "none" : mode,
         },
-      },
-    });
+      })
+    );
   };
 
   const handleTogglePrintPermission = (uiKey: string, groupKey: string) => {
     const current = isPrintEnabled(uiKey, groupKey);
 
-    updatePermissions({
-      ...permissions,
-      ui: {
-        ...(permissions.ui ?? {}),
-        [uiKey]: {
-          ...(permissions.ui?.[uiKey] ?? {}),
-          prints: {
-            ...(permissions.ui?.[uiKey]?.prints ?? {}),
-            [groupKey]: !current,
-          },
+    updatePermissions(
+      mergeUiEntry(permissions, uiKey, {
+        prints: {
+          ...(permissions.ui?.[uiKey]?.prints ?? {}),
+          [groupKey]: !current,
         },
-      },
-    });
+      })
+    );
   };
 
+  // Same toggle at column level: clicking a fully-selected column clears every
+  // row back to "none".
   const handleSelectAllPermission = (
     ui: PermissionUiList,
-    mode: PermissionMode
+    mode: PermissionMode,
+    isAllSelected: boolean
   ) => {
-    const uiKey = getUiKey(ui);
+    const uiKey = ui.key;
+    const nextMode: PermissionMode = isAllSelected ? "none" : mode;
 
     const groups = ui.group_list.reduce<Record<string, PermissionMode>>(
       (acc, group) => {
-        acc[getGroupKey(group)] = mode;
+        if (isPermissionRow(group)) acc[group.key] = nextMode;
         return acc;
       },
       {}
     );
 
-    updatePermissions({
-      ...permissions,
-      ui: {
-        ...(permissions.ui ?? {}),
-        [uiKey]: {
-          ...(permissions.ui?.[uiKey] ?? {}),
-          groups,
-        },
-      },
-    });
+    updatePermissions(mergeUiEntry(permissions, uiKey, { groups }));
   };
 
   const handleSelectAllPrintPermission = (ui: PermissionUiList, checked: boolean) => {
-    const uiKey = getUiKey(ui);
+    const uiKey = ui.key;
 
     const prints = ui.group_list.reduce<Record<string, boolean>>((acc, group) => {
-      acc[getGroupKey(group)] = checked;
+      if (isPermissionRow(group)) acc[group.key] = checked;
       return acc;
     }, {});
 
-    updatePermissions({
-      ...permissions,
-      ui: {
-        ...(permissions.ui ?? {}),
-        [uiKey]: {
-          ...(permissions.ui?.[uiKey] ?? {}),
-          prints,
-        },
-      },
-    });
+    updatePermissions(mergeUiEntry(permissions, uiKey, { prints }));
   };
 
   const selectedCheckpointIds = permissions.checkpoint_ids ?? [];
-  const checkpointIds = checkpointList.map((cp) => String(cp.id));
+
+  // Built once per render (keyed off the actual prop, not the `?? []`
+  // fallback above, which would be a fresh array every render) instead of
+  // doing an O(k) Array#includes() scan for every checkpoint row and inside
+  // the "select all" checks below - turns the matrix's checkpoint column
+  // from O(n*k) into O(n+k).
+  const selectedCheckpointIdSet = useMemo(
+    () => new Set(permissions.checkpoint_ids ?? []),
+    [permissions.checkpoint_ids]
+  );
+
+  const checkpointIds = useMemo(
+    () => checkpointList.map((cp) => String(cp.group_id)),
+    [checkpointList]
+  );
 
   const allCheckpointChecked =
     checkpointIds.length > 0 &&
-    checkpointIds.every((id) => selectedCheckpointIds.includes(id));
+    checkpointIds.every((id) => selectedCheckpointIdSet.has(id));
 
   const someCheckpointChecked =
-    checkpointIds.some((id) => selectedCheckpointIds.includes(id)) &&
+    checkpointIds.some((id) => selectedCheckpointIdSet.has(id)) &&
     !allCheckpointChecked;
 
   const handleToggleCheckpoint = (checkpointId: number | string) => {
     const id = String(checkpointId);
 
-    const updated = selectedCheckpointIds.includes(id)
+    const updated = selectedCheckpointIdSet.has(id)
       ? selectedCheckpointIds.filter((item) => item !== id)
       : [...selectedCheckpointIds, id];
 
@@ -241,7 +292,7 @@ const PermissionTable = ({
   };
 
   const activeCount = permissionUiList.filter((ui) =>
-    isUiEnabled(getUiKey(ui))
+    isUiEnabled(ui.key)
   ).length;
 
   const inactiveCount = permissionUiList.length - activeCount;
@@ -270,43 +321,22 @@ const PermissionTable = ({
 
         <div className="flex flex-col gap-2 border border-(--primary-color) rounded-sm p-2 mt-2 flex-1">
           {permissionUiList.map((ui, uiIndex) => {
-            const uiKey = getUiKey(ui);
-            const uiIsEnabled = isUiEnabled(uiKey);
+            const uiKey = ui.key;
+            const uiPermissionEntry = getUiPermission(uiKey);
+            const uiIsEnabled = uiPermissionEntry.enabled === true;
 
-            const allActiveChecked =
-              ui.group_list.length > 0 &&
-              ui.group_list.every(
-                (group) =>
-                  getPermissionMode(uiKey, getGroupKey(group)) === "active"
-              );
-
-            const allEditChecked =
-              ui.group_list.length > 0 &&
-              ui.group_list.every(
-                (group) =>
-                  getPermissionMode(uiKey, getGroupKey(group)) === "edit"
-              );
-
-            const allPrintChecked =
-              ui.group_list.length > 0 &&
-              ui.group_list.every((group) =>
-                isPrintEnabled(uiKey, getGroupKey(group))
-              );
-
-            const activePermissionCount = ui.group_list.filter(
-              (group) =>
-                getPermissionMode(uiKey, getGroupKey(group)) === "active"
-            ).length;
-
-            const editPermissionCount = ui.group_list.filter(
-              (group) =>
-                getPermissionMode(uiKey, getGroupKey(group)) === "edit"
-            ).length;
-
-            const noPermissionCount = ui.group_list.filter(
-              (group) =>
-                getPermissionMode(uiKey, getGroupKey(group)) === "none"
-            ).length;
+            const {
+              allActiveChecked,
+              allEditChecked,
+              allPrintChecked,
+              activeCount: activePermissionCount,
+              editCount: editPermissionCount,
+              noneCount: noPermissionCount,
+            } = summarizeUiGroups(
+              ui.group_list,
+              uiPermissionEntry.groups,
+              uiPermissionEntry.prints
+            );
 
             return (
               <Accordion
@@ -427,7 +457,11 @@ const PermissionTable = ({
                                 disabled={disabled || !uiIsEnabled}
                                 checked={allActiveChecked}
                                 onClick={() =>
-                                  handleSelectAllPermission(ui, "active")
+                                  handleSelectAllPermission(
+                                    ui,
+                                    "active",
+                                    allActiveChecked
+                                  )
                                 }
                                 sx={{
                                   color: "var(--tertiary-color)",
@@ -448,7 +482,11 @@ const PermissionTable = ({
                                 disabled={disabled || !uiIsEnabled}
                                 checked={allEditChecked}
                                 onClick={() =>
-                                  handleSelectAllPermission(ui, "edit")
+                                  handleSelectAllPermission(
+                                    ui,
+                                    "edit",
+                                    allEditChecked
+                                  )
                                 }
                                 sx={{
                                   color: "var(--tertiary-color)",
@@ -487,8 +525,51 @@ const PermissionTable = ({
 
                       <TableBody>
                         {ui.group_list.map((group, groupIndex) => {
-                          const groupKey = getGroupKey(group);
-                          const mode = getPermissionMode(uiKey, groupKey);
+                          const groupKey = group.key;
+                          const mode = uiPermissionEntry.groups?.[groupKey] ?? "none";
+
+                          // Nested catalogues indent their children; a flat one
+                          // leaves depth unset and keeps the default padding.
+                          const indent = 2 + (group.depth ?? 0) * 3;
+
+                          /*
+                            A row with no mode of its own spans the control
+                            columns. At the top level it is a heading over the
+                            rows beneath it; nested, it is a sub-item listed
+                            under the menu that grants it.
+                          */
+                          if (group.is_label) {
+                            const isHeading = !group.depth;
+
+                            return (
+                              <TableRow
+                                key={`${uiKey}-${groupKey}-${groupIndex}`}
+                                sx={{
+                                  // A sub-item sits on a lighter band than the
+                                  // menu row that grants it, so the two are
+                                  // told apart at a glance.
+                                  backgroundColor: isHeading
+                                    ? "rgba(var(--primary-color-rgb), 0.45)"
+                                    : "rgba(var(--primary-color-rgb), 0.12)",
+                                  "& td": { border: "none" },
+                                }}
+                              >
+                                <TableCell
+                                  colSpan={4}
+                                  sx={{
+                                    pl: indent,
+                                    py: isHeading ? 1 : 0.5,
+                                    fontSize: "14px",
+                                    ...(isHeading
+                                      ? { fontWeight: 700 }
+                                      : { opacity: 0.75 }),
+                                  }}
+                                >
+                                  {group.name}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }
 
                           return (
                             <TableRow
@@ -500,7 +581,10 @@ const PermissionTable = ({
                                 "& .MuiTableCell-root": { fontSize: "14px" },
                               }}
                             >
-                              <TableCell>{group.name}</TableCell>
+                              {/* Nesting is carried by the indent alone. */}
+                              <TableCell sx={{ pl: indent }}>
+                                {group.name}
+                              </TableCell>
 
                               <TableCell align="center" sx={{ p: 0 }}>
                                 <Radio
@@ -545,7 +629,7 @@ const PermissionTable = ({
                               <TableCell align="center" sx={{ p: 0 }}>
                                 <Checkbox
                                   disabled={disabled || !uiIsEnabled}
-                                  checked={isPrintEnabled(uiKey, groupKey)}
+                                  checked={uiPermissionEntry.prints?.[groupKey] === true}
                                   onChange={() => handleTogglePrintPermission(uiKey, groupKey)}
                                   sx={{
                                     color: "var(--primary-color)",
@@ -649,7 +733,7 @@ const PermissionTable = ({
 
               <TableBody>
                 {checkpointList.map((checkpoint, chIndex) => (
-                  <TableRow key={`checkpoint-permission-${checkpoint.id}`}>
+                  <TableRow key={`checkpoint-permission-${checkpoint.group_id}`}>
                     <TableCell colSpan={3} sx={{ p: 0, border: "none" }}>
                       <Accordion
                         expanded={openCheckpointAccordion[chIndex] ?? false}
@@ -683,9 +767,7 @@ const PermissionTable = ({
                                 fontWeight: 700,
                               }}
                             >
-                              {i18n.language === "th"
-                                ? checkpoint.title_th
-                                : checkpoint.title_en}
+                              {checkpoint.group_name}
                             </Typography>
 
                             <Typography
@@ -703,12 +785,12 @@ const PermissionTable = ({
                               <Checkbox
                                 size="small"
                                 disabled={disabled}
-                                checked={selectedCheckpointIds.includes(
-                                  String(checkpoint.id)
+                                checked={selectedCheckpointIdSet.has(
+                                  String(checkpoint.group_id)
                                 )}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={() =>
-                                  handleToggleCheckpoint(checkpoint.id)
+                                  handleToggleCheckpoint(checkpoint.group_id)
                                 }
                                 sx={{
                                   color: "var(--tertiary-color)",
@@ -769,9 +851,7 @@ const PermissionTable = ({
                                       }}
                                     >
                                       <TableCell>
-                                        {i18n.language === "th"
-                                          ? checkpoint.title_abbr_th
-                                          : checkpoint.title_abbr_en}
+                                        {cl.police_region_name ?? "-"}
                                       </TableCell>
                                       <TableCell>{cl.province_name}</TableCell>
                                       <TableCell align="center">

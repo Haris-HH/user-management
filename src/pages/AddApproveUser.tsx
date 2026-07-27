@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -39,7 +39,6 @@ import ApproveActionBar from '../components/approve-action-bar/ApproveActionBar'
 import UploadFile from '../components/upload-file/UploadFile';
 import TableSkeleton from '../components/table-skeleton/TableSkeleton';
 import LoadingScreen from '../components/loading-screen/LoadingScreen';
-import SubAgency from '../components/sub-agency/SubAgency';
 
 // i18n
 import { useTranslation } from 'react-i18next';
@@ -74,7 +73,7 @@ interface FormData {
   bh_id: string;
   bk_id: string;
   org_id: string;
-  sub_unit: string[]
+  sub_unit: string;
 };
 
 const AddApproveUser = () => {
@@ -89,14 +88,12 @@ const AddApproveUser = () => {
   
   // State
   const [isAccordionOpen, setIsAccordionOpen] = useState(true);
-  const [openApproveConfirmDialog, setOpenApproveConfirmDialog] = useState<boolean>(false);
   const [openImportDialog, setOpenImportDialog] = useState<boolean>(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Data
   const [tabValue, setTabValue] = useState(0);
-  const [visibleColumns, setVisibleColumns] = useState<Column[]>([]);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [userData, setUserData] = useState<User[]>([]);
   const [bk, setBk] = useState<NsbBk[]>([]);
@@ -116,17 +113,46 @@ const AddApproveUser = () => {
     bh_id: "0",
     bk_id: "0",
     org_id: "0",
-    sub_unit: [],
+    sub_unit: "",
   });
 
-  // Slice
-  const { agency, bh, title, userGroup } = useSelector((state: RootState) => state.dropdown);
+  // Refs mirroring frequently-changing filter/pagination state. fetchData is
+  // only re-created (via useCallback) when tabValue or the dropdown-derived
+  // maps below change, so its default parameters must read these refs
+  // instead of closing over formData/page/rowsPerPage directly - otherwise
+  // calls made with no arguments (e.g. after delete/approve) would silently
+  // reuse whatever filters/pagination were active the last time fetchData
+  // was recreated instead of the current ones.
+  const formDataRef = useRef(formData);
+  const pageRef = useRef(page);
+  const rowsPerPageRef = useRef(rowsPerPage);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    formDataRef.current = formData;
+    pageRef.current = page;
+    rowsPerPageRef.current = rowsPerPage;
+  }, [formData, page, rowsPerPage]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Slice - selected per-field so this component only re-renders when a
+  // field it actually uses changes, instead of on every dropdown slice
+  // update (the slice is repopulated by ~14 thunks fired once on login).
+  const agency = useSelector((state: RootState) => state.dropdown.agency);
+  const bh = useSelector((state: RootState) => state.dropdown.bh);
+  const title = useSelector((state: RootState) => state.dropdown.title);
+  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
   const { user } = useSelector((state: RootState) => state.authUser);
 
   const agencyOptions = useMemo(() => {
     const langKeyAgency = i18n.language === "th" ? "ou_abbr_th" : "ou_abbr_en";
     return buildOptions(agency, t("dropdown.all-agency"), langKeyAgency, "ou_code", true, "");
-  }, [agency, i18n.language, i18n.isInitialized]);
+  }, [agency, t, i18n.language]);
 
   const bhOptions = useMemo(() => {
     const langKeyBh = i18n.language === "th" ? "bh_abbr_th" : "bh_abbr_en";
@@ -135,7 +161,7 @@ const AddApproveUser = () => {
       : bh;
 
     return buildOptions(filteredBh, t("dropdown.all-bh"), langKeyBh, "bh_code");
-  }, [bh, i18n.language, formData.agency_id, i18n.isInitialized]);
+  }, [bh, t, i18n.language, formData.agency_id]);
 
   const bkOptions = useMemo(() => {
     const langKeyBk = i18n.language === "th" ? "bk_abbr_th" : "bk_abbr_en";
@@ -144,7 +170,7 @@ const AddApproveUser = () => {
       : bk;
 
     return buildOptions(filteredBk, t("dropdown.all-bk"), langKeyBk, "bk_code");
-  }, [bk, i18n.language, formData.bh_id, i18n.isInitialized]);
+  }, [bk, t, i18n.language, formData.bh_id]);
 
   const orgOptions = useMemo(() => {
     const langKeyOrg = i18n.language === "th" ? "org_abbr_th" : "org_abbr_en";
@@ -153,36 +179,180 @@ const AddApproveUser = () => {
       : org;
 
     return buildOptions(filteredOrg, t("dropdown.all-org"), langKeyOrg, "org_code");
-  }, [org, i18n.language, formData.bk_id, i18n.isInitialized]);
+  }, [org, t, i18n.language, formData.bk_id]);
 
-  const agencyMap = new Map(
-    agency.map(item => [item.ou_code, item])
+  // Memoized so fetchData (which reads these maps) only gets a new identity
+  // when the underlying dropdown/reference data actually changes, instead
+  // of on every render - previously these were rebuilt on every render and
+  // fetchData's useCallback (deps: [tabValue]) captured whichever instance
+  // existed when it was last recreated, so if agency/bh/bk/org/title/
+  // userGroup data arrived after the initial fetch (a real race with the
+  // dropdown thunks fired from App.tsx), the table kept showing "-" for
+  // names until the tab was switched.
+  const agencyMap = useMemo(
+    () => new Map(agency.map((item) => [item.ou_code, item])),
+    [agency]
   );
 
-  const bhMap = new Map(
-    bh.map(item => [item.bh_code, item])
+  const bhMap = useMemo(
+    () => new Map(bh.map((item) => [item.bh_code, item])),
+    [bh]
   );
 
-  const bkMap = new Map(
-    bk.map(item => [item.bk_code, item])
+  const bkMap = useMemo(
+    () => new Map(bk.map((item) => [item.bk_code, item])),
+    [bk]
   );
 
-  const orgMap = new Map(
-    org.map(item => [item.org_code, item])
+  const orgMap = useMemo(
+    () => new Map(org.map((item) => [item.org_code, item])),
+    [org]
   );
 
-  const titleMap = new Map(
-    title.map(item => [item.id, item])
+  const titleMap = useMemo(
+    () => new Map(title.map((item) => [item.id, item])),
+    [title]
   );
 
-  const userGroupMap = new Map(
-    userGroup.map(item => [item.group_id, item])
+  const userGroupMap = useMemo(
+    () => new Map(userGroup.map((item) => [item.group_id, item])),
+    [userGroup]
   );
 
   const internalPolice: boolean = useMemo(() => {
     const agencyData = agency.find((a) => a.ou_code === formData.agency_id);
     return agencyData?.ou_codename === "police" || false;
-  }, [formData.agency_id])
+  }, [agency, formData.agency_id])
+
+  const getFilters = useCallback(
+    (
+      formData: FormData,
+      tabValue: number,
+      page: number,
+      limit: number
+    ): Record<string, string> => {
+      const statusMap = ["pending", "wait_approve", "rejected"] as const;
+
+      const filters: Record<string, string> = {
+        filter: `approve_status=${statusMap[tabValue] ?? "pending"}`,
+        page: String(page),
+        limit: String(limit),
+      };
+
+      const pid = formData.pid.trim();
+      const name = formData.name.trim();
+      const subUnit = formData.sub_unit.trim();
+
+      if (pid) {
+        filters.idcard = `*${pid}*`;
+      }
+
+      if (name) {
+        filters.fullname = `*${name}*`;
+      }
+
+      if (formData.agency_id) {
+        filters.ou_code = formData.agency_id;
+      }
+
+      if (formData.bh_id !== "0") {
+        filters.bh_code = formData.bh_id;
+      }
+
+      if (formData.bk_id !== "0") {
+        filters.bk_code = formData.bk_id;
+      }
+
+      if (formData.org_id !== "0") {
+        filters.org_code = formData.org_id;
+      }
+
+      if (subUnit) {
+        filters.sub_unit_list = `*${subUnit}*`;
+      }
+
+      return filters;
+    },
+    []
+  );
+
+  // Guards fetchData against out-of-order responses (an older, slower
+  // request resolving after a newer one and overwriting fresh data with
+  // stale data) and against setState after unmount.
+  const fetchRequestIdRef = useRef(0);
+
+  const fetchData = useCallback(
+    async (
+      filterData: FormData = formDataRef.current,
+      pageData: number = pageRef.current,
+      limit: number = rowsPerPageRef.current
+    ) => {
+      const requestId = ++fetchRequestIdRef.current;
+      try {
+        setIsDataLoading(true);
+        const res = await searchUserApi(undefined, {
+          ...getFilters(filterData, tabValue, pageData, limit),
+        });
+        if (!isMountedRef.current || requestId !== fetchRequestIdRef.current) {
+          return;
+        }
+        setTotalPages(res?.pagination?.maxPage ?? 1);
+        const updated = res.data.map((data) => {
+          const titleData = data.title_id ? titleMap.get(data.title_id) : null;
+          const titleName = titleData ?
+                              (i18n.language === "th" ? titleData.title_abbr_th : titleData.title_abbr_en) ?? "-"
+                              : "-";
+          const agencyData = data.ou_code ? agencyMap.get(data.ou_code) : null;
+          const agencyName = agencyData ?
+                              (i18n.language === "th" ? agencyData.ou_abbr_th : agencyData.ou_abbr_en) ?? "-"
+                              : "-";
+          const bhData = data.bh_code ? bhMap.get(data.bh_code) : null;
+          const bhName = bhData ?
+                              (i18n.language === "th" ? bhData.bh_abbr_th : bhData.bh_abbr_en) ?? "-"
+                              : "-";
+          const bkData = data.bk_code ? bkMap.get(data.bk_code) : null;
+          const bkName = bkData ?
+                              (i18n.language === "th" ? bkData.bk_abbr_th : bkData.bk_abbr_en) ?? "-"
+                              : "-";
+          const orgData = data.org_code ? orgMap.get(data.org_code) : null;
+          const orgName = orgData ?
+                              (i18n.language === "th" ? orgData.org_abbr_th : orgData.org_abbr_en) ?? "-"
+                              : "-";
+          const userGroupData = data.user_group_id ? userGroupMap.get(data.user_group_id) : null;
+          return {
+            ...data,
+            title: titleName,
+            ou_name: agencyName,
+            bh_name: bhName,
+            bk_name: bkName,
+            org_name: orgName,
+            user_group_name: capitalizeWords(userGroupData?.group_name ?? ""),
+          }
+        })
+        setUserData(updated);
+      }
+      catch {
+        if (!isMountedRef.current || requestId !== fetchRequestIdRef.current) {
+          return;
+        }
+        await PopupMessage(t("popup.fetch-error"), "", "error");
+        setTotalPages(1);
+      }
+      finally {
+        if (isMountedRef.current && requestId === fetchRequestIdRef.current) {
+          setIsDataLoading(false);
+        }
+      }
+    },
+    // t/i18n.language are intentionally left out of this dependency list:
+    // both are read live at call time from stable objects (not values
+    // captured by this closure), so they never go stale here. Including
+    // them would recreate fetchData - and therefore retrigger the
+    // auto-fetch effect below, which depends on fetchData's identity - on
+    // every language toggle, causing an unwanted extra network request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tabValue, getFilters, titleMap, agencyMap, bhMap, bkMap, orgMap, userGroupMap]
+  );
 
   const fetchBkList = useCallback(async (bhCode?: string) => {
     try {
@@ -195,7 +365,7 @@ const AddApproveUser = () => {
 
       const res = await getBk(params);
       setBk(res.data ?? []);
-    } catch (error) {
+    } catch {
       setBk([]);
     }
   }, []);
@@ -211,113 +381,66 @@ const AddApproveUser = () => {
 
       const res = await getOrg(params);
       setOrg(res.data ?? []);
-    } catch (error) {
+    } catch {
       setOrg([]);
     }
   }, []);
 
   useEffect(() => {
+    // Cascading dropdown fetch driven by the selected bh - the async call
+    // only sets state after its network response resolves, never
+    // synchronously within the effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBkList(formData.bh_id);
   }, [fetchBkList, formData.bh_id]);
 
   useEffect(() => {
+    // Cascading dropdown fetch driven by the selected bk - see the bh effect
+    // above for why this legitimately belongs in an effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrgList(formData.bk_id);
   }, [fetchOrgList, formData.bk_id]);
-  
-  useEffect(() => {
-    let filteredColumns = [];
+
+  const visibleColumns = useMemo<Column[]>(() => {
     if (tabValue === 0) {
-      filteredColumns = columns.filter((column) => 
-        column.id !== "approve_date" && 
-        column.id !== "un_approve_date" && 
+      return columns.filter((column) =>
+        column.id !== "approve_date" &&
+        column.id !== "un_approve_date" &&
         column.id !== "un_approve_reason" &&
         column.id !== "active_date_time" &&
         column.id !== "account_status" &&
         column.id !== "remark"
       );
     }
-    else if (tabValue === 1) {
-      filteredColumns = columns.filter((column) => 
-        column.id !== "un_approve_date" && 
+    if (tabValue === 1) {
+      return columns.filter((column) =>
+        column.id !== "un_approve_date" &&
         column.id !== "un_approve_reason" &&
         column.id !== "active_date_time" &&
         column.id !== "account_status" &&
         column.id !== "remark"
       );
     }
-    else {
-      filteredColumns = columns.filter((column) => 
-        column.id !== "approve_date" && 
-        column.id !== "active_date_time" &&
-        column.id !== "update_profile_status" &&
-        column.id !== "latest_update_profile_date" &&
-        column.id !== "account_status" &&
-        column.id !== "remark"
-      );
-    }
-    setVisibleColumns(filteredColumns);
+    return columns.filter((column) =>
+      column.id !== "approve_date" &&
+      column.id !== "active_date_time" &&
+      column.id !== "update_profile_status" &&
+      column.id !== "latest_update_profile_date" &&
+      column.id !== "account_status" &&
+      column.id !== "remark"
+    );
   }, [columns, tabValue]);
 
   useEffect(() => {
     if (openImportDialog) return;
-    fetchData(formData);
-  }, [
-    tabValue, 
-    openImportDialog,
-  ]);
-
-  const fetchData = useCallback(
-    async (filterData: FormData = formData, pageData: number = page, limit: number = rowsPerPage) => {
-      try {
-        setIsDataLoading(true);
-        const res = await searchUserApi(undefined, {
-          ...getFilters(filterData, tabValue, pageData, limit),
-        });
-        setTotalPages(res?.pagination?.maxPage);
-        const updated = res.data.map((data) => {
-          const titleData = data.title_id ? titleMap.get(data.title_id) : null;
-          const titleName = titleData ? 
-                              i18n.language === "th" ? titleData.title_abbr_th : titleData.title_abbr_en
-                              : "-";
-          const agencyData = data.ou_code ? agencyMap.get(data.ou_code) : null;
-          const agencyName = agencyData ? 
-                              i18n.language === "th" ? agencyData.ou_abbr_th : agencyData.ou_abbr_en
-                              : "-";
-          const bhData = data.bh_code ? bhMap.get(data.bh_code) : null;
-          const bhName = bhData ? 
-                              i18n.language === "th" ? bhData.bh_abbr_th : bhData.bh_abbr_en
-                              : "-";
-          const bkData = data.bk_code ? bkMap.get(data.bk_code) : null;
-          const bkName = bkData ? 
-                              i18n.language === "th" ? bkData.bk_abbr_th : bkData.bk_abbr_en
-                              : "-";
-          const orgData = data.org_code ? orgMap.get(data.org_code) : null;
-          const orgName = orgData ? 
-                              i18n.language === "th" ? orgData.org_abbr_th : orgData.org_abbr_en
-                              : "-";
-          const userGroupData = data.user_group_id ? userGroupMap.get(data.user_group_id) : null;
-          return {
-            ...data,
-            title: titleName,
-            ou_name: agencyName,
-            bh_name: bhName,
-            bk_name: bkName,
-            org_name: orgName,
-            user_group_name: capitalizeWords(userGroupData?.group_name) ?? "-",
-          }
-        })
-        setUserData(updated);
-      }
-      catch (error) {
-        await PopupMessage(t("popup.fetch-error"), "", "error");
-        setTotalPages(1);
-      } 
-      finally {
-        setIsDataLoading(false);
-      }
-    },
-    [tabValue]
-  );
+    // formData is intentionally not read here: search is user-triggered (see
+    // handleSearchClick) and must not auto-run on every keystroke. fetchData
+    // reads the live filters via formDataRef internally. The setState calls
+    // inside fetchData only happen after its network response resolves,
+    // never synchronously within this effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [fetchData, openImportDialog]);
 
   const visibleUserIds = useMemo(
     () => userData.map((user) => user.user_id),
@@ -354,9 +477,10 @@ const AddApproveUser = () => {
   };
 
   const handleDropdownChange = (
+    // AutoComplete emits null when the selection is cleared.
     event: React.SyntheticEvent,
     key: keyof typeof formData,
-    value: string | OptionType,
+    value: string | OptionType | null,
   ) => {
     event.preventDefault();
 
@@ -388,8 +512,16 @@ const AddApproveUser = () => {
     });
   };
 
-  const handleChangePage = async (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
-    event.preventDefault();
+  /*
+    MUI passes null as the event when the page changes without a click
+    (e.g. after the rows-per-page control clamps the page), so the event is
+    optional-chained rather than dereferenced.
+  */
+  const handleChangePage = async (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
+    event?.preventDefault();
     setPage(newPage);
     await fetchData(formData, newPage, rowsPerPage);
   };
@@ -457,7 +589,7 @@ const AddApproveUser = () => {
       await PopupMessage(t("popup.deleted-success"), "", "success");
       await fetchData();
     }
-    catch (error) {
+    catch {
       await PopupMessage(t("popup.deleted-failed"), "", "error");
     }
     finally {
@@ -501,10 +633,10 @@ const AddApproveUser = () => {
         ...(
           (status === "approved" || status === "wait_approve") && {
             active_type: approveData?.activationTime === "now" ? "now" : "schedule",
-            auto_approve_at: dayjs(approveData.approveDate).format("YYYY-MM-DD")
+            auto_approve_at: dayjs(approveData?.approveDate).format("YYYY-MM-DD")
           }
         ),
-        approve_by: user.user_id || "",
+        approve_by: user?.user_id || "",
         approve_at: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       });
       if (approveData?.activationTime === "now") {
@@ -513,15 +645,15 @@ const AddApproveUser = () => {
             const updatePayload: UpdateUser = {
               user_id: userData.user_id,
               account_status: "active",
-              active_by: user.user_id,
+              active_by: user?.user_id ?? "",
             };
-            updateUserApi(updatePayload);
+            return updateUserApi(updatePayload);
           })
         )
       }
       await fetchData();
     }
-    catch (error) {
+    catch {
       await PopupMessage(t("popup.update-status-failed"), "", "error");
     }
     finally {
@@ -640,15 +772,8 @@ const AddApproveUser = () => {
         return data.details || "-";
 
       default:
-        return (data as any)[columnId] ?? "-";
+        return ((data as unknown as Record<string, unknown>)[columnId] as React.ReactNode) ?? "-";
     }
-  };
-
-  const handleSubAgencyChange = (values: string[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      sub_unit: values,
-    }));
   };
 
   const handleClearClick = () => {
@@ -659,61 +784,9 @@ const AddApproveUser = () => {
       bh_id: "0",
       bk_id: "0",
       org_id: "0",
-      sub_unit: [],
+      sub_unit: "",
     });
   }
-
-  const getFilters = useCallback(
-    (
-      formData: FormData,
-      tabValue: number,
-      page: number,
-      limit: number
-    ): Record<string, string> => {
-      const statusMap = ["pending", "wait_approve", "rejected"] as const;
-
-      const filters: Record<string, string> = {
-        filter: `approve_status=${statusMap[tabValue] ?? "pending"}`,
-        page: String(page),
-        limit: String(limit),
-      };
-
-      const pid = formData.pid.trim();
-      const name = formData.name.trim();
-      const subUnits = formData.sub_unit.filter(Boolean);
-
-      if (pid) {
-        filters.idcard = `*${pid}*`;
-      }
-
-      if (name) {
-        filters.fullname = `*${name}*`;
-      }
-
-      if (formData.agency_id) {
-        filters.ou_code = formData.agency_id;
-      }
-
-      if (formData.bh_id !== "0") {
-        filters.bh_code = formData.bh_id;
-      }
-
-      if (formData.bk_id !== "0") {
-        filters.bk_code = formData.bk_id;
-      }
-
-      if (formData.org_id !== "0") {
-        filters.org_code = formData.org_id;
-      }
-
-      if (subUnits.length > 0) {
-        filters.sub_unit_list = subUnits.join(",");
-      }
-
-      return filters;
-    },
-    []
-  );
 
   const handleSearchClick = async () => {
     await fetchData(formData);
@@ -738,7 +811,7 @@ const AddApproveUser = () => {
           t,
         });
 
-        let errorDetail: string[] = [];
+        const errorDetail: string[] = [];
 
         const isBhDataExist = user.bh_code ? bhMap.get(user.bh_code) : true;
         const isBkDataExist = user.bk_code ? bkMap.get(user.bk_code) : true;
@@ -1094,7 +1167,17 @@ const AddApproveUser = () => {
                 )}
 
                 {!internalPolice && formData.agency_id !== "" && (
-                  <SubAgency onChange={handleSubAgencyChange} />
+                  <TextBox
+                    sx={{ marginTop: "5px" }}
+                    id="sub-unit"
+                    label={t('component.only-sub-agency')}
+                    placeholder={t('placeholder.only-sub-agency')}
+                    labelFontSize="16px"
+                    value={formData.sub_unit}
+                    onChange={(event) =>
+                      handleTextChange("sub_unit", event.target.value)
+                    }
+                  />
                 )}
               </Box>
             </Box>
@@ -1138,7 +1221,7 @@ const AddApproveUser = () => {
                     }}
                   >
                     {
-                      visibleColumns?.map((column, index) => (
+                      visibleColumns.map((column, index) => (
                         <TableCell
                           size="medium"
                           key={`header-${column.id ?? index}`}
@@ -1180,7 +1263,7 @@ const AddApproveUser = () => {
                 </TableHead>
                 <TableBody>
                   {isDataLoading && (
-                    <TableSkeleton headerColumn={visibleColumns?.length ?? 0} />
+                    <TableSkeleton headerColumn={visibleColumns.length} />
                   )}
                   {
                     userData.length > 0 ? (

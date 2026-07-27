@@ -45,18 +45,35 @@ const MainTitleWithBreadcrumbs = ({
         )}
         {breadcrumbPaths &&
           breadcrumbPaths.length > 0 &&
-          breadcrumbPaths.map((path, index) => (
-            <Link
-              className={`text-[1.7rem] font-bold`}
-              key={index}
-              to={path.to}
-              style={{
-                color: breadcrumbPaths.length > 0 ? "var(--secondary-color)" : "var(--primary-color)"
-              }}
-            >
-              {path.label}
-            </Link>
-          ))}
+          breadcrumbPaths.map((path, index) => {
+            const crumbStyle = {
+              color: breadcrumbPaths.length > 0 ? "var(--secondary-color)" : "var(--primary-color)"
+            };
+
+            /*
+              The trailing crumb is the current page and deliberately carries
+              no `to`, so it renders as plain text — the same treatment the
+              header above already gives a link-less entry.
+            */
+            return path.to ? (
+              <Link
+                className={`text-[1.7rem] font-bold`}
+                key={index}
+                to={path.to}
+                style={crumbStyle}
+              >
+                {path.label}
+              </Link>
+            ) : (
+              <span
+                className={`text-[1.7rem] font-bold`}
+                key={index}
+                style={crumbStyle}
+              >
+                {path.label}
+              </span>
+            );
+          })}
       </Breadcrumbs>
     </Box>
   )

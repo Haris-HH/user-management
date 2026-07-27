@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import dayjs from 'dayjs';
 
 // Material UI
@@ -60,15 +60,12 @@ const ApproveActionBar = ({
   // State
   const [openActivationModal, setOpenActivationModal] = useState<boolean>(false);
 
-  // Data
-  const [tabValue, setTabValue] = useState(tab);
-
   const hasSelectedUser = userSelected.length > 0;
 
-  useEffect(() => {
-    setTabValue(tab);
-  }, [tab])
-
+  // Tab selection is fully owned by the parent (AddApproveUser) and passed
+  // down as `tab`; there is no need to mirror it into local state here -
+  // clicking a tab notifies the parent via onTabSelectChange, which flows
+  // back down as an updated `tab` prop in the same render pass.
   const tapProps = (index: number) => {
     return {
       id: `tab-${index}`,
@@ -90,7 +87,6 @@ const ApproveActionBar = ({
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     event.preventDefault();
-    setTabValue(newValue);
     onTabSelectChange(newValue);
   };
 
@@ -102,7 +98,7 @@ const ApproveActionBar = ({
     const dateFormat = i18n.language === "th" ? "BBBB-MM-DD" : "YYYY-MM-DD";
     const dataDateFormat = i18n.language === "th" ? "DD/MM/BBBB HH:mm:ss" : "DD/MM/YYYY HH:mm:ss";
     await exportExcel({
-      sheetName: `${t('file-name.manage-user')}_${tabValue === 0 ? t('tabs.pending') : tabValue === 1 ? t('tabs.approved') : t('tabs.rejected')}`,
+      sheetName: `${t('file-name.manage-user')}_${tab === 0 ? t('tabs.pending') : tab === 1 ? t('tabs.approved') : t('tabs.rejected')}`,
       fileName: `${t('file-name.manage-user')}_${dayjs().format(dateFormat)}.xlsx`,
       headers: [
         t('table.header.no'),
@@ -117,7 +113,7 @@ const ApproveActionBar = ({
         t('table.header.org'),
         t('table.header.email'),
         t('table.header.mobile'),
-        ...(tabValue === 0
+        ...(tab === 0
           ? [
               t("table.header.group-name"),
               t("table.header.update-profile-status"),
@@ -125,7 +121,7 @@ const ApproveActionBar = ({
             ]
           : []),
 
-        ...(tabValue === 1
+        ...(tab === 1
           ? [
               t("table.header.approve-date"),
               t("table.header.active-date"),
@@ -135,7 +131,7 @@ const ApproveActionBar = ({
             ]
           : []),
 
-        ...(tabValue === 2
+        ...(tab === 2
           ? [
               t("table.header.unapprove-date"),
               t("table.header.group-name"),
@@ -157,7 +153,7 @@ const ApproveActionBar = ({
         data.org_name || "-",
         data.email || "-",
         data.phone || "-",
-        ...(tabValue === 0
+        ...(tab === 0
           ? [
               data.user_group_name || "-",
               data.police_profile_status || "-",
@@ -167,7 +163,7 @@ const ApproveActionBar = ({
             ]
           : []),
 
-        ...(tabValue === 1
+        ...(tab === 1
           ? [
               data.approve_date ? dayjs(data.approve_date).format(dataDateFormat) : "-",
               data.active_datetime
@@ -181,7 +177,7 @@ const ApproveActionBar = ({
             ]
           : []),
 
-        ...(tabValue === 2
+        ...(tab === 2
           ? [
               data.approve_date ? dayjs(data.approve_date).format(dataDateFormat) : "-",
               data.user_group_name || "-",
@@ -203,7 +199,7 @@ const ApproveActionBar = ({
       pdfName,
       t,
       i18n,
-      tabValue
+      tab
     );
   };
 
@@ -223,7 +219,7 @@ const ApproveActionBar = ({
   return (
     <Box className="flex justify-between items-center">
       <Tabs 
-        value={tabValue} 
+        value={tab}
         onChange={handleTabChange}
         sx={{
           overflow: "hidden",
@@ -304,7 +300,7 @@ const ApproveActionBar = ({
         </Button>
         <>
           {
-            tabValue === 1 && (
+            tab === 1 && (
               <Button
                 variant="contained"
                 sx={{
@@ -330,7 +326,7 @@ const ApproveActionBar = ({
             )
           }
           {
-            tabValue === 2 ?
+            tab === 2 ?
             (
               <Button
                 variant="contained"
@@ -381,7 +377,7 @@ const ApproveActionBar = ({
             )
           }
           {
-            tabValue === 1 &&
+            tab === 1 &&
             (
               <Button
                 variant="contained"
@@ -408,7 +404,7 @@ const ApproveActionBar = ({
             )
           }
           {
-            tabValue !== 1 && (
+            tab !== 1 && (
               <Button
                 variant="contained"
                 sx={{

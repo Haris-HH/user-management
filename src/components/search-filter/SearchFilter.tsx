@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 
 // Material UI
@@ -65,7 +65,10 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
   // Redux
-  const { agency, bh } = useSelector((state: RootState) => state.dropdown);
+  // One selector per field so this dialog doesn't re-render on every
+  // unrelated dropdown slice update (a burst of thunks fires on login).
+  const agency = useSelector((state: RootState) => state.dropdown.agency);
+  const bh = useSelector((state: RootState) => state.dropdown.bh);
 
   const agencyOptions = useMemo(() => {
     const labelKey = i18n.language === "th" ? "ou_abbr_th" : "ou_abbr_en";
@@ -126,31 +129,44 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
   const internalPolice: boolean = useMemo(() => {
     const agencyData = agency.find((a) => a.ou_code === formData.agency);
     return agencyData?.ou_codename === "police" || false;
-  }, [formData.agency])
+  }, [agency, formData.agency])
+
+  // Guards against a slow, stale bh/bk lookup overwriting a newer one when
+  // the user changes the agency/bh selection again before it resolves.
+  const bkRequestRef = useRef(0);
+  const orgRequestRef = useRef(0);
 
   const fetchBkList = useCallback(async (bhCode: string) => {
+    const requestId = ++bkRequestRef.current;
+
     try {
       const res = await getBk({
         limit: "100",
         ...(bhCode ? { bh_code: bhCode } : {}),
       });
 
+      if (bkRequestRef.current !== requestId) return;
       setBk(res.data ?? []);
     } catch (error) {
+      if (bkRequestRef.current !== requestId) return;
       console.log(error);
       setBk([]);
     }
   }, []);
 
   const fetchOrgList = useCallback(async (bkCode: string) => {
+    const requestId = ++orgRequestRef.current;
+
     try {
       const res = await getOrg({
         limit: "100",
         ...(bkCode ? { bk_code: bkCode } : {}),
       });
 
+      if (orgRequestRef.current !== requestId) return;
       setOrg(res.data ?? []);
     } catch (error) {
+      if (orgRequestRef.current !== requestId) return;
       console.log(error);
       setOrg([]);
     }
@@ -159,17 +175,30 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
   useEffect(() => {
     if (!open) return;
 
-    fetchBkList(formData.bh);
+    // fetchBkList sets state after its internal `await`, not synchronously
+    // in the effect body; the IIFE keeps that async boundary explicit for
+    // the compiler's effect lint.
+    void (async () => {
+      await fetchBkList(formData.bh);
+    })();
   }, [open, formData.bh, fetchBkList]);
 
   useEffect(() => {
     if (!open) return;
 
-    fetchOrgList(formData.bk);
+    void (async () => {
+      await fetchOrgList(formData.bk);
+    })();
   }, [open, formData.bk, fetchOrgList]);
 
+  // Synchronizes local, user-editable form state from the `value` prop
+  // whenever the dialog (re)opens with new saved filters. This is a
+  // deliberate "adjust state from props" sync, not a derived value, since
+  // the user edits formData locally afterwards — eslint-disable is
+  // intentional here.
   useEffect(() => {
     if (!open) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormData(value);
   }, [open, value]);
 

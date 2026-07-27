@@ -1,7 +1,8 @@
 export type OptionType = {
-  value: any;
+  value: string;
   label: string;
-  [key: string]: any;
+  inputValue?: string;
+  [key: string]: unknown;
 };
 
 export interface AddApproveData {
@@ -76,7 +77,7 @@ export interface User {
   edit_note: string | null;
   tokens: Tokens;
   permissions: GroupPermissions;
-  allowed_checkpoints: any[];
+  allowed_checkpoints: unknown[];
   last_login: string | null;
   last_logout: string | null;
   user_lifetime: string | null;
@@ -196,15 +197,20 @@ export interface NsbBh {
   notes: string | null;
 }
 
+/*
+  The English abbreviation/name and notes columns are nullable in the
+  masterdata API (see the captured fixtures in src/mocks), so they are typed
+  as nullable here rather than pretending they are always present.
+*/
 export interface NsbBk {
   ou_code: string;
   bh_code: string;
   bk_code: string;
-  bk_abbr_en: string;
+  bk_abbr_en: string | null;
   bk_abbr_th: string;
-  bk_name_en: string;
+  bk_name_en: string | null;
   bk_name_th: string;
-  notes: string;
+  notes: string | null;
 }
 
 export interface NsbOrg {
@@ -212,12 +218,12 @@ export interface NsbOrg {
   bh_code: string;
   bk_code: string;
   org_code: string;
-  org_abbr_en: string;
+  org_abbr_en: string | null;
   org_abbr_th: string;
-  org_name_en: string;
+  org_name_en: string | null;
   org_name_th: string;
   quota: number;
-  notes: string;
+  notes: string | null;
 }
 
 export interface Province {
@@ -287,12 +293,17 @@ export interface Title {
   remark: string;
 }
 
+/*
+  The police-regions endpoint returns no abbreviation columns (see
+  src/mocks/mockArea.tsx), and the call sites already fall back to "-",
+  so they are optional rather than required-but-absent.
+*/
 export interface Area {
   id: number;
   title_en: string;
   title_th: string;
-  title_abbr_en: string;
-  title_abbr_th: string;
+  title_abbr_en?: string;
+  title_abbr_th?: string;
   visible: boolean;
   active: boolean;
 }
@@ -319,11 +330,34 @@ export interface GroupPermissions {
   checkpoint_ids?: string[];
 }
 
+/*
+  A menu catalogue that is a tree rather than a flat list. Only some levels are
+  persisted (which ones depends on the screen), so a key here is not necessarily
+  a permission key - see `PermissionUiGroup.is_label`.
+*/
+export interface PermissionMenuNode {
+  /** Stable id; for persisted nodes this is the groupKey. Never contains a dot. */
+  key: string;
+  /** i18n key of the menu label. */
+  labelKey: string;
+  children?: PermissionMenuNode[];
+}
+
 export interface PermissionUiGroup {
   key: string;
   name: string;
   active: boolean;
   edit: boolean;
+  /*
+    A label row rather than a permission: it carries no controls and is never
+    persisted, so its key must be excluded from groups/prints. `depth` decides
+    how it reads - a top-level label row is a section heading over the rows
+    beneath it (LPR Center), a nested one is a sub-item shown for context under
+    a menu that is itself the permission (LPR License Plate).
+  */
+  is_label?: boolean;
+  /** Indent level of the row. Omitted or 0 for a top-level row. */
+  depth?: number;
 }
 
 export interface PermissionUiList {
@@ -342,7 +376,7 @@ export interface UserGroup {
   locked?: boolean;
 }
 
-export interface CreateUserGroup extends Omit<UserGroup, "group_id"> {}
+export type CreateUserGroup = Omit<UserGroup, "group_id">;
 
 export interface Camera {
   camera_id: string;
@@ -388,11 +422,9 @@ export interface Camera {
 }
 
 export interface CameraInCheckpoint {
-  id: number;
-  title_en: string;
-  title_th: string;
-  title_abbr_en: string;
-  title_abbr_th: string;
+  group_id: string;
+  group_name: string;
+  description: string | null;
   visible: boolean;
   active: boolean;
   camera_list: Camera[];
@@ -532,12 +564,59 @@ export interface CreateWatchlistGroup {
 
 export interface MembersWatchListGroupRequest {
   group_id: string;
-  member_id_list: string[];
+  member_list: string[];
+}
+
+/*
+  LPR Center group membership is deliberately separate from User.user_group_id:
+  a user has exactly one global user group, so reusing that field would evict
+  the user from their user-management group. See LprCenterApi for the backend
+  contract these types describe.
+*/
+export interface LprCenterGroupMembersRequest {
+  group_id: string;
+  user_ids: string[];
 }
 
 export interface WatchListIdInUser {
   user_id: string;
-  special_plates?: string[];
-  watchlists?: string[];
-  checkpoints?: string[];
+  group_id_list?: string[];
+}
+
+export interface UserListInGroup {
+  group_id: string;
+  member_list: string[];
+}
+
+export interface CameraInGroup {
+  group_id: string;
+  camera_id_list: string[];
+}
+
+export interface CheckpointGroup {
+  group_id: string;
+  group_name: string;
+  description: string | null;
+  members: string[];
+  cameras: string[];
+  visible: boolean;
+  active: boolean;
+  deleted: boolean;
+  created_by: string | null;
+  deleted_by: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  total: number;
+}
+
+export interface UpdateProfile {
+  idcard: string;
+  level_abbr?: string;
+  rank_abbr?: string;
+  bh_code?: string;
+  bk_code?: string;
+  org_code?: string;
+  name?: string;
+  sname?: string;
 }

@@ -11,7 +11,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import TextBox from "../../components/text-box/TextBox";
 
 // i18n
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 // Constants
 import { MAX_SUB_AGENCY } from "../../hooks/useColumnItems";
@@ -25,9 +25,23 @@ const SubAgency = ({ value, onChange }: Props) => {
   // i18n
   const { t } = useTranslation();
 
-  const [subAgencies, setSubAgencies] = useState<string[]>(
+  // State
+  const [subAgencies, setSubAgencies] = useState<string[]>(() =>
     value && value.length > 0 ? value : [""]
   );
+
+  // Sync data when editing user or when value changes externally. State is
+  // adjusted during render instead of in an effect to avoid a synchronous
+  // setState-in-effect and the extra render that effect would cause.
+  const [prevValue, setPrevValue] = useState(value);
+
+  if (value !== prevValue) {
+    setPrevValue(value);
+
+    if (value !== undefined) {
+      setSubAgencies(value.length > 0 ? value : [""]);
+    }
+  }
 
   const updateSubAgencies = (newValues: string[]) => {
     setSubAgencies(newValues);
@@ -35,7 +49,14 @@ const SubAgency = ({ value, onChange }: Props) => {
   };
 
   const handleAddClick = () => {
-    if (subAgencies.length >= MAX_SUB_AGENCY) return;
+    const lastSubAgency = subAgencies.at(-1)?.trim() ?? "";
+
+    if (
+      lastSubAgency === "" ||
+      subAgencies.length >= MAX_SUB_AGENCY
+    ) {
+      return;
+    }
 
     updateSubAgencies([...subAgencies, ""]);
   };
@@ -43,66 +64,99 @@ const SubAgency = ({ value, onChange }: Props) => {
   const handleRemoveClick = (index: number) => {
     if (subAgencies.length === 1) return;
 
-    const newValues = subAgencies.filter((_, itemIndex) => itemIndex !== index);
+    const newValues = subAgencies.filter(
+      (_, itemIndex) => itemIndex !== index
+    );
+
     updateSubAgencies(newValues);
   };
 
   const handleTextChange = (index: number, text: string) => {
-    const newValues = [...subAgencies];
-    newValues[index] = text;
+    const newValues = subAgencies.map((subAgency, itemIndex) =>
+      itemIndex === index ? text : subAgency
+    );
 
     updateSubAgencies(newValues);
   };
 
   return (
-    <>
-      {subAgencies.map((subAgency, index) => (
-        <Box
-          key={`sub-agency-${index}`}
-          sx={{
-            display: "flex",
-            alignItems: "flex-end",
-            gap: 1,
-          }}
-        >
-          <TextBox
-            sx={{ marginTop: "5px" }}
-            id={`sub-agency-${index + 1}`}
-            label={t('component.sub-agency', { number: index + 1 })}
-            placeholder={t('placeholder.sub-agency', { number: index + 1 })}
-            labelFontSize="16px"
-            value={subAgency}
-            onChange={(event) => handleTextChange(index, event.target.value)}
-          />
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+      }}
+    >
+      {subAgencies.map((subAgency, index) => {
+        const isLastItem = index === subAgencies.length - 1;
 
-          <IconButton
-            onClick={handleAddClick}
-            disabled={subAgencies.length >= MAX_SUB_AGENCY}
+        const isAddDisabled =
+          !isLastItem ||
+          subAgency.trim() === "" ||
+          subAgencies.length >= MAX_SUB_AGENCY;
+
+        return (
+          <Box
+            key={`sub-agency-${index}`}
             sx={{
-              mb: "1px",
-              color: "var(--primary-color)",
+              display: "flex",
+              alignItems: "flex-end",
+              gap: 1,
             }}
           >
-            <AddIcon />
-          </IconButton>
+            <TextBox
+              sx={{ marginTop: "5px" }}
+              id={`sub-agency-${index + 1}`}
+              label={t("component.sub-agency", {
+                number: index + 1,
+              })}
+              placeholder={t("placeholder.sub-agency", {
+                number: index + 1,
+              })}
+              labelFontSize="16px"
+              value={subAgency}
+              onChange={(event) =>
+                handleTextChange(index, event.target.value)
+              }
+            />
 
-          <IconButton
-            onClick={() => handleRemoveClick(index)}
-            disabled={subAgencies.length === 1}
-            sx={{
-              mb: "1px",
-              color: "var(--danger-color)",
+            <IconButton
+              type="button"
+              aria-label={t("button.add")}
+              onClick={handleAddClick}
+              disabled={isAddDisabled}
+              sx={{
+                mb: "1px",
+                color: "var(--primary-color)",
 
-              "&.Mui-disabled": {
-                color: "rgba(var(--primary-color-rgb), 0.3)",
-              },
-            }}
-          >
-            <RemoveIcon />
-          </IconButton>
-        </Box>
-      ))}
-    </>
+                "&.Mui-disabled": {
+                  color: "rgba(var(--primary-color-rgb), 0.3)",
+                },
+              }}
+            >
+              <AddIcon />
+            </IconButton>
+
+            <IconButton
+              type="button"
+              aria-label={t("button.remove")}
+              onClick={() => handleRemoveClick(index)}
+              disabled={subAgencies.length === 1}
+              sx={{
+                mb: "1px",
+                color: "var(--danger-color)",
+
+                "&.Mui-disabled": {
+                  color: "rgba(var(--primary-color-rgb), 0.3)",
+                },
+              }}
+            >
+              <RemoveIcon />
+            </IconButton>
+          </Box>
+        );
+      })}
+    </Box>
   );
 };
 

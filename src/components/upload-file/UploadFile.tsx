@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useDropzone } from "react-dropzone";
-import ExcelJS from "exceljs";
+import type ExcelJS from "exceljs";
 import { useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
 import dayjs from "dayjs";
@@ -96,8 +96,73 @@ type Props = {
   onUploadComplete?: (targetTab: number) => void;
 };
 
+// Alias for exceljs's real cell value union so raw Excel values never need
+// `any` as they flow through parsing/matching below.
+type ExcelJsCellValue = ExcelJS.CellValue;
+
 const ROWS_PER_PAGE = 1000;
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
+
+const noop = () => {};
+
+const toTrimmedString = (value: ExcelJsCellValue): string =>
+  value === null || value === undefined ? "" : String(value).trim();
+
+// Prefer the localized (th/en) label; fall back to whatever raw value was in
+// the Excel cell, then to "". Collapses the repeated
+// `(isThai ? a : b) || raw?.toString().trim() || ""` pattern used for every
+// masterdata-backed column below.
+const pickLocalizedLabel = (
+  thValue: string | null | undefined,
+  enValue: string | null | undefined,
+  rawValue: ExcelJsCellValue,
+  isThai: boolean
+): string => (isThai ? thValue : enValue) || toTrimmedString(rawValue) || "";
+
+// Builds a normalized-alias -> record lookup Map once for a masterdata list,
+// so callers get O(1) matches instead of re-scanning the whole list with
+// Array#find for every imported row. Reproduces the semantics of
+// `list.find(item => keyFields.map(normalizeText).includes(keyword))`:
+// the first item (in list order) that owns a given normalized alias wins it,
+// including blank/empty aliases (matches the original find()-based lookups).
+const buildLookupMap = <T,>(
+  list: readonly T[],
+  keyFields: readonly (keyof T)[]
+): Map<string, T> => {
+  const map = new Map<string, T>();
+
+  list.forEach((item) => {
+    keyFields.forEach((field) => {
+      const key = normalizeText(item[field]);
+      if (!map.has(key)) {
+        map.set(key, item);
+      }
+    });
+  });
+
+  return map;
+};
+
+// Extracts a human-readable message from a caught API error without
+// resorting to `any` for the error shape.
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === "object") {
+    const { response, message } = error as {
+      response?: { data?: { message?: unknown } };
+      message?: unknown;
+    };
+    const responseMessage = response?.data?.message;
+
+    if (typeof responseMessage === "string" && responseMessage) {
+      return responseMessage;
+    }
+    if (typeof message === "string" && message) {
+      return message;
+    }
+  }
+
+  return fallback;
+};
 
 const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
 
@@ -105,20 +170,14 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
   const { t, i18n } = useTranslation();
 
   // Redux
-  const { 
-    agency,
-    bh,
-    title,
-    position,
-    userGroup,
-  } = useSelector(
-    (state: RootState) => state.dropdown
-  );
-  const { 
-    user,
-  } = useSelector(
-    (state: RootState) => state.authUser
-  );
+  // NOTE: one useSelector per field so this component only re-renders when a
+  // field it actually reads changes, instead of on every dropdown slice update.
+  const agency = useSelector((state: RootState) => state.dropdown.agency);
+  const bh = useSelector((state: RootState) => state.dropdown.bh);
+  const title = useSelector((state: RootState) => state.dropdown.title);
+  const position = useSelector((state: RootState) => state.dropdown.position);
+  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
+  const user = useSelector((state: RootState) => state.authUser.user);
 
   // Data
   const [file, setFile] = useState<File | null>(null);
@@ -152,6 +211,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
 
   const agencyOptions = useMemo(() => {
     const langKeyAgency = i18n.language === "th" ? "ou_abbr_th" : "ou_abbr_en";
+
     return buildOptions(agency, "", langKeyAgency, "ou_code", false);
   }, [agency, i18n.language]);
 
@@ -187,10 +247,18 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     return Math.max(1, Math.ceil(visibleRows.length / ROWS_PER_PAGE));
   }, [visibleRows.length]);
 
+  // Clamp the visible page to the current page count derived from data,
+  // instead of syncing a page state via effect, so shrinking data (e.g.
+  // removing a row) can never render a blank out-of-range page.
+  const currentPage = useMemo(
+    () => Math.min(page, totalPage),
+    [page, totalPage]
+  );
+
   const paginatedRows = useMemo(() => {
-    const start = (page - 1) * ROWS_PER_PAGE;
+    const start = (currentPage - 1) * ROWS_PER_PAGE;
     return visibleRows.slice(start, start + ROWS_PER_PAGE);
-  }, [visibleRows, page]);
+  }, [visibleRows, currentPage]);
 
   const summary = useMemo(() => {
     return allImportData.reduce(
@@ -246,35 +314,24 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     });
   }, []);
 
-  useEffect(() => {
+  // Reset local state when the dialog transitions to closed. Adjusting state
+  // in response to a prop change is done during render (React's recommended
+  // pattern for this) rather than in a useEffect, which would otherwise cause
+  // an extra render before the reset becomes visible.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (!open) {
       resetState();
     }
-  }, [open, resetState]);
-
-  useEffect(() => {
-    if (page > totalPage) {
-      setPage(totalPage);
-    }
-  }, [page, totalPage]);
-
-  useEffect(() => {
-    if (formData.userGroup) {
-      const userGroupData = userGroup.find((data) => data.group_id === formData.userGroup);
-      handleTextChange("userLifeTime", userGroupData?.login_lifetime.toString());
-      clearErrors("userLifeTime");
-    }
-    else {
-      handleTextChange("userLifeTime", "");
-    }
-  }, [formData.userGroup])
+  }
 
   const handleTextChange = useCallback(
     (key: keyof FormData, value: string) => {
       setFormData((prev) => ({ ...prev, [key]: value }));
       setValue(key, value);
     },
-    []
+    [setValue]
   );
 
   const handleDropdownChange = useCallback(
@@ -293,18 +350,30 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
 
       if (key === "userGroup") {
         setValue(key, newValue);
+
+        // Keep the life-time field in sync with the selected user group.
+        // Folded into this handler (instead of a useEffect keyed off
+        // formData.userGroup) since this is the only place userGroup changes.
+        if (newValue) {
+          const userGroupData = userGroup.find((data) => data.group_id === newValue);
+          handleTextChange("userLifeTime", userGroupData?.login_lifetime.toString() ?? "");
+          clearErrors("userLifeTime");
+        } else {
+          handleTextChange("userLifeTime", "");
+        }
       }
     },
-    []
+    [userGroup, handleTextChange, clearErrors, setValue]
   );
 
   const getCellValue = useCallback(
-    (row: Record<string, any>, key: string) => row[t(key)],
+    (row: Record<string, ExcelJsCellValue>, key: string): ExcelJsCellValue =>
+      row[t(key)],
     [t]
   );
 
-  const normalizePhone = (value: any) => {
-    let phone = value?.toString().trim() ?? "";
+  const normalizePhone = (value: ExcelJsCellValue): string => {
+    let phone = toTrimmedString(value);
 
     if (!phone) return "";
 
@@ -319,103 +388,8 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     return phone;
   };
 
-  const normalizeNationalId = (value: any) => {
-    return value?.toString().trim().replace(/[^0-9]/g, "") ?? "";
-  };
-
-  const findAgency = (name: any) => {
-    const keyword = normalizeText(name);
-
-    return agency.find((item) =>
-      [
-        item.ou_abbr_th,
-        item.ou_abbr_en,
-        item.ou_name_th,
-        item.ou_name_en,
-        item.ou_code,
-      ]
-        .map(normalizeText)
-        .includes(keyword)
-    );
-  };
-
-  const findBh = (name: any) => {
-    const keyword = normalizeText(name);
-
-    return bh.find((item) =>
-      [
-        item.bh_name_th,
-        item.bh_name_en,
-        item.bh_abbr_th,
-        item.bh_abbr_en,
-        item.bh_code,
-      ]
-        .map(normalizeText)
-        .includes(keyword)
-    );
-  };
-
-  const findBk = (name: any, bkList: NsbBk[]) => {
-    const keyword = normalizeText(name);
-
-    return bkList.find((item) =>
-      [
-        item.bk_name_th,
-        item.bk_name_en,
-        item.bk_abbr_th,
-        item.bk_abbr_en,
-        item.bk_code,
-      ]
-        .map(normalizeText)
-        .includes(keyword)
-    );
-  };
-
-  const findOrg = (name: any, orgList: NsbOrg[]) => {
-    const keyword = normalizeText(name);
-
-    return orgList.find((item) =>
-      [
-        item.org_name_th,
-        item.org_name_en,
-        item.org_abbr_th,
-        item.org_abbr_en,
-        item.org_code,
-      ]
-        .map(normalizeText)
-        .includes(keyword)
-    );
-  };
-
-  const findTitle = (name: any) => {
-    const keyword = normalizeText(name);
-
-    return title.find((item) =>
-      [
-        item.title_th,
-        item.title_en,
-        item.title_abbr_th,
-        item.title_abbr_en,
-        item.id,
-      ]
-        .map(normalizeText)
-        .includes(keyword)
-    );
-  };
-
-  const findPosition = (name: any) => {
-    const keyword = normalizeText(name);
-
-    return position.find((item) =>
-      [
-        item.position_en,
-        item.position_th,
-        item.id,
-      ]
-        .map(normalizeText)
-        .includes(keyword)
-    );
-  };
+  const normalizeNationalId = (value: ExcelJsCellValue): string =>
+    toTrimmedString(value).replace(/[^0-9]/g, "");
 
   const parseExcelFile = useCallback(
     async (
@@ -425,7 +399,13 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     ) => {
       const arrayBuffer = await uploadedFile.arrayBuffer();
 
-      const workbook = new ExcelJS.Workbook();
+      /*
+        exceljs is only needed once a file is actually being parsed, so it is
+        loaded on demand rather than shipping in the initial bundle.
+      */
+      const { Workbook } = await import("exceljs");
+
+      const workbook = new Workbook();
       await workbook.xlsx.load(arrayBuffer);
 
       const worksheet = workbook.worksheets[0];
@@ -434,10 +414,15 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
         throw new Error("Worksheet not found");
       }
 
-      const rawRows: any[][] = [];
+      const rawRows: ExcelJsCellValue[][] = [];
 
       worksheet.eachRow((row) => {
-        const values = row.values as any[];
+        // row.values is normally a sparse array (index 0 unused), but the
+        // type also allows a keyed object form - handle both defensively so
+        // an unusual/corrupt worksheet can't throw here.
+        const values = Array.isArray(row.values)
+          ? row.values
+          : Object.values(row.values);
         rawRows.push(values.slice(1));
       });
 
@@ -447,19 +432,65 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
         throw new Error("Empty file");
       }
 
-      const headers = headerRow.map((header: any) =>
-        typeof header === "string" ? header.trim() : header
+      const headers = headerRow.map((header) =>
+        typeof header === "string" ? header.trim() : String(header)
       );
 
       const mappedRows = dataRows.map((row) => {
-        const obj: Record<string, any> = {};
+        const obj: Record<string, ExcelJsCellValue> = {};
 
-        headers.forEach((key: string, index: number) => {
+        headers.forEach((key, index) => {
           obj[key] = row[index];
         });
 
         return obj;
       });
+
+      // Build normalized-alias -> record lookups once per import instead of
+      // scanning the full masterdata list for every row (previously an
+      // O(rows * masterdata) linear scan per column, per row).
+      const agencyMap = buildLookupMap(agency, [
+        "ou_abbr_th",
+        "ou_abbr_en",
+        "ou_name_th",
+        "ou_name_en",
+        "ou_code",
+      ]);
+      const bhMap = buildLookupMap(bh, [
+        "bh_name_th",
+        "bh_name_en",
+        "bh_abbr_th",
+        "bh_abbr_en",
+        "bh_code",
+      ]);
+      const bkMap = buildLookupMap(bkList, [
+        "bk_name_th",
+        "bk_name_en",
+        "bk_abbr_th",
+        "bk_abbr_en",
+        "bk_code",
+      ]);
+      const orgMap = buildLookupMap(orgList, [
+        "org_name_th",
+        "org_name_en",
+        "org_abbr_th",
+        "org_abbr_en",
+        "org_code",
+      ]);
+      const titleMap = buildLookupMap(title, [
+        "title_th",
+        "title_en",
+        "title_abbr_th",
+        "title_abbr_en",
+        "id",
+      ]);
+      const positionMap = buildLookupMap(position, [
+        "position_en",
+        "position_th",
+        "id",
+      ]);
+
+      const isThai = i18n.language === "th";
 
       const jsonData = mappedRows
         .map((row): ImportRow | null => {
@@ -470,12 +501,12 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           const posRow = getCellValue(row, "table.header.position");
           const ouRow = getCellValue(row, "table.header.agency");
 
-          const ouData = findAgency(ouRow);
-          const bhData = findBh(bhRow);
-          const bkData = findBk(bkRow, bkList);
-          const orgData = findOrg(orgRow, orgList);
-          const titleData = findTitle(prefixRow);
-          const positionData = findPosition(posRow);
+          const ouData = agencyMap.get(normalizeText(ouRow));
+          const bhData = bhMap.get(normalizeText(bhRow));
+          const bkData = bkMap.get(normalizeText(bkRow));
+          const orgData = orgMap.get(normalizeText(orgRow));
+          const titleData = titleMap.get(normalizeText(prefixRow));
+          const positionData = positionMap.get(normalizeText(posRow));
 
           const nationalId = normalizeNationalId(
             getCellValue(row, "table.header.pid")
@@ -485,8 +516,8 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             getCellValue(row, "table.header.mobile")
           );
 
-          const firstName = getCellValue(row, "table.header.first-name") || "";
-          const lastName = getCellValue(row, "table.header.last-name") || "";
+          const firstName = toTrimmedString(getCellValue(row, "table.header.first-name"));
+          const lastName = toTrimmedString(getCellValue(row, "table.header.last-name"));
 
           const validation = validateUserImportData({
             nationalId,
@@ -497,7 +528,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             t,
           });
 
-          let errorDetail: string[] = [];
+          const errorDetail: string[] = [];
 
           if (!bhData) {
             errorDetail.push(t("text.invalid-bh"));
@@ -516,61 +547,58 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           const isInvalid = validation.isInvalid || errorDetail.length > 0;
 
           return {
-            prefixName:
-              (i18n.language === "th" ? 
-                titleData?.title_th :
-                titleData?.title_en) ||
-              prefixRow?.toString().trim() ||
-              "",
-            prefixNameId:
-              titleData?.id?.toString() ||
-              titleData?.id?.toString() ||
-              "",
+            prefixName: pickLocalizedLabel(
+              titleData?.title_th,
+              titleData?.title_en,
+              prefixRow,
+              isThai
+            ),
+            prefixNameId: titleData?.id?.toString() || "",
 
             firstName,
             lastName,
             nationalNumber: nationalId,
             phoneNumber,
-            email: getCellValue(row, "table.header.email") || "",
+            email: toTrimmedString(getCellValue(row, "table.header.email")),
 
-            position:
-              (i18n.language === "th" ? 
-                positionData?.position_th :
-                positionData?.position_en) ||
-              posRow?.toString().trim() ||
-              "",
+            position: pickLocalizedLabel(
+              positionData?.position_th,
+              positionData?.position_en,
+              posRow,
+              isThai
+            ),
             positionId: positionData?.id?.toString() || "",
 
-            ou_name:
-              (i18n.language === "th" ? 
-                ouData?.ou_abbr_th :
-                ouData?.ou_abbr_en) ||
-              ouRow?.toString().trim() ||
-              "",
+            ou_name: pickLocalizedLabel(
+              ouData?.ou_abbr_th,
+              ouData?.ou_abbr_en,
+              ouRow,
+              isThai
+            ),
             ou_id: ouData?.ou_code?.toString() || "",
 
-            bh_name:
-              (i18n.language === "th" ? 
-                bhData?.bh_abbr_th :
-                bhData?.bh_abbr_en) ||
-              bhRow?.toString().trim() ||
-              "",
+            bh_name: pickLocalizedLabel(
+              bhData?.bh_abbr_th,
+              bhData?.bh_abbr_en,
+              bhRow,
+              isThai
+            ),
             bh_name_id: bhData?.bh_code?.toString() || "",
 
-            bk_name:
-              (i18n.language === "th" ? 
-                bkData?.bk_abbr_th :
-                bkData?.bk_abbr_en) ||
-              bkRow?.toString().trim() ||
-              "",
+            bk_name: pickLocalizedLabel(
+              bkData?.bk_abbr_th,
+              bkData?.bk_abbr_en,
+              bkRow,
+              isThai
+            ),
             bk_name_id: bkData?.bk_code?.toString() || "",
 
-            org_name:
-              (i18n.language === "th" ? 
-                orgData?.org_abbr_th :
-                orgData?.org_abbr_en) ||
-              orgRow?.toString().trim() ||
-              "",
+            org_name: pickLocalizedLabel(
+              orgData?.org_abbr_th,
+              orgData?.org_abbr_en,
+              orgRow,
+              isThai
+            ),
             org_name_id: orgData?.org_code?.toString() || "",
 
             status: isInvalid ? SAVE_BUT_NOT_APPROVE_STATE : WAITING_STATE,
@@ -585,14 +613,11 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
 
       return jsonData;
     },
-    [
-      getCellValue,
-      t,
-      agency,
-      bh,
-      title,
-      position,
-    ]
+    // i18n.language is a real dependency: prefixName/position/ou_name/... pick
+    // between *_th and *_en based on it, so a language switch must invalidate
+    // this callback or an import right after switching language would use
+    // stale labels.
+    [getCellValue, t, i18n.language, agency, bh, title, position]
   );
 
   const onDrop = useCallback(
@@ -678,32 +703,19 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     resetState();
   }, [resetState]);
 
-  const getRowColor = (status: number) => {
-    let color = "";
-    let bgColor = "";
+  const getRowColor = (status: number): { color: string; bgColor: string } => {
     switch (status) {
       case WAITING_STATE:
-        color = "var(--secondary-color)";
-        bgColor = "var(--tertiary-color-rgb)";
-        break;
+        return { color: "var(--secondary-color)", bgColor: "var(--tertiary-color-rgb)" };
       case SUCCESS_STATE:
-        color = "var(--tertiary-color)";
-        bgColor = "#F1FBE4";
-        break;
+        return { color: "var(--tertiary-color)", bgColor: "#F1FBE4" };
       case SAVE_BUT_NOT_APPROVE_STATE:
-        color = "var(--tertiary-color)";
-        bgColor = "#F9DFDF";
-        break;
+        return { color: "var(--tertiary-color)", bgColor: "#F9DFDF" };
       case SUSPEND_STATE:
-        color = "var(--tertiary-color)";
-        bgColor = "#FEBE43";
-        break;
+        return { color: "var(--tertiary-color)", bgColor: "#FEBE43" };
       default:
-        color = "var(--tertiary-color)";
-        bgColor = "#BDBDBD";
-        break;
+        return { color: "var(--tertiary-color)", bgColor: "#BDBDBD" };
     }
-    return { color, bgColor }
   };
 
   const renderStatusIcon = (row: ImportRow, originalIndex: number) => {
@@ -773,7 +785,13 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           const shouldSendToRejected =
             data.status === SAVE_BUT_NOT_APPROVE_STATE;
 
-          const createPayload: CreateUser = {
+          // Built up field-by-field so absent/invalid columns are simply
+          // omitted rather than sent as empty strings. Rows can legitimately
+          // reach here missing some of CreateUser's fields (e.g. an
+          // incomplete row still gets sent so it can be routed to the
+          // "rejected" approve flow below), so the object is cast to
+          // CreateUser rather than widening the API's declared contract.
+          const createPayload = {
             ...(userGroupData && { user_group_id: userGroupData.group_id }),
             ...(data.prefixNameId && { title_id: Number(data.prefixNameId) }),
             ...(data.position && { position: data.position }),
@@ -789,7 +807,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             ...(data.ou_id && { ou_code: data.ou_id }),
             ...(userGroupData && { permissions: userGroupData.permissions }),
             password: "",
-          };
+          } as CreateUser;
 
           const res = await createUserApi(createPayload);
           const createdUserId = res.data?.user_id;
@@ -804,13 +822,11 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
 
           if (shouldSendToRejected) continue;
           updateStatus(index, SUCCESS_STATE);
-        } catch (error: any) {
+        } catch (error: unknown) {
           updateStatus(
             index,
             ERROR_STATE,
-            error?.response?.data?.message ||
-              error?.message ||
-              t("popup.save-error")
+            getApiErrorMessage(error, t("popup.save-error"))
           );
         }
       }
@@ -823,15 +839,10 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             approve_at: dayjs().format("YYYY-MM-DD HH:mm:ss"),
             approve_by: user?.user_id || "",
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const message = getApiErrorMessage(error, t("popup.save-error"));
           sendToUnApprovedIndexes.forEach((index) => {
-            updateStatus(
-              index,
-              ERROR_STATE,
-              error?.response?.data?.message ||
-                error?.message ||
-                t("popup.save-error")
-            );
+            updateStatus(index, ERROR_STATE, message);
           });
         }
       }
@@ -868,7 +879,10 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
   return (
     <Dialog
       open={open}
-      handleClose={isUploading ? undefined : handleCloseDialog}
+      // Dialog's handleClose is required (not optional); a no-op preserves
+      // the previous "closing disabled while uploading" behavior without
+      // passing undefined for a required prop.
+      handleClose={isUploading ? noop : handleCloseDialog}
       dialogTitle={t("dialog.import-file")}
       width={allImportData.length > 0 && file ? "1650px" : "900px"}
       disabled={isUploading}
@@ -1104,46 +1118,50 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   </TableHead>
 
                   <TableBody>
-                    {paginatedRows.map(({ row, originalIndex }) => (
-                      <TableRow
-                        key={`${row.nationalNumber}-${originalIndex}`}
-                        sx={{
-                          backgroundColor: getRowColor(row.status).bgColor,
-                          transition: "background-color 0.3s ease-in-out",
-                          "& .MuiTableCell-root": {
-                            color: getRowColor(row.status).color,
-                            borderBottom: "1px solid var(--primary-color)",
-                          },
-                        }}
-                      >
-                        <TableCell align="center">
-                          {renderStatusIcon(row, originalIndex)}
-                        </TableCell>
-                        <TableCell align="center">{originalIndex + 1}</TableCell>
-                        <TableCell align="center">
-                          {formatThaiID(row.nationalNumber) || "-"}
-                        </TableCell>
-                        <TableCell align="center">{row.prefixName || "-"}</TableCell>
-                        <TableCell align="center">{row.firstName || "-"}</TableCell>
-                        <TableCell align="center">{row.lastName || "-"}</TableCell>
-                        <TableCell align="center">{row.position || "-"}</TableCell>
-                        <TableCell align="center">{row.ou_name || "-"}</TableCell>
-                        <TableCell align="center">{row.bh_name || "-"}</TableCell>
-                        <TableCell align="center">{row.bk_name || "-"}</TableCell>
-                        <TableCell align="center">{row.org_name || "-"}</TableCell>
-                        <TableCell align="center">{row.email || "-"}</TableCell>
-                        <TableCell align="center">
-                          {formatPhone(row.phoneNumber) || "-"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {paginatedRows.map(({ row, originalIndex }) => {
+                      const rowColor = getRowColor(row.status);
+
+                      return (
+                        <TableRow
+                          key={`${row.nationalNumber}-${originalIndex}`}
+                          sx={{
+                            backgroundColor: rowColor.bgColor,
+                            transition: "background-color 0.3s ease-in-out",
+                            "& .MuiTableCell-root": {
+                              color: rowColor.color,
+                              borderBottom: "1px solid var(--primary-color)",
+                            },
+                          }}
+                        >
+                          <TableCell align="center">
+                            {renderStatusIcon(row, originalIndex)}
+                          </TableCell>
+                          <TableCell align="center">{originalIndex + 1}</TableCell>
+                          <TableCell align="center">
+                            {formatThaiID(row.nationalNumber) || "-"}
+                          </TableCell>
+                          <TableCell align="center">{row.prefixName || "-"}</TableCell>
+                          <TableCell align="center">{row.firstName || "-"}</TableCell>
+                          <TableCell align="center">{row.lastName || "-"}</TableCell>
+                          <TableCell align="center">{row.position || "-"}</TableCell>
+                          <TableCell align="center">{row.ou_name || "-"}</TableCell>
+                          <TableCell align="center">{row.bh_name || "-"}</TableCell>
+                          <TableCell align="center">{row.bk_name || "-"}</TableCell>
+                          <TableCell align="center">{row.org_name || "-"}</TableCell>
+                          <TableCell align="center">{row.email || "-"}</TableCell>
+                          <TableCell align="center">
+                            {formatPhone(row.phoneNumber) || "-"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
 
               <Pagination
                 count={totalPage}
-                page={page}
+                page={currentPage}
                 onChange={handleChangePage}
                 variant="outlined"
                 shape="rounded"

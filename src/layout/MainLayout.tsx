@@ -28,7 +28,9 @@ const MainLayout = () => {
   const { user } = useSelector((state: RootState) => state.authUser);
 
   const hashPid = user?.hash_id || "NO HASH ID";
-  const nsbOu = i18n.language === "th" ? user?.agency.ou_abbr_th || "-" : user?.agency.ou_abbr_en || "-";
+  // `agency` is optional on AuthUser, so it must be optional-chained too —
+  // `user?.agency.x` still throws for a signed-in user without an agency.
+  const nsbOu = i18n.language === "th" ? user?.agency?.ou_abbr_th || "-" : user?.agency?.ou_abbr_en || "-";
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -67,7 +69,7 @@ const MainLayout = () => {
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "rgba(var(--tertiary-color-rgb),0.8)",
+            backgroundColor: "rgba(var(--tertiary-color-rgb),0.85)",
             zIndex: -1,
           }}
         />

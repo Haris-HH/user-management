@@ -184,6 +184,10 @@ const useColumnItems = () => {
         align: "center",
       },
     ];
+    // Translations load asynchronously over XHR, so language and the
+    // initialised flag are kept as explicit deps to guarantee the labels are
+    // rebuilt once the bundle arrives, even if `t` keeps its identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t, i18n.language, i18n.isInitialized]);
 };
 

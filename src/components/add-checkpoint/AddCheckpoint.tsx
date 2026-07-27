@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo, useRef } from 'react'
 import { useSelector } from 'react-redux';
 
 // Store
@@ -29,7 +29,7 @@ import { useTranslation } from 'react-i18next';
 
 // API
 import { getPoliceStation } from "../../features/dropdown/api/DropdownApi";
-import { searchCameras, getCheckpoints } from "../../features/core-data/api/CoreDataApi";
+import { searchCameras } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
 import {
@@ -38,7 +38,7 @@ import {
 import { buildUniqueOptions } from "../../utils/commonFunctions";
 
 // Types
-import type { Camera } from "../../types/common"; 
+import type { Camera, PoliceStation } from "../../types/common";
 
 interface FormData {
   search: string;
@@ -64,7 +64,6 @@ const AddCheckpoint = ({
   const [openedFilter, setOpenedFilter] = useState<string | null>(null);
   const [searchTrigger, setSearchTrigger] = useState(0);
   const [isDataLoading, setIsDataLoading] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
 
   // Data
   const [selectedAreaRegion, setSelectedAreaRegion] = useState<string[]>([]);
@@ -86,12 +85,19 @@ const AddCheckpoint = ({
   });
 
   // Slice
-  const { area, province } = useSelector((state: RootState) => state.dropdown);
+  const area = useSelector((state: RootState) => state.dropdown.area);
+  const province = useSelector((state: RootState) => state.dropdown.province);
 
   const selectedCheckpointIdSet = useMemo(
     () => new Set(selectedCheckpointIds),
     [selectedCheckpointIds]
   );
+
+  const selectAll =
+    rows.length > 0 &&
+    rows.every((camera) =>
+      checkpointChecked.includes(camera.camera_id)
+    );
 
   const areaOptions = useMemo(
     () =>
@@ -170,98 +176,36 @@ const AddCheckpoint = ({
     if (!open) return;
 
     setCheckpointChecked(selectedCheckpointIds);
-
-    const selectedSet = new Set(selectedCheckpointIds);
-
-    setSelectAll(
-      rows.length > 0 &&
-      rows.every(camera => selectedSet.has(camera.camera_id))
-    );
-  }, [open, selectedCheckpointIds, rows]);
-
-  const fetchData = useCallback(async (filterData: FormData = formData) => {
-    setIsDataLoading(true);
-    try {
-      const res = await searchCameras({
-        ...getFilters(filterData),
-      })
-
-      const cameras = res.data ?? [];
-
-      const updated = await mapCameraRows(cameras);
-      setRows(updated);
-      setTotalItems(res.pagination?.countAll ?? 0);
-      setTotalPages(res.pagination?.maxPage ?? 1);
-    }
-    catch (error) {
-      await PopupMessage(
-        t("popup.fetch-error"),
-        "",
-        "error"
-      );
-
-      setRows([]);
-      setTotalItems(0);
-      setTotalPages(1);
-    }
-    finally {
-      setIsDataLoading(false);
-    }
-  }, [
-    page,
-    rowsPerPage,
-    searchTrigger,
-  ]);
-
-  useEffect(() => {
-    fetchData();
-  }, [
-    fetchData,
-    page,
-    rowsPerPage,
-    searchTrigger,
-  ]);
+    // NOTE: intentionally does not depend on `rows` — this effect only needs
+    // to (re)seed the checked set from the incoming selection when the
+    // dialog opens or the selection prop changes. Including `rows` here
+    // previously caused every page/search refetch to reset any checkboxes
+    // the user had ticked on other pages back to just `selectedCheckpointIds`.
+  }, [open, selectedCheckpointIds]);
 
   const mapCameraRows = useCallback(
     async (cameras: Camera[]) => {
-      const stationCache = new Map<string, any>();
-      const checkpointCache = new Map<string, any>();
+      const stationCache = new Map<string, PoliceStation | undefined>();
 
       await Promise.all(
         cameras.map(async (item) => {
           const stationKey = String(item.police_station_id);
-          const checkpointKey = String(item.checkpoint_id);
-
-          const requests: Promise<void>[] = [];
 
           if (!stationCache.has(stationKey)) {
-            requests.push(
-              getPoliceStation({
-                filter: `id=${item.police_station_id}`,
-              }).then((res) => {
-                stationCache.set(
-                  stationKey,
-                  res.data?.[0]
-                );
-              })
-            );
+            const res = await getPoliceStation({
+              filter: `id=${item.police_station_id}`,
+            });
+            stationCache.set(stationKey, res.data?.[0]);
           }
-
-          if (!checkpointCache.has(checkpointKey)) {
-            requests.push(
-              getCheckpoints({
-                filter: `checkpoint_id=${item.checkpoint_id}`,
-              }).then((res) => {
-                checkpointCache.set(
-                  checkpointKey,
-                  res.data?.[0]
-                );
-              })
-            );
-          }
-
-          await Promise.all(requests);
         })
+      );
+
+      // Build lookup maps once instead of calling `.find()` per row.
+      const provinceMap = new Map(
+        province.map((p) => [p.province_code, p])
+      );
+      const areaMap = new Map(
+        area.map((a) => [a.id, a])
       );
 
       const updated = cameras.map((item) => {
@@ -270,14 +214,9 @@ const AddCheckpoint = ({
             String(item.police_station_id)
           );
 
-        const provinceData = province.find(
-          (p) => p.province_code === item.province_code
-        );
+        const provinceData = provinceMap.get(item.province_code);
 
-        const areaData = area.find(
-          (a) =>
-            a.id === Number(item.police_region_id)
-        );
+        const areaData = areaMap.get(Number(item.police_region_id));
 
         return {
           ...item,
@@ -305,11 +244,6 @@ const AddCheckpoint = ({
     ]
   )
 
-  const onChange = (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
-    event.preventDefault();
-    setPage(newPage);
-  };
-
   const getFilters = useCallback((formData: FormData) => {
     const body: Record<string, string> = {
       page: page.toString(),
@@ -325,6 +259,68 @@ const AddCheckpoint = ({
     page,
     rowsPerPage
   ])
+
+  // Guards against a slower, stale request (e.g. a previous page/search)
+  // overwriting the result of a newer one when the user paginates or
+  // searches again before the first request finishes.
+  const fetchRequestIdRef = useRef(0);
+
+  const fetchData = useCallback(async (filterData: FormData = formData) => {
+    const requestId = ++fetchRequestIdRef.current;
+    setIsDataLoading(true);
+    try {
+      const res = await searchCameras({
+        ...getFilters(filterData),
+      })
+
+      const cameras = res.data ?? [];
+
+      const updated = await mapCameraRows(cameras);
+
+      if (requestId !== fetchRequestIdRef.current) return;
+
+      setRows(updated);
+      setTotalItems(res.pagination?.countAll ?? 0);
+      setTotalPages(res.pagination?.maxPage ?? 1);
+    }
+    catch {
+      if (requestId !== fetchRequestIdRef.current) return;
+
+      await PopupMessage(
+        t("popup.fetch-error"),
+        "",
+        "error"
+      );
+
+      setRows([]);
+      setTotalItems(0);
+      setTotalPages(1);
+    }
+    finally {
+      if (requestId === fetchRequestIdRef.current) {
+        setIsDataLoading(false);
+      }
+    }
+  }, [
+    page,
+    rowsPerPage,
+    searchTrigger,
+  ]);
+
+  useEffect(() => {
+    fetchData();
+  }, [
+    fetchData,
+    page,
+    rowsPerPage,
+    searchTrigger,
+  ]);
+
+  // MUI's Pagination reports a generic ChangeEvent, not a mouse event.
+  const onChange = (event: React.ChangeEvent<unknown>, newPage: number) => {
+    event.preventDefault();
+    setPage(newPage);
+  };
 
   const handleTextChange = (key: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -362,8 +358,6 @@ const AddCheckpoint = ({
   };
 
   const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
-
     if (checked) {
       setCheckpointChecked((prev) =>
         Array.from(new Set([...prev, ...rows.map((item) => item.camera_id)]))

@@ -20,14 +20,31 @@ const ImageUpload = ({ initialImage, onImageChange, onImageDelete }: Props) => {
   const { t } = useTranslation();
 
   // Data
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  
+  const [uploadedImage, setUploadedImage] = useState<string | null>(initialImage || null);
+
   // State
   const [isFileOverSize, setIsFileOverSize] = useState(false);
 
-  useEffect(() => {
+  // Re-sync from the `initialImage` prop when it changes externally. State is
+  // adjusted during render (React's documented pattern for "adjusting state
+  // when a prop changes") instead of in an effect, avoiding a synchronous
+  // setState-in-effect and the extra render that effect would cause.
+  const [prevInitialImage, setPrevInitialImage] = useState(initialImage);
+
+  if (initialImage !== prevInitialImage) {
+    setPrevInitialImage(initialImage);
     setUploadedImage(initialImage || null);
-  }, [initialImage]);
+  }
+
+  // Release the object URL created for a local preview once it's replaced or
+  // the component unmounts, so it isn't leaked.
+  useEffect(() => {
+    return () => {
+      if (uploadedImage?.startsWith("blob:")) {
+        URL.revokeObjectURL(uploadedImage);
+      }
+    };
+  }, [uploadedImage]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

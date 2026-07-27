@@ -4,7 +4,6 @@ import buddhistEra from "dayjs/plugin/buddhistEra";
 import "dayjs/locale/th";
 import { Th, Gb } from "react-flags-select";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 // Material UI
@@ -59,7 +58,11 @@ const Navbar = () => {
 
   // Data
   const [currentTime, setCurrentTime] = useState(dayjs());
-  const [selectedLanguage, setSelectedLanguage] = useState(LANGUAGES[0]);
+  const [selectedLanguage, setSelectedLanguage] = useState<(typeof LANGUAGES)[number]>(() => {
+    const savedLanguage = localStorage.getItem("language");
+
+    return savedLanguage ? JSON.parse(savedLanguage) : LANGUAGES[0];
+  });
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   // i18n
@@ -87,25 +90,30 @@ const Navbar = () => {
     ? `${i18n.language === "th" ? user.title_name_th : user.title_name_en}${user.first_name} ${user.last_name}`
     : "-";
 
+  const closeMenu = () => {
+    setAnchorEl(null);
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(dayjs());
     }, 1000);
 
-    const savedLanguage = localStorage.getItem("language");
-
-    if (savedLanguage) {
-      setSelectedLanguage(JSON.parse(savedLanguage));
-    }
-
     return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
+  // Close the mobile menu once the viewport becomes desktop-sized. Adjusted
+  // during render (rather than in an effect) to avoid a synchronous
+  // setState-in-effect and the extra render that effect would cause.
+  const [prevIsDesktop, setPrevIsDesktop] = useState(isDesktop);
+
+  if (isDesktop !== prevIsDesktop) {
+    setPrevIsDesktop(isDesktop);
+
     if (isDesktop) {
       closeMenu();
     }
-  }, [isDesktop]);
+  }
 
   const handleLogout = async () => {
     const isConfirmed = await PopupMessageWithCancel(
@@ -124,10 +132,6 @@ const Navbar = () => {
 
     setIsLoading(false);
     closeMenu();
-  };
-
-  const closeMenu = () => {
-    setAnchorEl(null);
   };
 
   const toggleMenu = (event: React.MouseEvent<HTMLElement>) => {

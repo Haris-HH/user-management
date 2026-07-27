@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import Typography from "@mui/material/Typography";
 import Popper from "@mui/material/Popper";
@@ -40,7 +40,9 @@ function HoverSelectMenu<T>({
   const [openMenu, setOpenMenu] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
-  const anchorRef = useRef<HTMLDivElement>(null);
+  // Held in state (set via a callback ref) rather than a plain ref so the
+  // Popper's `anchorEl` never reads `ref.current` during render.
+  const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
 
   const hasGroups = !!groups?.length;
 
@@ -58,7 +60,7 @@ function HoverSelectMenu<T>({
       }}
     >
       <div
-        ref={anchorRef}
+        ref={setAnchorEl}
         className="flex gap-1 items-center opacity-80 hover:opacity-100 cursor-pointer transition-all duration-200"
       >
         {icon}
@@ -77,7 +79,7 @@ function HoverSelectMenu<T>({
 
       <Popper
         open={openMenu}
-        anchorEl={anchorRef.current}
+        anchorEl={anchorEl}
         placement="bottom-start"
         transition
         sx={{ zIndex: 9999 }}

@@ -84,18 +84,8 @@ const StatisticTopUsers = () => {
   });
 
   // Slice
-  const { title, agency } = useSelector((state: RootState) => state.dropdown);
-
-  useEffect(() => {
-    if (!formData.month_year) return;
-
-    fetchData();
-  }, [
-    formData.month_year, 
-    policeState,
-    page,
-    rowsPerPage,
-  ]);
+  const title = useSelector((state: RootState) => state.dropdown.title);
+  const agency = useSelector((state: RootState) => state.dropdown.agency);
 
   const getFilters = useCallback((): Record<string, string> => {
     const filters: Record<string, string> = {
@@ -174,12 +164,24 @@ const StatisticTopUsers = () => {
         ...res,
         data: updatedData,
       });
-    } catch (error) {
+    } catch {
       setTopUsersData(null);
     } finally {
       setIsLoading(false);
     }
   }, [getFilters, title, agency, i18n.language]);
+
+  useEffect(() => {
+    if (!formData.month_year) return;
+
+    // Data fetching is one of the legitimate uses of an Effect (syncing with
+    // the network, a case React's own docs call out) even though `fetchData`
+    // synchronously flips the loading flag before its first `await`. There is
+    // no prop/state this can be derived from during render, so it can't be
+    // rewritten as a render-time adjustment like the other fixes in this pass.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData();
+  }, [formData.month_year, fetchData]);
 
   const handleStateChange = (value: "internal" | "external") => {
     setPoliceState(value);

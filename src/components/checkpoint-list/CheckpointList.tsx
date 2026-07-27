@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useSelector } from 'react-redux';
 
 // Store
@@ -31,15 +31,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { useTranslation } from 'react-i18next';
 
 // Types
-import type { Camera, MembersWatchListGroupRequest } from "../../types/common";
+import type { Camera, CameraInGroup, PoliceStation } from "../../types/common";
 
 // API
 import { getPoliceStation } from "../../features/dropdown/api/DropdownApi";
-import { 
-  searchCameras, 
-  getCheckpoints,
-  deleteMembersWatchListGroups,
-  addMembersWatchListGroups,
+import {
+  searchCameras,
+  addCameraInGroup,
+  removeCameraInGroup,
 } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -82,7 +81,8 @@ const CheckpointList = ({
   });
 
   // Slice
-  const { area, province } = useSelector((state: RootState) => state.dropdown);
+  const area = useSelector((state: RootState) => state.dropdown.area);
+  const province = useSelector((state: RootState) => state.dropdown.province);
 
   const selectedCheckpointIds = useMemo(
     () => selectedCheckpoints.map((checkpoint) => checkpoint.camera_id),
@@ -109,80 +109,29 @@ const CheckpointList = ({
     });
   }, [formData.search, selectedCheckpoints]);
 
-  const fetchData = useCallback(async (filterData: FormData = formData) => {
-    setIsDataLoading(true);
-    try {
-      const res = await searchCameras({
-        ...getFilters(filterData),
-      })
-
-      const cameras = res.data ?? [];
-
-      const updated = await mapCameraRows(cameras);
-      setSelectedCheckpoints(updated);
-      setTotalCheckpoint(res.pagination?.countAll ?? 0);
-    }
-    catch (error) {
-      await PopupMessage(
-        t("popup.fetch-error"),
-        "",
-        "error"
-      );
-
-      setSelectedCheckpoints([]);
-      setTotalCheckpoint(0);
-    }
-    finally {
-      setIsDataLoading(false);
-    }
-  }, []
-  );
-
-  useEffect(() => {
-    if (!group_id) return;
-    fetchData();
-  }, [group_id, checkpointList])
-
   const mapCameraRows = useCallback(
     async (cameras: Camera[]) => {
-      const stationCache = new Map<string, any>();
-      const checkpointCache = new Map<string, any>();
+      const stationCache = new Map<string, PoliceStation | undefined>();
 
       await Promise.all(
         cameras.map(async (item) => {
           const stationKey = String(item.police_station_id);
-          const checkpointKey = String(item.checkpoint_id);
-
-          const requests: Promise<void>[] = [];
 
           if (!stationCache.has(stationKey)) {
-            requests.push(
-              getPoliceStation({
-                filter: `id=${item.police_station_id}`,
-              }).then((res) => {
-                stationCache.set(
-                  stationKey,
-                  res.data?.[0]
-                );
-              })
-            );
+            const res = await getPoliceStation({
+              filter: `id=${item.police_station_id}`,
+            });
+            stationCache.set(stationKey, res.data?.[0]);
           }
-
-          if (!checkpointCache.has(checkpointKey)) {
-            requests.push(
-              getCheckpoints({
-                filter: `checkpoint_id=${item.checkpoint_id}`,
-              }).then((res) => {
-                checkpointCache.set(
-                  checkpointKey,
-                  res.data?.[0]
-                );
-              })
-            );
-          }
-
-          await Promise.all(requests);
         })
+      );
+
+      // Build lookup maps once instead of calling `.find()` per row.
+      const provinceMap = new Map(
+        province.map((p) => [p.province_code, p])
+      );
+      const areaMap = new Map(
+        area.map((a) => [a.id, a])
       );
 
       const updated = cameras.map((item) => {
@@ -191,14 +140,9 @@ const CheckpointList = ({
             String(item.police_station_id)
           );
 
-        const provinceData = province.find(
-          (p) => p.province_code === item.province_code
-        );
+        const provinceData = provinceMap.get(item.province_code);
 
-        const areaData = area.find(
-          (a) =>
-            a.id === Number(item.police_region_id)
-        );
+        const areaData = areaMap.get(Number(item.police_region_id));
 
         return {
           ...item,
@@ -224,33 +168,76 @@ const CheckpointList = ({
       province,
       i18n.language,
     ]
-  )
+  );
 
-  const getFilters = useCallback((formData: FormData) => {
-    const body: Record<string, string> = {};
+  // Guards against a slower, stale request (e.g. from a previously
+  // selected group) overwriting the result of a newer one when the user
+  // switches groups quickly.
+  const fetchRequestIdRef = useRef(0);
 
-    if (formData.search) {
-      body.filter = `camera_name~*${formData.search}*`;
+  const fetchData = useCallback(async () => {
+    const requestId = ++fetchRequestIdRef.current;
+
+    if (!group_id || checkpointList.length === 0) {
+      setSelectedCheckpoints([]);
+      setTotalCheckpoint(0);
+      setIsDataLoading(false);
+      return;
     }
-    return body;
+
+    try {
+      setIsDataLoading(true);
+
+      const response = await searchCameras({
+        page: "1",
+        limit: "100",
+        filter: `camera_id=${checkpointList.join("|")},deleted=false`,
+      });
+
+      const cameras = response.data ?? [];
+      const mappedCameras = await mapCameraRows(cameras);
+
+      if (requestId !== fetchRequestIdRef.current) return;
+
+      setSelectedCheckpoints(mappedCameras);
+      setTotalCheckpoint(response.pagination?.countAll ?? 0);
+    } catch {
+      if (requestId !== fetchRequestIdRef.current) return;
+
+      setSelectedCheckpoints([]);
+      setTotalCheckpoint(0);
+
+      await PopupMessage(
+        t("popup.fetch-error"),
+        "",
+        "error"
+      );
+    } finally {
+      if (requestId === fetchRequestIdRef.current) {
+        setIsDataLoading(false);
+      }
+    }
   }, [
-    formData.search,
-  ])
+    group_id,
+    checkpointList,
+    mapCameraRows,
+    t,
+  ]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleSaveCheckpoint = async (checkpoint: Camera[]) => {
     try {
       setIsAddCheckpointOpen(false);
       setIsLoading(true);
-      const body: MembersWatchListGroupRequest = {
-        group_id: group_id,
-        member_id_list: checkpoint.map((cp) => cp.camera_id),
-      }
-      await addMembersWatchListGroups(body);
+      await addListOfCamera(checkpoint);
       await PopupMessage(t("popup.add-checkpoint-success"), "", "success");
       setSelectedCheckpoints(checkpoint);
       onDataChange();
     }
-    catch (error) {
+    catch {
       await PopupMessage(t("popup.add-checkpoint-failed"), "", "error");
     }
     finally {
@@ -258,14 +245,38 @@ const CheckpointList = ({
     }
   };
 
+  const addListOfCamera = async (cameras: Camera[]) => {
+    // No group selected means there is nothing to attach cameras to;
+    // without this the request went out with group_id: null.
+    if (!group_id) return;
+
+    const body: CameraInGroup = {
+      group_id: group_id,
+      camera_id_list: cameras.map((camera) => camera.camera_id),
+    };
+
+    await addCameraInGroup(body);
+  };
+
   const handleDeleteCheckpoint = async (cameraId: string) => {
-    await deleteCheckpoint([cameraId]);
+    // deleteCheckpoint rethrows on failure so the local list is only
+    // updated once the removal is confirmed by the API — previously the
+    // checkbox was removed from view even when the request failed.
+    try {
+      await deleteCheckpoint([cameraId]);
+    } catch {
+      return;
+    }
     setSelectedCheckpoints((prev) => prev.filter((checkpoint) => checkpoint.camera_id !== cameraId));
     onDataChange();
   };
-  
+
   const handleDeleteAllCheckpoints = async () => {
-    await deleteCheckpoint(selectedCheckpoints.map((checkpoint) => checkpoint.camera_id));
+    try {
+      await deleteCheckpoint(selectedCheckpoints.map((checkpoint) => checkpoint.camera_id));
+    } catch {
+      return;
+    }
     setSelectedCheckpoints([]);
     onDataChange();
   };
@@ -273,20 +284,28 @@ const CheckpointList = ({
   const deleteCheckpoint = async (checkpointId: string[]) => {
     try {
       setIsLoading(true);
-      const body: MembersWatchListGroupRequest = {
-        group_id: group_id,
-        member_id_list: checkpointId,
-      }
-      await deleteMembersWatchListGroups(body);
+      await removeListOfCamera(checkpointId);
       await PopupMessage(t("popup.delete-checkpoint-success"), "", "success");
     }
     catch (error) {
       await PopupMessage(t("popup.delete-checkpoint-failed"), "", "success");
+      throw error;
     }
     finally {
       setIsLoading(false);
     }
-  }
+  };
+
+  const removeListOfCamera = async (checkpointId: string[]) => {
+    if (!group_id) return;
+
+    const body: CameraInGroup = {
+      group_id: group_id,
+      camera_id_list: checkpointId,
+    };
+
+    await removeCameraInGroup(body);
+  };
 
   const handleTextChange = (key: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));

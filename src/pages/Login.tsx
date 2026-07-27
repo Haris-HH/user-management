@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
@@ -48,7 +48,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   // Form Data
-  const [formData, setFormData] = React.useState<FormData>({
+  const [formData, setFormData] = useState<FormData>({
     username: "",
     password: "",
   });
@@ -114,10 +114,10 @@ const Login = () => {
       }
 
       navigate("/", { replace: true });
-    } 
-    catch (error) {
+    }
+    catch {
       await PopupMessage(t("popup.login-failed-title"), t("popup.login-failed-message"), "error");
-    } 
+    }
     finally {
       setLoading(false);
     }
@@ -212,7 +212,7 @@ const Login = () => {
               }
               register={register("username", { required: true })}
               helperText={
-                !!errors.username
+                errors.username
                   ? t("helperText.please-input-pid")
                   : ""
               }
@@ -234,7 +234,7 @@ const Login = () => {
               }
               register={register("password", { required: true })}
               helperText={
-                !!errors.password
+                errors.password
                   ? t("helperText.please-input-password")
                   : ""
               }

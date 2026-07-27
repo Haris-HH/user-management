@@ -1,3 +1,10 @@
+/*
+  This is a React context module: it deliberately exports the provider
+  component alongside the `useTheme` hook and the `themes` palette map that
+  consumers need. Splitting them apart only to satisfy Fast Refresh would
+  fragment the theme definition for no runtime benefit.
+*/
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,

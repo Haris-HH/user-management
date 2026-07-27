@@ -1,7 +1,7 @@
 // Material UI
 import SearchIcon from '@mui/icons-material/Search';
 import InputBase from '@mui/material/InputBase';
-import { styled, alpha } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 
 // i18n
 import { useTranslation } from 'react-i18next';

@@ -22,6 +22,9 @@ import type {
   Checkpoint,
   WatchlistGroup,
   WatchListIdInUser,
+  UserListInGroup,
+  CheckpointGroup,
+  UpdateProfile,
 } from "../types/common";
 
 export interface DropdownResponse {
@@ -36,57 +39,67 @@ export interface UsersResponse {
   total: number;
 }
 
-export interface TitleResponse extends BasicResponse<Title[]> {}
+export type TitleResponse = BasicResponse<Title[]>;
 
-export interface CreateTitleResponse extends BasicResponse<Title> {}
+export type CreateTitleResponse = BasicResponse<Title>;
 
-export interface UserResponse extends BasicResponse<User[]> {}
+export type UserResponse = BasicResponse<User[]>;
 
-export interface UserCreateResponse extends BasicResponse<User> {}
+export type UserCreateResponse = BasicResponse<User>;
 
-export interface NsbOuResponse extends BasicResponse<NsbOu[]> {}
+export type NsbOuResponse = BasicResponse<NsbOu[]>;
 
-export interface NsbBhResponse extends BasicResponse<NsbBh[]> {}
+export type NsbBhResponse = BasicResponse<NsbBh[]>;
 
-export interface NsbBkResponse extends BasicResponse<NsbBk[]> {}
+export type NsbBkResponse = BasicResponse<NsbBk[]>;
 
-export interface NsbOrgResponse extends BasicResponse<NsbOrg[]> {}
+export type NsbOrgResponse = BasicResponse<NsbOrg[]>;
 
-export interface ProvinceResponse extends BasicResponse<Province[]> {}
+export type ProvinceResponse = BasicResponse<Province[]>;
 
-export interface DistrictResponse extends BasicResponse<District[]> {}
+export type DistrictResponse = BasicResponse<District[]>;
 
-export interface SubdistrictResponse extends BasicResponse<Subdistrict[]> {}
+export type SubdistrictResponse = BasicResponse<Subdistrict[]>;
 
-export interface AreaResponse extends BasicResponse<Area[]> {}
+export type AreaResponse = BasicResponse<Area[]>;
 
-export interface LprRegionResponse extends BasicResponse<LprRegion[]> {}
+export type LprRegionResponse = BasicResponse<LprRegion[]>;
 
-export interface PositionResponse extends BasicResponse<Position[]> {}
+export type PositionResponse = BasicResponse<Position[]>;
 
-export interface CreatePositionResponse extends BasicResponse<Position> {}
+export type CreatePositionResponse = BasicResponse<Position>;
 
-export interface UserGroupResponse extends BasicResponse<UserGroup[]> {}
+export type UserGroupResponse = BasicResponse<UserGroup[]>;
 
-export interface WatchListIdInUserResponse extends BasicResponse<WatchListIdInUser[]> {}
+export type WatchListIdInUserResponse = BasicResponse<WatchListIdInUser[]>;
 
-export interface CameraResponse extends BasicResponse<Camera[]> {}
+export type CameraResponse = BasicResponse<Camera[]>;
 
-export interface PoliceStationResponse extends BasicResponse<PoliceStation[]> {}
+export type PoliceStationResponse = BasicResponse<PoliceStation[]>;
 
-export interface StatusResponse extends BasicResponse<Dropdown[]> {}
+export type StatusResponse = BasicResponse<Dropdown[]>;
 
-export interface UploadedResponse extends BasicResponse<Uploaded[]> {}
+export type UploadedResponse = BasicResponse<Uploaded[]>;
 
-export interface DeleteFileResponse extends BasicResponse<DeleteFile[]> {}
+export type DeleteFileResponse = BasicResponse<DeleteFile[]>;
 
-export interface TopUsersResponse extends BasicResponse<TopUsers[]> {}
+export type TopUsersResponse = BasicResponse<TopUsers[]>;
 
-export interface CheckpointResponse extends BasicResponse<Checkpoint[]> {}
+export type CheckpointResponse = BasicResponse<Checkpoint[]>;
 
-export interface CreateWatchlistGroupResponse extends BasicResponse<WatchlistGroup> {}
+export type CreateWatchlistGroupResponse = BasicResponse<WatchlistGroup>;
 
-export interface WatchlistGroupResponse extends BasicResponse<WatchlistGroup[]> {}
+export type CreateUserWatchlistGroupResponse = BasicResponse<UserListInGroup>;
+
+export type WatchlistGroupResponse = BasicResponse<WatchlistGroup[]>;
+
+export type CheckpointGroupResponse = BasicResponse<CheckpointGroup[]>;
+
+export type UpdateProfileResponse = BasicResponse<UpdateProfile>;
+
+export type LprCenterMembersResponse = BasicResponse<User[]>;
+
+export type LprCenterMembershipResponse = BasicResponse<null>;
 
 export interface BasicResponse<T> {
   endpoint: string;

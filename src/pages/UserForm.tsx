@@ -64,15 +64,18 @@ import {
 import { PopupMessage, PopupMessageWithCancelAndDeny, PopupMessageWithCancel } from "../utils/popupMessage";
 
 // API
-import { getCameras, getBk, getOrg } from "../features/dropdown/api/DropdownApi";
+import { getCameras, getBk, getOrg, getPoliceStation } from "../features/dropdown/api/DropdownApi";
 import { requestUpload, removeUpload  } from '../features/upload/api/UploadApi';
-import { createUserApi, updateUserApi, getUserApi } from "../features/users/api/UsersApi";
+import { createUserApi, updateUserApi, getUserApi, requestUpdateProfile } from "../features/users/api/UsersApi";
 import { setAuthUser } from "../features/auth-user/api/AuthUserSlice";
 import { getTitle, getAgency, createTitle, createPosition } from "../features/dropdown/api/DropdownApi";
 import {
   fetchTitle,
   fetchPosition,
 } from "../features/dropdown/api/DropdownSlice";
+import {
+  getCameraGroup,
+} from "../features/core-data/api/CoreDataApi";
 
 interface FormData {
   username: string;
@@ -165,17 +168,14 @@ const UserForm = () => {
   });
 
   // Redux
-  const {
-    agency,
-    bh,
-    title,
-    position,
-    area,
-    policeStation,
-    province,
-    userGroup,
-  } = useSelector((state: RootState) => state.dropdown);
-  const { user } = useSelector((state: RootState) => state.authUser);
+  const agency = useSelector((state: RootState) => state.dropdown.agency);
+  const bh = useSelector((state: RootState) => state.dropdown.bh);
+  const title = useSelector((state: RootState) => state.dropdown.title);
+  const position = useSelector((state: RootState) => state.dropdown.position);
+  const area = useSelector((state: RootState) => state.dropdown.area);
+  const province = useSelector((state: RootState) => state.dropdown.province);
+  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
+  const user = useSelector((state: RootState) => state.authUser.user);
 
   // Ref
   const tempUploadedUrlsRef = useRef<string[]>([]);
@@ -219,7 +219,7 @@ const UserForm = () => {
     setImageUrl(editingUser.image_url ?? null);
     setActiveStatus(editingUser.account_status ?? "active");
     setValue("status", editingUser.account_status ?? "active");
-  }, [editingUser, reset]);
+  }, [editingUser, reset, setValue]);
 
   useEffect(() => {
     tempUploadedUrlsRef.current = tempUploadedUrls;
@@ -227,13 +227,14 @@ const UserForm = () => {
 
   useEffect(() => {
     return () => {
-      setIsLoading(true);
+      // Note: no setIsLoading here — the component is unmounting, so a
+      // state update here is a no-op at best and a "set state after
+      // unmount" hazard at worst. Just fire the cleanup request.
       const urls = tempUploadedUrlsRef.current;
 
       if (urls.length > 0) {
         removeUpload({ keys: urls }).catch(console.error);
       }
-      setIsLoading(false);
     };
   }, []);
 
@@ -286,7 +287,9 @@ const UserForm = () => {
   const internalPolice: boolean = useMemo(() => {
     const agencyData = agency.find((a) => a.ou_code === formData.agency);
     return agencyData?.ou_codename === "police" || false;
-  }, [formData.agency])
+  }, [agency, formData.agency]);
+
+  const canUpdateProfile = Boolean(internalPolice && formData.pid);
 
   const fetchBkList = useCallback(async (bhCode?: string) => {
     try {
@@ -300,6 +303,7 @@ const UserForm = () => {
       const res = await getBk(params);
       setBk(res.data ?? []);
     } catch (error) {
+      console.error(error);
       setBk([]);
     }
   }, []);
@@ -316,6 +320,7 @@ const UserForm = () => {
       const res = await getOrg(params);
       setOrg(res.data ?? []);
     } catch (error) {
+      console.error(error);
       setOrg([]);
     }
   }, []);
@@ -348,44 +353,121 @@ const UserForm = () => {
     try {
       setIsLoading(true);
 
-      const updated = await Promise.all(
-        area.map(async (a) => {
-          const res = await getCameras({
-            filter: `police_region_id=${a.id}`,
-          });
+      const cameraGroupResponse = await getCameraGroup({
+        filter: "deleted=false",
+      });
 
-          const updatedCamera = res.data.map((c) => {
-            const policeStationData = policeStation.find(
-              (ps) => ps.id === c.police_station_id
-            );
-            const provinceData = province.find(
-              (p) => p.province_code === c.province_code
-            );
+      const cameraGroups = cameraGroupResponse?.data ?? [];
 
-            return {
-              ...c,
-              police_station_name: policeStationData?.station_name ?? "-",
+      const allCameraIds = [
+        ...new Set(
+          cameraGroups.flatMap((group) => group.cameras ?? [])
+        ),
+      ];
+
+      if (allCameraIds.length === 0) {
+        setCheckpointData(
+          cameraGroups.map((group) => ({
+            ...group,
+            camera_list: [],
+          }))
+        );
+
+        return;
+      }
+
+      const cameraResponse = await getCameras({
+        filter: `camera_id=${allCameraIds.join("|")}`,
+      });
+
+      const cameras = cameraResponse?.data ?? [];
+
+      const allPoliceStationIds = [
+        ...new Set(
+          cameras
+            .map((camera) => camera.police_station_id)
+            .filter(
+              (stationId): stationId is number =>
+                Boolean(stationId)
+            )
+        ),
+      ];
+
+      const policeStationResponse =
+        allPoliceStationIds.length > 0
+          ? await getPoliceStation({
+              filter: `id=${allPoliceStationIds.join("|")}`,
+            })
+          : { data: [] };
+
+      const policeStationMap = new Map(
+        (policeStationResponse?.data ?? []).map((station) => [
+          station.id,
+          station,
+        ])
+      );
+
+      const policeRegionMap = new Map(
+        area.map((item) => [item.id, item])
+      );
+
+      const provinceMap = new Map(
+        province.map((item) => [item.province_code, item])
+      );
+
+      const cameraMap = new Map(
+        cameras.map((camera) => {
+          const policeStationData = policeStationMap.get(
+            camera.police_station_id
+          );
+
+          const provinceData = provinceMap.get(
+            camera.province_code
+          );
+
+          const policeRegionData = policeRegionMap.get(
+            camera.police_region_id
+          );
+
+          return [
+            camera.camera_id,
+            {
+              ...camera,
+              police_region_name:
+                i18n.language === "th"
+                  ? policeRegionData?.title_abbr_th ?? "-"
+                  : policeRegionData?.title_abbr_en ?? "-",
+              police_station_name:
+                policeStationData?.station_name ?? "-",
               province_name:
                 i18n.language === "th"
                   ? provinceData?.name_th ?? "-"
                   : provinceData?.name_en ?? "-",
-            };
-          });
-
-          return {
-            ...a,
-            camera_list: updatedCamera,
-          };
+            },
+          ];
         })
       );
 
+      const updated = cameraGroups.map((cameraGroup) => ({
+        ...cameraGroup,
+        camera_list: (cameraGroup.cameras ?? [])
+          .map((cameraId) => cameraMap.get(cameraId))
+          .filter(
+            (
+              camera
+            ): camera is NonNullable<typeof camera> =>
+              Boolean(camera)
+          ),
+      }));
+
       setCheckpointData(updated);
     } catch (error) {
+      console.error(error);
       await PopupMessage(t("popup.fetch-error"), "", "error");
     } finally {
       setIsLoading(false);
     }
-  }, [area, policeStation, province, i18n.language, t]);
+  }, [area, province, i18n.language, t]);
 
   useEffect(() => {
     fetchData();
@@ -421,16 +503,16 @@ const UserForm = () => {
       formData.pid.replaceAll("-", "") !== (editingUser?.idcard ?? "") ||
       formData.email !== (editingUser?.email ?? "") ||
       formData.phone.replaceAll("-", "") !== (editingUser?.phone ?? "") ||
-      formData.position !== (editingUser?.position ?? "") ||
+      formData.position !== (editingUser?.position_id ? String(editingUser.position_id) : "") ||
       formData.agency !== (editingUser?.ou_code ?? "") ||
       formData.bh !== (editingUser?.bh_code ?? "") ||
       formData.bk !== (editingUser?.bk_code ?? "") ||
       formData.org !== (editingUser?.org_code ?? "") ||
       formData.permission !== (editingUser?.user_group_id ?? "") ||
-      formData.status !== (editingUser?.account_status ?? "active") ||
+      activeStatus !== (editingUser?.account_status ?? "active") ||
       formData.detail !== (editingUser?.details ?? "")
     );
-  }, [formData, imageUrl, deletedImageUrls, tempUploadedUrls, editingUser]);
+  }, [formData, imageUrl, deletedImageUrls, tempUploadedUrls, editingUser, activeStatus]);
 
   const handleTextChange = (key: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -577,18 +659,24 @@ const UserForm = () => {
     clearErrors("password");
   };
 
-  const addChangedField = <T extends Record<string, any>>(
+  // `currentValue`/`originalValue` are intentionally `unknown`: this helper is
+  // called with values of many different shapes (string, number, string[], ...)
+  // depending on `key`, and `UpdateUser` itself doesn't always narrow cleanly
+  // (e.g. `image_url` is typed as `string` but nullable in practice). A single
+  // cast at the assignment point avoids `any` while keeping every existing
+  // call site working unchanged.
+  const addChangedField = <T, K extends keyof T>(
     payload: T,
-    key: keyof T,
-    currentValue: any,
-    originalValue: any
+    key: K,
+    currentValue: unknown,
+    originalValue: unknown
   ) => {
     if (currentValue !== originalValue) {
-      payload[key] = currentValue;
+      payload[key] = currentValue as T[K];
     }
   };
 
-  const findTitle = (name: any) => {
+  const findTitle = (name: string) => {
     const keyword = normalizeText(name);
 
     return title.find((item) =>
@@ -604,7 +692,7 @@ const UserForm = () => {
     );
   };
 
-  const findPosition = (name: any) => {
+  const findPosition = (name: string) => {
     const keyword = normalizeText(name);
 
     return position.find((item) =>
@@ -690,7 +778,7 @@ const UserForm = () => {
           addChangedField(updatePayload, "title_id", title_id, editingUser.title_id);
         }
         if (position_id !== 0) {
-          addChangedField(updatePayload, "position_id", position_id, editingUser.position ?? "");
+          addChangedField(updatePayload, "position_id", position_id, editingUser.position_id);
         }
         addChangedField(updatePayload, "bh_code", formData.bh, editingUser.bh_code ?? "");
         addChangedField(updatePayload, "bk_code", formData.bk, editingUser.bk_code ?? "");
@@ -728,22 +816,22 @@ const UserForm = () => {
       } 
       else {
         const createPayload: CreateUser = {
-          ...(formData.permission && { user_group_id: formData.permission }),
+          user_group_id: formData.permission,
           ...(imageUrl && { image_url: imageUrl }),
           ...((formData.prefix && title_id !== 0) && { title_id: title_id }),
           ...((formData.position && position_id !== 0) && { position_id: position_id }),
           ...(formData.bh && { bh_code: formData.bh }),
           ...(formData.bk && { bk_code: formData.bk }),
           ...(formData.org && { org_code: formData.org }),
-          ...(formData.username && { username: formData.username }),
-          ...(formData.first_name && { firstname: formData.first_name }),
-          ...(formData.last_name && { lastname: formData.last_name }),
-          ...(formData.pid && { idcard: formData.pid.replaceAll("-", "") }),
-          ...(formData.phone && { phone: formData.phone.replaceAll("-", "") }),
-          ...(formData.email && { email: formData.email }),
-          ...(formData.agency && { ou_code: formData.agency }),
+          username: formData.username,
+          password: formData.password,
+          firstname: formData.first_name,
+          lastname: formData.last_name,
+          idcard: formData.pid.replaceAll("-", ""),
+          phone: formData.phone.replaceAll("-", ""),
+          email: formData.email,
+          ou_code: formData.agency,
           ...(permissions && { permissions }),
-          ...(formData.password && { password: formData.password }),
           ...(formData.sub_unit && { sub_unit: formData.sub_unit }),
         };
 
@@ -837,10 +925,11 @@ const UserForm = () => {
         setTempUploadedUrls(prev => [...prev, uploadedUrl]);
         setImageUrl(uploadedUrl);
       }
-    } 
+    }
     catch (error) {
+      console.error(error);
       await PopupMessage(t("popup.upload-error"), "", "error");
-    } 
+    }
     finally {
       setIsLoading(false);
     }
@@ -913,12 +1002,10 @@ const UserForm = () => {
     }
   };
 
-  const handleSubAgencyChange = (values: string[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      sub_unit: values,
-    }));
-  }
+  const handleSubAgencyChange = (values: string[]) => { 
+    setFormData((prev) => ({ ...prev, sub_unit: values, })); 
+    setValue("sub_unit", values, { shouldDirty: true, shouldValidate: true, }); 
+  };
 
   const getApiErrorMessage = (
     error: unknown,
@@ -945,6 +1032,58 @@ const UserForm = () => {
     return message || "";
   };
 
+  const handleUpdateProfile = async () => {
+    const pid = formData.pid.replaceAll("-", "").trim();
+
+    if (pid.length !== 13) {
+      setError("pid", {
+        type: "manual",
+        message: t("text.invalid-pid"),
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      clearErrors("pid");
+
+      const response = await requestUpdateProfile({
+        idcard: pid,
+      });
+
+      const profile = response?.data;
+
+      if (!profile) return;
+
+      setFormData((prev) => {
+        const updatedFormData = {
+          ...prev,
+          bh: profile.bh_code ?? prev.bh,
+          bk: profile.bk_code ?? prev.bk,
+          org: profile.org_code ?? prev.org,
+          position: profile.level_abbr ?? prev.position,
+          prefix: profile.rank_abbr ?? prev.prefix,
+          first_name: profile.name ?? prev.first_name,
+          last_name: profile.sname ?? prev.last_name,
+        };
+
+        setValue("bh", updatedFormData.bh);
+        setValue("bk", updatedFormData.bk);
+        setValue("org", updatedFormData.org);
+        setValue("position", updatedFormData.position);
+        setValue("prefix", updatedFormData.prefix);
+        setValue("first_name", updatedFormData.first_name);
+        setValue("last_name", updatedFormData.last_name);
+
+        return updatedFormData;
+      });
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <section id="user-form" className="flex flex-col h-full w-full">
       {isLoading && <LoadingScreen />}
@@ -964,12 +1103,32 @@ const UserForm = () => {
           onSubmit={handleSubmit(handleSaveClick)}
         >
           <Box className="grid grid-cols-[220px_1fr] gap-4">
-            <Box className="flex items-start justify-center">
+            <Box className="flex flex-col gap-3 items-center justify-start">
               <ImageUpload
                 initialImage={imageUrl ?? undefined}
                 onImageChange={handleImageChange}
                 onImageDelete={handleImageDelete}
               />
+              <Button
+                variant="contained"
+                sx={{
+                  height: 35,
+                  backgroundColor: "var(--primary-color)",
+                  color: "var(--tertiary-color)",
+                  mb: "1px",
+                  "&:hover": { backgroundColor: "rgba(var(--primary-color-rgb), 0.7)" },
+                  textTransform: "capitalize",
+                  "&.Mui-disabled": {
+                    backgroundColor: "var(--primary-color)",
+                    color: "var(--tertiary-color)",
+                    opacity: 0.5,
+                  },
+                }}
+                onClick={handleUpdateProfile}
+                disabled={!canUpdateProfile}
+              >
+                {t("button.update-profile")}
+              </Button>
             </Box>
 
             <Box className="flex flex-col gap-4">
@@ -1227,9 +1386,7 @@ const UserForm = () => {
 
                   {
                     (!internalPolice && formData.agency) && (
-                      <SubAgency
-                        onChange={handleSubAgencyChange}
-                      />
+                      <SubAgency value={formData.sub_unit} onChange={handleSubAgencyChange} />
                     )
                   }
                 </Box>

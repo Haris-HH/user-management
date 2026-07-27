@@ -1,4 +1,5 @@
 import React, { useState } from "react"
+import type { UseFormRegisterReturn } from "react-hook-form";
 
 // Material UI
 import TextField from "@mui/material/TextField";
@@ -29,7 +30,7 @@ type TextBoxProps = {
   variant?: "outlined" | "filled" | "standard"
   required?: boolean
   type?: string
-  register?: any;
+  register?: UseFormRegisterReturn;
   isMultiline?: boolean;
   rows?: number;
   autoComplete?: string;
@@ -240,6 +241,7 @@ const TextBox: React.FC<TextBoxProps> = ({
                   sx={{
                     padding: "4px",
                   }}
+                  tabIndex={-1}
                 >
                   {showPassword ? (
                     <VisibilityOff
@@ -255,7 +257,7 @@ const TextBox: React.FC<TextBoxProps> = ({
             ) : type === "number" ? (
               <InputAdornment position="end">
                 <Box sx={{ display:"flex", flexDirection:"column", mr: "-5px" }}>
-                  <IconButton sx={{ p: 0, mt: "0px" }}>
+                  <IconButton sx={{ p: 0, mt: "0px" }} tabIndex={-1}>
                     <KeyboardArrowUpIcon
                       sx={{ 
                         color: "var(--primary-color)", 
@@ -267,7 +269,7 @@ const TextBox: React.FC<TextBoxProps> = ({
                       }}
                     />
                   </IconButton>
-                  <IconButton sx={{ p: 0, mt: "-5px" }}>
+                  <IconButton sx={{ p: 0, mt: "-5px" }} tabIndex={-1}>
                     <KeyboardArrowDownIcon
                       sx={{ 
                         color: "var(--primary-color)", 

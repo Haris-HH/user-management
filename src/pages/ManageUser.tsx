@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import dayjs from 'dayjs';
 import { useNavigate } from "react-router-dom";
 import { useSelector } from 'react-redux';
@@ -34,9 +34,7 @@ import MainTitle from '../components/main-title/MainTitle';
 import AutoComplete from '../components/auto-complete/AutoComplete';
 import TextBox from '../components/text-box/TextBox';
 import UpdateProfile from '../components/update-profile/UpdateProfile';
-import LoadingScreen from '../components/loading-screen/LoadingScreen';
 import TableSkeleton from '../components/table-skeleton/TableSkeleton';
-import SubAgency from '../components/sub-agency/SubAgency';
 
 // Icons
 import ExcelIcon from "../assets/icons/excel.png";
@@ -76,7 +74,7 @@ interface FormData {
   org_id: string;
   user_group_id: string;
   status_id: string;
-  sub_unit: string[];
+  sub_unit: string;
 };
 
 const ManageUser = () => {
@@ -93,12 +91,15 @@ const ManageUser = () => {
   const [isAccordionOpen, setIsAccordionOpen] = useState(true);
   const [selectAll, setSelectAll] = useState(false);
   const [openUpdateProfileDialog, setOpenUpdateProfileDialog] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
+  // Guards against an older, slower search response overwriting the
+  // results of a newer one (e.g. a fast page-2 fetch resolving before a
+  // slow page-1 fetch that was fired first).
+  const latestRequestIdRef = useRef(0);
+
   // Data
-  const [visibleColumns, setVisibleColumns] = useState<Column[]>([]);
   const [userData, setUserData] = useState<User[]>([]);
   const [memberChecked, setMemberChecked] = useState<string[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -120,16 +121,23 @@ const ManageUser = () => {
     org_id: "0",
     user_group_id: "0",
     status_id: "0",
-    sub_unit: [],
+    sub_unit: "",
   });
 
   // Slice
-  const { agency, bh, title, userGroup, status } = useSelector((state: RootState) => state.dropdown);
+  // Selected per-field (instead of the whole dropdown slice) so this
+  // component only re-renders when a field it actually reads changes,
+  // rather than on every one of the ~14 dropdown thunks fired on login.
+  const agency = useSelector((state: RootState) => state.dropdown.agency);
+  const bh = useSelector((state: RootState) => state.dropdown.bh);
+  const title = useSelector((state: RootState) => state.dropdown.title);
+  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
+  const status = useSelector((state: RootState) => state.dropdown.status);
 
   const agencyOptions = useMemo(() => {
     const langKeyAgency = i18n.language === "th" ? "ou_abbr_th" : "ou_abbr_en";
     return buildOptions(agency, t("dropdown.all-agency"), langKeyAgency, "ou_code", true, "");
-  }, [agency, i18n.language]);
+  }, [agency, t, i18n.language]);
 
   const bhOptions = useMemo(() => {
     const langKeyBh = i18n.language === "th" ? "bh_abbr_th" : "bh_abbr_en";
@@ -138,7 +146,12 @@ const ManageUser = () => {
       : bh;
 
     return buildOptions(filteredBh, t("dropdown.all-bh"), langKeyBh, "bh_code");
-  }, [bh, i18n.language, formData.agency_id, i18n.isInitialized]);
+    // Translations load asynchronously over XHR (see useColumnItems), so
+    // language and the initialised flag are kept as explicit deps to
+    // guarantee labels rebuild once the bundle arrives, even if `t` keeps
+    // its identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bh, t, i18n.language, formData.agency_id, i18n.isInitialized]);
 
   const bkOptions = useMemo(() => {
     const langKeyBk = i18n.language === "th" ? "bk_abbr_th" : "bk_abbr_en";
@@ -147,7 +160,9 @@ const ManageUser = () => {
       : bk;
 
     return buildOptions(filteredBk, t("dropdown.all-bk"), langKeyBk, "bk_code");
-  }, [bk, i18n.language, formData.bh_id, i18n.isInitialized]);
+    // See the bhOptions comment above re: async translation loading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bk, t, i18n.language, formData.bh_id, i18n.isInitialized]);
 
   const orgOptions = useMemo(() => {
     const langKeyOrg = i18n.language === "th" ? "org_abbr_th" : "org_abbr_en";
@@ -156,46 +171,62 @@ const ManageUser = () => {
       : org;
 
     return buildOptions(filteredOrg, t("dropdown.all-org"), langKeyOrg, "org_code");
-  }, [org, i18n.language, formData.bk_id, i18n.isInitialized]);
+    // See the bhOptions comment above re: async translation loading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org, t, i18n.language, formData.bk_id, i18n.isInitialized]);
 
   const userGroupOptions = useMemo(() => {
     const langKeyUserGroup = "group_name";
     return buildOptions(userGroup, t("dropdown.all-user-group"), langKeyUserGroup, "group_id");
-  }, [userGroup, i18n.language, i18n.isInitialized]);
+    // See the bhOptions comment above re: async translation loading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userGroup, t, i18n.language, i18n.isInitialized]);
 
   const statusOptions = useMemo(() => {
     const langKeyStatus = "name";
     return buildOptions(status, t("dropdown.all-status"), langKeyStatus, "code");
-  }, [status, i18n.language, i18n.isInitialized]);
+    // See the bhOptions comment above re: async translation loading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, t, i18n.language, i18n.isInitialized]);
 
-  const agencyMap = new Map(
-    agency.map(item => [item.ou_code, item])
+  // Memoized so identity is stable across renders that don't change the
+  // underlying dropdown list — mapUserDataRows (below) depends on these
+  // and would otherwise re-run on every render, or (if naively memoized
+  // with an empty dep array) capture stale/empty maps forever.
+  const agencyMap = useMemo(
+    () => new Map(agency.map(item => [item.ou_code, item])),
+    [agency]
   );
 
-  const bhMap = new Map(
-    bh.map(item => [item.bh_code, item])
+  const bhMap = useMemo(
+    () => new Map(bh.map(item => [item.bh_code, item])),
+    [bh]
   );
 
-  const bkMap = new Map(
-    bk.map(item => [item.bk_code, item])
+  const bkMap = useMemo(
+    () => new Map(bk.map(item => [item.bk_code, item])),
+    [bk]
   );
 
-  const orgMap = new Map(
-    org.map(item => [item.org_code, item])
+  const orgMap = useMemo(
+    () => new Map(org.map(item => [item.org_code, item])),
+    [org]
   );
 
-  const titleMap = new Map(
-    title.map(item => [item.id, item])
+  const titleMap = useMemo(
+    () => new Map(title.map(item => [item.id, item])),
+    [title]
   );
 
-  const userGroupMap = new Map(
-    userGroup.map(item => [item.group_id, item])
+  const userGroupMap = useMemo(
+    () => new Map(userGroup.map(item => [item.group_id, item])),
+    [userGroup]
   );
 
   const internalPolice: boolean = useMemo(() => {
     const agencyData = agency.find((a) => a.ou_code === formData.agency_id);
     return agencyData?.ou_codename === "police" || false;
-  }, [formData.agency_id])
+  }, [agency, formData.agency_id])
 
   const fetchBkList = useCallback(async (bhCode?: string) => {
     try {
@@ -209,6 +240,7 @@ const ManageUser = () => {
       const res = await getBk(params);
       setBk(res.data ?? []);
     } catch (error) {
+      console.log(error);
       setBk([]);
     }
   }, []);
@@ -225,19 +257,31 @@ const ManageUser = () => {
       const res = await getOrg(params);
       setOrg(res.data ?? []);
     } catch (error) {
+      console.log(error);
       setOrg([]);
     }
   }, []);
 
   useEffect(() => {
+    // fetchBkList synchronizes the bk dropdown with the selected bh — a
+    // genuine "fetch when a reactive value changes" effect. The lint rule
+    // flags it because it can't see that the resulting setBk happens after
+    // an await, not synchronously; there's no way to fetch this from a
+    // cascading-dropdown filter without an effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchBkList(formData.bh_id);
   }, [fetchBkList, formData.bh_id]);
 
   useEffect(() => {
+    // Same rationale as the bk effect above, for the org dropdown.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchOrgList(formData.bk_id);
   }, [fetchOrgList, formData.bk_id]);
 
-  useEffect(() => {
+  // Derived purely from `columns` — computed during render instead of via
+  // an effect+state pair, which used to leave the table headerless for one
+  // extra render after mount.
+  const visibleColumns = useMemo(() => {
     const filtered = columns.filter(
       (column) =>
         column.id !== "created_at" &&
@@ -249,39 +293,35 @@ const ManageUser = () => {
 
     const first = ["actions", "edit", "id", "account_status", "last_login", "pid"];
 
-    setVisibleColumns([
+    return [
       ...first
         .map((id) => filtered.find((column) => column.id === id))
         .filter(Boolean) as Column[],
       ...filtered.filter((column) => !first.includes(column.id)),
-    ]);
+    ];
   }, [columns]);
-
-  useEffect(() => {
-    fetchData(formData);
-  }, []);
 
   const mapUserDataRows = useCallback((data: User[]) => {
     return data.map((item) => {
       const titleData = item.title_id ? titleMap.get(item.title_id) : null;
-      const titleName = titleData ? 
-                          i18n.language === "th" ? titleData.title_abbr_th : titleData.title_abbr_en
+      const titleName = titleData ?
+                          (i18n.language === "th" ? titleData.title_abbr_th : titleData.title_abbr_en) ?? "-"
                           : "-";
       const agencyData = item.ou_code ? agencyMap.get(item.ou_code) : null;
-      const agencyName = agencyData ? 
-                          i18n.language === "th" ? agencyData.ou_abbr_th : agencyData.ou_abbr_en
+      const agencyName = agencyData ?
+                          (i18n.language === "th" ? agencyData.ou_abbr_th : agencyData.ou_abbr_en) ?? "-"
                           : "-";
       const bhData = item.bh_code ? bhMap.get(item.bh_code) : null;
-      const bhName = bhData ? 
-                          i18n.language === "th" ? bhData.bh_abbr_th : bhData.bh_abbr_en
+      const bhName = bhData ?
+                          (i18n.language === "th" ? bhData.bh_abbr_th : bhData.bh_abbr_en) ?? "-"
                           : "-";
       const bkData = item.bk_code ? bkMap.get(item.bk_code) : null;
-      const bkName = bkData ? 
-                          i18n.language === "th" ? bkData.bk_abbr_th : bkData.bk_abbr_en
+      const bkName = bkData ?
+                          (i18n.language === "th" ? bkData.bk_abbr_th : bkData.bk_abbr_en) ?? "-"
                           : "-";
       const orgData = item.org_code ? orgMap.get(item.org_code) : null;
-      const orgName = orgData ? 
-                          i18n.language === "th" ? orgData.org_abbr_th : orgData.org_abbr_en
+      const orgName = orgData ?
+                          (i18n.language === "th" ? orgData.org_abbr_th : orgData.org_abbr_en) ?? "-"
                           : "-";
       const userGroupData = item.user_group_id ? userGroupMap.get(item.user_group_id) : null;
 
@@ -292,13 +332,70 @@ const ManageUser = () => {
         bh_name: bhName,
         bk_name: bkName,
         org_name: orgName,
-        user_group_name: capitalizeWords(userGroupData?.group_name) ?? "-",
+        user_group_name: capitalizeWords(userGroupData?.group_name ?? ""),
       }
     })
-  }, [])
+  }, [titleMap, agencyMap, bhMap, bkMap, orgMap, userGroupMap, i18n.language])
+
+  // Pure — `formData` is a parameter here (shadowing the outer state), so
+  // this function has no external reactive dependencies at all.
+  const getFilters = useCallback((formData: FormData, pageData: number, limit: number) => {
+    const filters: Record<string, string> = {
+      filter: `approve_status=approved`,
+      page: pageData.toString(),
+      limit: limit.toString(),
+    };
+
+    const pid = formData.pid.trim();
+    const name = formData.name.trim();
+    const subUnit = formData.sub_unit.trim();
+
+    if (pid) {
+      filters.idcard = `*${formData.pid}*`;
+    }
+
+    if (name) {
+      filters.fullname = `*${formData.name.trim()}*`;
+    }
+
+    if (formData.agency_id) {
+      filters.ou_code = formData.agency_id;
+    }
+
+    if (formData.bh_id !== "0") {
+      filters.bh_code = formData.bh_id;
+    }
+
+    if (formData.bk_id !== "0") {
+      filters.bk_code = formData.bk_id;
+    }
+
+    if (formData.org_id !== "0") {
+      filters.org_code = formData.org_id;
+    }
+
+    if (formData.user_group_id !== "0") {
+      filters.user_group_id = formData.user_group_id;
+    }
+
+    if (formData.status_id !== "0") {
+      filters.active_status = formData.status_id;
+    }
+
+    if (subUnit) {
+      filters.sub_unit_list = `*${subUnit}*`;
+    }
+
+    return filters;
+  }, []);
 
   const fetchData = useCallback(
-    async (filterData: FormData = formData, pageData: number = page, limit: number = rowsPerPage) => {
+    async (filterData: FormData, pageData: number, limit: number) => {
+      // Tags this call so a response that resolves after a newer call has
+      // already landed (e.g. a slow page-1 fetch resolving after a fast
+      // page-2 fetch) is discarded instead of overwriting fresher results.
+      const requestId = ++latestRequestIdRef.current;
+
       try {
         setIsDataLoading(true);
 
@@ -306,31 +403,54 @@ const ManageUser = () => {
           ...getFilters(filterData, pageData, limit),
         });
 
+        if (requestId !== latestRequestIdRef.current) return;
+
         setUserData(mapUserDataRows(res.data ?? []));
         setTotalPages(res.pagination?.maxPage ?? 1);
         setTotalUsers(res.pagination?.countAll ?? 0);
       } catch (error) {
+        if (requestId !== latestRequestIdRef.current) return;
+
         console.log(error);
         setUserData([]);
         setTotalPages(1);
         setTotalUsers(0);
       } finally {
-        setSelectAll(false);
-        setMemberChecked([]);
-        setIsDataLoading(false);
+        if (requestId === latestRequestIdRef.current) {
+          setSelectAll(false);
+          setMemberChecked([]);
+          setIsDataLoading(false);
+        }
       }
     },
-    [page, rowsPerPage, mapUserDataRows]
+    [mapUserDataRows, getFilters]
   );
+
+  useEffect(() => {
+    // Runs once on mount to load the initial (unfiltered) result page. This
+    // is a genuine fetch-on-mount effect; there's no way to do this outside
+    // an effect without a data-fetching library.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchData(formData, page, rowsPerPage);
+    // fetchData/formData/page/rowsPerPage are intentionally omitted:
+    // fetchData is recreated whenever mapUserDataRows changes (i.e.
+    // whenever dropdown reference data loads), and every other trigger for
+    // a search (search/clear button, page/rows-per-page change) already
+    // calls fetchData explicitly — depending on it here would re-run this
+    // effect and fire a duplicate search each time the dropdown data
+    // resolves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleTextChange = (key: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleDropdownChange = (
+    // AutoComplete emits null when the selection is cleared.
     event: React.SyntheticEvent,
     key: keyof typeof formData,
-    value: string | OptionType,
+    value: string | OptionType | null,
   ) => {
     event.preventDefault();
 
@@ -373,8 +493,16 @@ const ManageUser = () => {
     setSelectAll((prev) => !prev);
   };
 
-  const handleChangePage = async (event: React.MouseEvent<HTMLButtonElement>, newPage: number) => {
-    event.preventDefault();
+  /*
+    MUI passes null as the event when the page changes without a click
+    (e.g. after the rows-per-page control clamps the page), so the event is
+    optional-chained rather than dereferenced.
+  */
+  const handleChangePage = async (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    newPage: number
+  ) => {
+    event?.preventDefault();
     setPage(newPage);
     await fetchData(formData, newPage, rowsPerPage);
   };
@@ -466,56 +594,6 @@ const ManageUser = () => {
     });
   };
 
-  const getFilters = useCallback((formData: FormData, pageData: number, limit: number) => {
-    const filters: Record<string, string> = {
-      filter: `approve_status=approved`,
-      page: pageData.toString(),
-      limit: limit.toString(),
-    };
-
-    const pid = formData.pid.trim();
-    const name = formData.name.trim();
-    const subUnits = formData.sub_unit.filter(Boolean);
-
-    if (pid) {
-      filters.idcard = `*${formData.pid}*`;
-    }
-
-    if (name) {
-      filters.fullname = `*${formData.name.trim()}*`;
-    }
-
-    if (formData.agency_id) {
-      filters.ou_code = formData.agency_id;
-    }
-
-    if (formData.bh_id !== "0") {
-      filters.bh_code = formData.bh_id;
-    }
-
-    if (formData.bk_id !== "0") {
-      filters.bk_code = formData.bk_id;
-    }
-
-    if (formData.org_id !== "0") {
-      filters.org_code = formData.org_id;
-    }
-
-    if (formData.user_group_id !== "0") {
-      filters.user_group_id = formData.user_group_id;
-    }
-
-    if (formData.status_id !== "0") {
-      filters.active_status = formData.status_id;
-    }
-
-    if (subUnits.length > 0) {
-      filters.sub_unit_list = subUnits.join(",");
-    }
-
-    return filters;
-  }, [formData]);
-
   const handleSearchClick = async () => {
     setPage(1);
     await fetchData(formData, 1, rowsPerPage);
@@ -531,17 +609,10 @@ const ManageUser = () => {
       org_id: "0",
       user_group_id: "0",
       status_id: "0",
-      sub_unit: [],
+      sub_unit: "",
     });
 
     setPage(1);
-  };
-
-  const handleSubAgencyChange = (values: string[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      sub_unit: values,
-    }));
   };
 
   const renderCellValue = (
@@ -644,7 +715,11 @@ const ManageUser = () => {
         return data.remark || "-";
 
       default:
-        return (data as any)[columnId] ?? "-";
+        // Unreachable: visibleColumns only ever contains ids handled above
+        // (the remaining AddApproveData-derived ids are filtered out before
+        // rendering), so there's no column id left needing a dynamic,
+        // unsafely-typed lookup into `data` here.
+        return "-";
     }
   };
 
@@ -728,26 +803,30 @@ const ManageUser = () => {
         return data.remark || "-";
 
       default:
-        return String((data as any)[columnId] ?? "-");
+        // Unreachable — see the matching comment in renderCellValue.
+        return "-";
     }
   };
 
   const handleCopy = async (value: string) => {
     if (!value || value === "-") return;
 
-    await navigator.clipboard.writeText(value);
-    setIsAlertOpen(true);
+    try {
+      await navigator.clipboard.writeText(value);
+      setIsAlertOpen(true);
 
-    setTimeout(() => {
-      setIsAlertOpen(false);
-    }, 1500)
+      setTimeout(() => {
+        setIsAlertOpen(false);
+      }, 1500)
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
     <section id="manage-user" className="flex flex-col h-full w-full p-2">
       {/* Main Title */}
       <MainTitle title={t('pages.manage-user')} />
-      { isLoading && <LoadingScreen /> }
       <Box className='flex flex-col p-4 bg-(--main-bg-color) flex-1 min-h-0 w-full rounded-lg border border-(--primary-color) overflow-y-auto gap-2'>
         <Accordion
           expanded={isAccordionOpen}
@@ -990,7 +1069,17 @@ const ManageUser = () => {
                 )}
 
                 {!internalPolice && formData.agency_id !== "" && (
-                  <SubAgency onChange={handleSubAgencyChange} />
+                  <TextBox
+                    sx={{ marginTop: "5px" }}
+                    id="sub-unit"
+                    label={t('component.only-sub-agency')}
+                    placeholder={t('placeholder.only-sub-agency')}
+                    labelFontSize="16px"
+                    value={formData.sub_unit}
+                    onChange={(event) =>
+                      handleTextChange("sub_unit", event.target.value)
+                    }
+                  />
                 )}
               </Box>
             </Box>

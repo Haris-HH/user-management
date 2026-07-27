@@ -1,7 +1,7 @@
-import pdfMake from "pdfmake/build/pdfmake";
 import { saveAs } from "file-saver";
 import dayjs from "dayjs";
 import type { TDocumentDefinitions, TableCell } from "pdfmake/interfaces";
+import type { i18n as I18n } from "i18next";
 import type { User } from "../types/common";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 
@@ -14,10 +14,10 @@ dayjs.extend(buddhistEra);
 export const generateAddApproveUsersPdfBlob = async (
   data: User[],
   t: (key: string) => string,
-  i18n: any,
+  i18n: I18n,
   tab: number,
 ): Promise<Blob> => {
-  await getConfiguredPdfMake();
+  const pdfMake = await getConfiguredPdfMake();
 
   const dataDateFormat = i18n.language === "th" ? "DD/MM/BBBB" : "DD/MM/YYYY";
 
@@ -116,7 +116,7 @@ export const downloadAddApproveUsersPdf = async (
   data: User[],
   fileName: string,
   t: (key: string) => string,
-  i18n: any,
+  i18n: I18n,
   tab: number,
 ) => {
   const blob = await generateAddApproveUsersPdfBlob(data, t, i18n, tab);

@@ -1,5 +1,6 @@
 import dayjs, { Dayjs } from 'dayjs';
 import "dayjs/locale/th";
+import type { UseFormRegisterReturn } from "react-hook-form";
 
 // Material UI
 import Typography from "@mui/material/Typography";
@@ -7,7 +8,8 @@ import type { DatePickerProps } from '@mui/x-date-pickers/DatePicker'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import type { DateTimePickerProps } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers"
-import type { DateView, DateOrTimeView } from '@mui/x-date-pickers/models';
+import type { DateView, DateOrTimeView, PickerChangeHandlerContext } from '@mui/x-date-pickers/models';
+import type { DateTimeValidationError } from '@mui/x-date-pickers/models';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 // Utils
@@ -25,13 +27,12 @@ type CustomDatePickerProps = Omit<
   labelFontSize?: string
   className?: string
   value: Date | null
-  onChange: (date: Date | null, context: any) => void
+  onChange: (date: Date | null, context: PickerChangeHandlerContext<DateTimeValidationError>) => void
   isWithTime?: boolean
   error?: boolean
-  register?: any
+  register?: UseFormRegisterReturn
   sx?: object
   maxDate?: Dayjs
-  slotProps?: any
 }
 
 const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
@@ -62,7 +63,10 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
     "minutes",
   ];
   
-  const handleDateChange = (date: Dayjs | null, context: any) => {
+  const handleDateChange = (
+    date: Dayjs | null,
+    context: PickerChangeHandlerContext<DateTimeValidationError>
+  ) => {
     if (onChange) {
       onChange(date?.toDate() || null, context);
       if (register) {
@@ -74,7 +78,7 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
   }
 
   const textFieldProps = {
-    size: 'medium' as 'medium',
+    size: 'medium' as const,
     style: { height: '30px', justifyContent: 'center' },
     fullWidth: true,
     inputProps: {

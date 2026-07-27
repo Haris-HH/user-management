@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -25,6 +25,17 @@ type Props = {
   isShowToggle?: boolean;
 }
 
+// Static 1-31 list — doesn't depend on props/state/i18n, so it's built once
+// at module scope instead of via a useState+useEffect pair (which used to
+// leave the date select empty for one render after mount).
+const DATE_OPTIONS: { label: string; value: string }[] = Array.from(
+  { length: 31 },
+  (_, index) => ({
+    label: `${index + 1}`,
+    value: `${index + 1}`,
+  })
+);
+
 const UpdateProfile = ({ 
   open, 
   onClose,
@@ -37,29 +48,21 @@ const UpdateProfile = ({
   // State
   const [scheduleStatus, setScheduleStatus] = useState(false);
 
-  // Options
-  const [dateOptions, setDateOptions] = useState<{ label: string, value: string }[]>([]);
-
   // Form Data
   const [formData, setFormData] = useState<FormData>({
     date: "20",
   });
 
-  useEffect(() => {
-    const option = Array.from({ length: 31 }).map((_, index) => ({
-      label: `${index + 1}`,
-      value: `${index + 1}`,
-    }))
-    setDateOptions(option);
-  }, []);
-
   const handleDropdownChange = (
+    // AutoComplete emits null when the selection is cleared.
     event: React.SyntheticEvent,
     key: keyof typeof formData,
-    value: string | OptionType,
+    value: string | OptionType | null,
   ) => {
     event.preventDefault();
-    setFormData((prev) => ({ ...prev, [key]: typeof value === "string" ? value : value?.value ?? 0 }));
+    // Every field of this form is a string, so a cleared selection falls
+    // back to "" rather than the numeric 0 it used to store.
+    setFormData((prev) => ({ ...prev, [key]: typeof value === "string" ? value : value?.value ?? "" }));
   };
 
   return (
@@ -106,7 +109,7 @@ const UpdateProfile = ({
                       sx={{ marginTop: "5px" }}
                       value={formData.date}
                       onChange={(event, value) => handleDropdownChange(event, "date", value)}
-                      options={dateOptions}
+                      options={DATE_OPTIONS}
                       label=""
                       labelFontSize="16px"
                       disablePortal={true}

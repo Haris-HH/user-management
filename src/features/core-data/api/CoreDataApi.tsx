@@ -4,9 +4,15 @@ import type {
   CheckpointResponse,
   WatchlistGroupResponse,
   CreateWatchlistGroupResponse,
+  CreateUserWatchlistGroupResponse,
+  UserGroupResponse,
+  CheckpointGroupResponse,
 } from "../../../types/response";
 import type {
-  MembersWatchListGroupRequest
+  MembersWatchListGroupRequest,
+  UserListInGroup,
+  CreateWatchlistGroup,
+  CameraInGroup,
 } from "../../../types/common";
 
 // Api
@@ -98,3 +104,81 @@ export const deleteMembersWatchListGroups = async (body: MembersWatchListGroupRe
   });
 }
 
+export const addListSpecialPlates = async (body: UserListInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/watch-groups/special-plates/add", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const removeListSpecialPlates = async (body: UserListInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/watch-groups/special-plates/remove", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const addListWatchlists = async (body: UserListInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/watch-groups/watchlists/add", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const removeListWatchlists = async (body: UserListInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/watch-groups/watchlists/remove", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const addListCheckpoints = async (body: UserListInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/watch-groups/checkpoints/add", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const removeListCheckpoints = async (body: UserListInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/watch-groups/checkpoints/remove", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+};
+
+export const getCameraGroup = async (param?: Record<string, string>) => {
+  return fetchClient<CheckpointGroupResponse>("/core-data/camera-groups/get", {
+    method: "GET",
+    queryParams: param,
+  });
+}
+
+export const createCameraGroup = async (body: CreateWatchlistGroup) => {
+  return fetchClient<UserGroupResponse>("/core-data/camera-groups/create", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const deleteCameraGroup = async (ids: string[]) => {
+  return fetchClient<UserGroupResponse>("/core-data/camera-groups/delete", {
+    method: "DELETE",
+    queryParams: {
+      group_ids: ids.toString()
+    },
+  });
+};
+
+export const addCameraInGroup = async (body: CameraInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/camera-groups/cameras/add", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export const removeCameraInGroup = async (body: CameraInGroup) => {
+  return fetchClient<CreateUserWatchlistGroupResponse>("/core-data/camera-groups/cameras/remove", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}

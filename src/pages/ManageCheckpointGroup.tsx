@@ -1,74 +1,73 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
 
 // Components
-import MainTitle from '../components/main-title/MainTitle';
-import CheckpointGroupList from '../components/group-list/CheckpointGroupList';
-import CheckpointList from '../components/checkpoint-list/CheckpointList';
+import MainTitle from "../components/main-title/MainTitle";
+import CheckpointGroupList from "../components/group-list/CheckpointGroupList";
+import CheckpointList from "../components/checkpoint-list/CheckpointList";
 
 // i18n
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from "react-i18next";
 
 // Hooks
 import usePageTitle from "../hooks/usePageTitle";
 
 // Types
-import type { WatchlistGroup } from "../types/common";
+import type { CheckpointGroup } from "../types/common";
 
 const ManageCheckpointGroup = () => {
   // i18n
   const { t } = useTranslation();
 
-  // Set Page Title
-  usePageTitle(t('pages.manage-checkpoint-group'));
+  // Set page title
+  usePageTitle(t("pages.manage-checkpoint-group"));
 
   // State
   const [refreshGroupListKey, setRefreshGroupListKey] = useState(0);
+  const [selectedGroup, setSelectedGroup] =
+    useState<CheckpointGroup | null>(null);
 
-  // Data
-  const [selectedGroup, setSelectedGroup] = useState<WatchlistGroup | null>(null);
-  
-  const selectedCheckpointIds = useMemo(() => {
-    if (!selectedGroup?.checkpoints) return [];
+  // Selected checkpoint IDs
+  const selectedCheckpointIds = useMemo<string[]>(() => {
+    const cameras = selectedGroup?.cameras;
+    return Array.isArray(cameras) ? cameras : [];
+  }, [selectedGroup?.cameras]);
 
-    if (Array.isArray(selectedGroup.checkpoints)) {
-      return selectedGroup.checkpoints;
-    }
+  const handleSelectChange = useCallback(
+    (group: CheckpointGroup | null) => {
+      setSelectedGroup(group);
+    },
+    []
+  );
 
-    return [];
-  }, [selectedGroup]);
-
-  const handleSelectChange = (group: WatchlistGroup) => {
-    setSelectedGroup(group);
-  };
-
-  const handleDataChange = () => {
-    setRefreshGroupListKey((prev) => prev + 1);
-  };
+  const handleDataChange = useCallback(() => {
+    setRefreshGroupListKey((previous) => previous + 1);
+  }, []);
 
   return (
-    <section id='manage-checkpoint-group'>
-      <Box className='p-6 flex flex-col gap-4'>
-        {/* Main Title */}
-        <MainTitle title={t('pages.manage-checkpoint-group')} />
+    <section id="manage-checkpoint-group">
+      <Box className="flex flex-col gap-4 p-6">
+        <MainTitle title={t("pages.manage-checkpoint-group")} />
 
         <Box className="grid grid-cols-[30vw_1fr] gap-5">
-          <CheckpointGroupList 
-            onSelectChanged={handleSelectChange}
+          <CheckpointGroupList
+            selectedGroupId={selectedGroup?.group_id ?? null}
             refreshKey={refreshGroupListKey}
+            onSelectChanged={handleSelectChange}
           />
-          <CheckpointList 
+
+          <CheckpointList
             checkpointList={selectedCheckpointIds}
-            isDisable={false}
             group_id={selectedGroup?.group_id ?? null}
+            isDisable={!selectedGroup}
             onDataChange={handleDataChange}
           />
         </Box>
       </Box>
     </section>
-  )
-}
+  );
+};
 
 export default ManageCheckpointGroup;

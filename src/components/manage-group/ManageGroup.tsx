@@ -1,60 +1,57 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from "react";
 
-// Material UI
 import Box from "@mui/material/Box";
 
-// Components
-import GroupList from '../group-list/GroupList';
-import UserList from '../user-list/UserList';
+import GroupList from "../group-list/GroupList";
+import UserList from "../user-list/UserList";
 
-// Types
 import type { WatchlistGroup } from "../../types/common";
 
+export type GroupType = "watchlist" | "plate" | "checkpoint";
+
 type Props = {
-  group_type: "watchlist" | "plate" | "checkpoint";
-}
+  group_type: GroupType;
+};
 
 const ManageGroup = ({ group_type }: Props) => {
-
-  // State
   const [refreshGroupListKey, setRefreshGroupListKey] = useState(0);
+  const [selectedGroup, setSelectedGroup] =
+    useState<WatchlistGroup | null>(null);
 
-  // Data
-  const [selectedGroup, setSelectedGroup] = useState<WatchlistGroup | null>(null);
-  
   const selectedUserIds = useMemo(() => {
-    if (!selectedGroup?.members) return [];
+    const members = selectedGroup?.members;
+    return Array.isArray(members) ? members : [];
+  }, [selectedGroup?.members]);
 
-    if (Array.isArray(selectedGroup.members)) {
-      return selectedGroup.members;
-    }
+  const handleSelectChange = useCallback(
+    (group: WatchlistGroup | null) => {
+      setSelectedGroup(group);
+    },
+    []
+  );
 
-    return [];
-  }, [selectedGroup]);
-
-  const handleSelectChange = (group: WatchlistGroup) => {
-    setSelectedGroup(group);
-  };
-
-  const handleDataChange = () => {
-    setRefreshGroupListKey((prev) => prev + 1);
-  };
+  const handleDataChange = useCallback(() => {
+    setRefreshGroupListKey((previous) => previous + 1);
+  }, []);
 
   return (
     <Box className="grid grid-cols-[30vw_1fr] gap-5">
-      <GroupList 
+      <GroupList
         group_type={group_type}
-        onSelectChanged={handleSelectChange}
+        selectedGroupId={selectedGroup?.group_id ?? null}
         refreshKey={refreshGroupListKey}
+        onSelectChanged={handleSelectChange}
       />
-      <UserList 
+
+      <UserList
+        group_type={group_type}
+        group_id={selectedGroup?.group_id ?? null}
         userList={selectedUserIds}
         isDisable={!selectedGroup}
-        group_id={selectedGroup?.group_id ?? null}
         onDataChange={handleDataChange}
       />
     </Box>
-  )
-}
+  );
+};
 
 export default ManageGroup;

@@ -18,7 +18,8 @@
     "manage-watch-list-plate": "จัดการกลุ่มทะเบียนเฝ้าระวัง",
     "manage-watch-list-checkpoint": "จัดการกลุ่มด่านตรวจเฝ้าระวัง",
     "manage-checkpoint-group": "จัดการกลุ่มด่านตรวจ",
-    "statistics": "สถิติการเข้าใช้"
+    "statistics": "สถิติการเข้าใช้",
+    "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center"
   },
   "dock": {
     "home": "หน้าหลัก",
@@ -35,7 +36,8 @@
     "manage-watch-list-plate": "จัดการกลุ่มทะเบียนเฝ้าระวัง",
     "manage-watch-list-checkpoint": "จัดการกลุ่มด่านตรวจเฝ้าระวัง",
     "manage-checkpoint-group": "จัดการกลุ่มด่านตรวจ",
-    "statistics": "ผู้ใช้งานสูงสุด"
+    "statistics": "ผู้ใช้งานสูงสุด",
+    "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center"
   },
   "button": {
     "login": "เข้าสู่ระบบ",
@@ -68,7 +70,18 @@
     "add-user-group": "เพิ่มกลุ่มผู้ใช้งาน",
     "add": "เพิ่ม",
     "not-save": "ไม่บันทึก",
-    "active": "Active"
+    "active": "Active",
+    "reset": "รีเซ็ต",
+    "expand": "ขยาย",
+    "collapse": "ย่อ",
+    "assign": "เพิ่มผู้ใช้งาน",
+    "assign-user": "เพิ่มผู้ใช้งานเข้ากลุ่ม",
+    "remove-from-group": "นำออกจากกลุ่ม",
+    "close": "ปิด",
+    "manage-groups": "จัดการกลุ่ม",
+    "cancel-changes": "ยกเลิกการเปลี่ยนแปลง",
+    "save-changes": "บันทึกการเปลี่ยนแปลง",
+    "remove-selected": "นำออกที่เลือก"
   },
   "text": {
     "app-version": "App Version",
@@ -148,7 +161,15 @@
     "discord": "Discord",
     "telegram-description": "ทั้ง Bot Token และ Chat ID จำเป็นต้องใช้เมื่อเปิดใช้งาน Telegram",
     "discord-description": "ป้อน URL ของ Webhook สำหรับช่อง Discord ที่ต้องการรับการแจ้งเตือน",
-    "notification-integration-optional": "การตั้งค่า Telegram และ Discord เป็นตัวเลือก คุณสามารถตั้งค่าอย่างใดอย่างหนึ่ง ทั้งสองอย่าง หรือไม่ตั้งค่าเลยก็ได้"
+    "notification-integration-optional": "การตั้งค่า Telegram และ Discord เป็นตัวเลือก คุณสามารถตั้งค่าอย่างใดอย่างหนึ่ง ทั้งสองอย่าง หรือไม่ตั้งค่าเลยก็ได้",
+    "selected-count": "เลือกแล้ว {{count}} รายการ",
+    "selected-permission-count": "เลือกสิทธิ์แล้ว {{count}} จาก {{total}} รายการ",
+    "unsaved-changes": "ยังไม่ได้บันทึก",
+    "no-description": "ไม่มีคำอธิบาย",
+    "assigned-users": "ผู้ใช้งานในกลุ่ม",
+    "assigned-users-of": "ผู้ใช้งานในกลุ่ม {{group}}",
+    "select-group-first": "กรุณาเลือกกลุ่มสิทธิ์ก่อน",
+    "missing-base-groups": "ยังไม่มีกลุ่มพื้นฐาน: {{groups}} — กรุณาสร้างที่หน้าจัดการสิทธิ์การใช้งาน"
   },
   "component": {
     "pid": "เลขบัตรประชาชน",
@@ -178,9 +199,12 @@
     "document-name": "ชื่อเอกสารที่นำเข้า",
     "title": "คำนำหน้า",
     "sub-agency": "หน่วยงานย่อย {{number}}",
+    "only-sub-agency": "หน่วยงานย่อย",
     "bot-token": "Bot Token",
     "chat-id": "Chat ID",
-    "webhook-url": "Webhook URL"
+    "webhook-url": "Webhook URL",
+    "full-name": "ชื่อ-นามสกุล",
+    "group": "กลุ่มสิทธิ์"
   },
   "placeholder": {
     "pid": "เลขบัตรประชาชน",
@@ -213,9 +237,11 @@
     "inactive": "เหตุผลของการ Inactive",
     "suspend": "กรณีบันทึกเหตุผลของการ Suspend หรือการแก้ไขข้อมูลต่างๆ ในหน้านี้",
     "sub-agency": "หน่วยงานย่อย {{number}}",
+    "only-sub-agency": "หน่วยงานย่อย",
     "bot-token": "••••••••••••••••••••••",
     "chat-id": "-100123456789",
-    "webhook-url": "http://discord.com/api/webhooks/..."
+    "webhook-url": "http://discord.com/api/webhooks/...",
+    "group": "เลือกกลุ่มสิทธิ์"
   },
   "table": {
     "header": {
@@ -269,7 +295,9 @@
       "can-print": "พิมพ์",
       "end-date": "สิ้นสุดการใช้งาน (วัน)",
       "life-date": "อายุการใช้งาน (วัน)",
-      "last-login": "ใช้งานล่าสุด"
+      "last-login": "ใช้งานล่าสุด",
+      "username": "ชื่อผู้ใช้",
+      "action": "จัดการ"
     }
   },
   "permission": {
@@ -302,8 +330,16 @@
         "manage-watch-list-plate": "จัดการกลุ่มทะเบียนเฝ้าระวัง",
         "manage-watch-list-checkpoint": "จัดการกลุ่มด่านตรวจเฝ้าระวัง",
         "manage-checkpoint-group": "จัดการกลุ่มด่านตรวจ",
-        "statistics": "ผู้ใช้งานสูงสุด"
-      }
+        "statistics": "ผู้ใช้งานสูงสุด",
+        "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center"
+      },
+      "lpr-center": {
+        "name": "LPR Center"
+      },
+      "lpr-license-plate": {
+        "name": "LPR License Plate"
+      },
+      "menu-section-label": "{{index}}. {{menu}}"
     }
   },
   "dialog": {
@@ -312,7 +348,9 @@
     "add-user": "เพิ่มผู้ใช้งาน",
     "search-condition": "เงื่อนไขการค้นหา",
     "add-checkpoint": "เพิ่มด่านตรวจ",
-    "import-file": "นำไฟล์เข้า"
+    "import-file": "นำไฟล์เข้า",
+    "assign-user": "เพิ่มผู้ใช้งานเข้ากลุ่ม LPR Center",
+    "manage-groups": "จัดการกลุ่ม"
   },
   "tabs": {
     "pending": "รออนุมัติ",
@@ -376,7 +414,35 @@
     "add-checkpoint-success": "การเพิ่มข้อมูลด่านเสร็จสิ้น",
     "add-checkpoint-failed": "การเพิ่มข้อมูลด่านล้มเหลว",
     "delete-checkpoint-success": "การลบข้อมูลด่านเสร็จสิ้น",
-    "delete-checkpoint-failed": "การลบข้อมูลด่านล้มเหลว"
+    "delete-checkpoint-failed": "การลบข้อมูลด่านล้มเหลว",
+    "save-success-title": "บันทึกสำเร็จ",
+    "save-failed": "ไม่สามารถบันทึกสิทธิ์การใช้งานได้",
+    "load-group-failed": "ไม่สามารถโหลดข้อมูลกลุ่มสิทธิ์ได้",
+    "unsaved-changes-title": "ยังไม่ได้บันทึกการเปลี่ยนแปลง",
+    "unsaved-changes-message": "หากเปลี่ยนกลุ่มสิทธิ์ การแก้ไขที่ยังไม่ได้บันทึกจะหายไป ต้องการดำเนินการต่อหรือไม่",
+    "save-permission-title": "ยืนยันการบันทึกสิทธิ์",
+    "save-permission-message": "ต้องการบันทึกสิทธิ์การใช้งาน LPR Center ของกลุ่ม {{group}} หรือไม่",
+    "assign-user-title": "ยืนยันการเพิ่มผู้ใช้งาน",
+    "assign-user-message": "ต้องการเพิ่มผู้ใช้งาน {{count}} คน เข้ากลุ่ม {{group}} หรือไม่",
+    "assign-user-success": "เพิ่มผู้ใช้งานเข้ากลุ่มสำเร็จ",
+    "assign-user-failed": "ไม่สามารถเพิ่มผู้ใช้งานเข้ากลุ่มได้",
+    "already-assigned": "ผู้ใช้งานที่เลือกอยู่ในกลุ่มนี้แล้ว",
+    "remove-user-title": "ยืนยันการนำผู้ใช้งานออกจากกลุ่ม",
+    "remove-user-message": "ต้องการนำ {{name}} ออกจากกลุ่ม {{group}} หรือไม่ (บัญชีผู้ใช้งานจะไม่ถูกลบ)",
+    "remove-user-success": "นำผู้ใช้งานออกจากกลุ่มสำเร็จ",
+    "remove-user-failed": "ไม่สามารถนำผู้ใช้งานออกจากกลุ่มได้",
+    "remove-users-title": "ยืนยันการนำออก",
+    "remove-users-message": "นำสมาชิก {{count}} รายออกจากกลุ่ม {{group}}? บัญชีผู้ใช้งานจะไม่ถูกลบ",
+    "create-group-title": "ยืนยันการสร้างกลุ่ม",
+    "create-group-message": "สร้างกลุ่ม \"{{group}}\"?",
+    "create-group-success": "สร้างกลุ่มสำเร็จ",
+    "create-group-failed": "ไม่สามารถสร้างกลุ่มได้",
+    "group-name-required": "กรุณากรอกชื่อกลุ่ม",
+    "group-name-duplicate": "มีกลุ่มชื่อนี้อยู่แล้ว",
+    "delete-group-title": "ยืนยันการลบ",
+    "delete-group-message": "ลบกลุ่ม \"{{group}}\"? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+    "delete-group-success": "ลบกลุ่มสำเร็จ",
+    "delete-group-failed": "ไม่สามารถลบกลุ่มได้"
   },
   "ui-program": {
     "log-management": "Log Management",
@@ -392,5 +458,85 @@
     "telegram-chat-id-required": "ต้องระบุ Chat ID เมื่อมีการใส่ Bot Token",
     "telegram-bot-token-required": "ต้องระบุ Bot Token เมื่อมีการระบุ Chat ID",
     "invalid-url": "URL นี้ไม่ถูกต้อง"
+  },
+  "lpr-center-page": {
+    "select-group-hint": "เลือกกลุ่มเพื่อจัดการสิทธิ์และสมาชิก",
+    "group-details": "รายละเอียดกลุ่ม",
+    "group-details-hint": "จัดการชื่อและคำอธิบายของกลุ่ม",
+    "group-name": "ชื่อกลุ่ม",
+    "description": "คำอธิบาย",
+    "permissions": "สิทธิ์การใช้งาน",
+    "permissions-of": "สิทธิ์การใช้งาน: {{group}}",
+    "permissions-hint": "กำหนดสิทธิ์เข้าชมหรือแก้ไขในแต่ละเมนู และเปิด/ปิดสิทธิ์การพิมพ์",
+    "permissions-moved-hint": "กำหนดสิทธิ์การใช้งาน LPR Center ได้ที่หน้าจัดการสิทธิ์การใช้งาน ในส่วนจัดการสิทธิ์ UI หัวข้อ LPR Center",
+    "col-menu": "เมนูระบบ",
+    "col-view": "เข้าชม",
+    "col-edit": "แก้ไข",
+    "col-print": "พิมพ์",
+    "legend-view-edit": "เข้าชม / แก้ไข",
+    "total-granted": "สิทธิ์ที่ได้รับทั้งหมด",
+    "group-members": "สมาชิกในกลุ่ม",
+    "members-of": "สมาชิกในกลุ่ม {{group}}",
+    "search-members": "ค้นหาสมาชิก...",
+    "select-all-members": "เลือกสมาชิกทั้งหมด",
+    "manage-groups-hint": "เพิ่มกลุ่มใหม่หรือลบกลุ่มที่กำหนดเอง กลุ่มระบบและกลุ่มพื้นฐานจะถูกป้องกันไว้",
+    "existing-groups": "กลุ่มที่มีอยู่",
+    "create-new-group": "สร้างกลุ่มใหม่",
+    "new-group-placeholder": "ชื่อกลุ่มใหม่",
+    "badge-base": "พื้นฐาน",
+    "no-groups": "ไม่มีกลุ่ม"
+  },
+  "lpr-center": {
+    "base-group": {
+      "investigation": "กองบังคับการสืบสวน",
+      "user": "User",
+      "admin": "Admin"
+    }
+  },
+  "lpr-center-permission": {
+    "news": "ข่าว/ประกาศระบบ",
+    "lpr-find": "ตรวจหาทะเบียนรถ",
+    "lpr-cond": "แบบระบุเงื่อนไข",
+    "lpr-ba": "ก่อน/หลังผ่านด่านตรวจ",
+    "face-find": "ตรวจหาใบหน้า",
+    "face-by-face": "ค้นหาด้วยใบหน้า",
+    "face-by-plate": "ค้นหาด้วยหมายเลขทะเบียน",
+    "veh-analysis": "ระบบวิเคราะห์ยานพาหนะ",
+    "va-fake": "ทะเบียนปลอม",
+    "va-clone": "สวมทะเบียน",
+    "va-convoy": "วิเคราะห์ยานพาหนะจากทะเบียน (Convoy)",
+    "va-by-ck": "วิเคราะห์ยานพาหนะจากด่านตรวจ",
+    "lpr-watch": "เฝ้าระวัง",
+    "wl-manage": "จัดการรถเฝ้าระวัง",
+    "analysis": "วิเคราะห์ข้อมูล",
+    "map": "แผนที่สืบสวน",
+    "graph": "วิเคราะห์ความสัมพันธ์",
+    "maps": "แผนที่",
+    "wl-map": "แผนที่",
+    "heat-map": "Heat map",
+    "sysadmin": "จัดการระบบ",
+    "a-ck": "จัดการด่าน/กล้อง",
+    "news-mgmt": "จัดการข่าว/ประกาศระบบ"
+  },
+  "lpr-license-plate-permission": {
+    "lpr-find": "ตรวจหาทะเบียนรถ",
+    "lpr-cond": "แบบระบุเงื่อนไข",
+    "lpr-ba": "ก่อน/หลังผ่านด่านตรวจ",
+    "face-find": "ตรวจหาใบหน้า",
+    "face-by-face": "ค้นหาด้วยใบหน้า",
+    "face-by-plate": "ค้นหาด้วยหมายเลขทะเบียน",
+    "veh-analysis": "ระบบวิเคราะห์ยานพาหนะ",
+    "va-fake": "ทะเบียนปลอม",
+    "va-clone": "สวมทะเบียน",
+    "va-convoy": "วิเคราะห์ยานพาหนะจากทะเบียน (Convoy)",
+    "va-by-ck": "วิเคราะห์ยานพาหนะจากด่านตรวจ",
+    "tools": "ตัวช่วย",
+    "ck-map": "แผนที่จุดตรวจ",
+    "vdo-request": "ขอไฟล์ VDO ย้อนหลัง",
+    "admin": "Admin",
+    "vdo-request-list": "รายการขอไฟล์ VDO ย้อนหลัง",
+    "access-request": "ยื่นคำขอใช้งาน",
+    "web-admin": "บริหาร Webside",
+    "news-mgmt": "จัดการประกาศ"
   }
 }

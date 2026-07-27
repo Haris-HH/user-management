@@ -1,13 +1,48 @@
 // Class
 import { ApiError } from "../types/class";
 
+/*
+  Arrays are permitted because some endpoints take repeated ids; they are
+  serialised by String(), i.e. comma-joined, which is exactly what
+  URLSearchParams did with them before.
+*/
+export type QueryParamValue =
+  | string
+  | number
+  | boolean
+  | readonly string[]
+  | readonly number[]
+  | null
+  | undefined;
+
 export interface FetchOptions extends RequestInit {
-  queryParams?: any;
+  queryParams?: Record<string, QueryParamValue>;
   skipAuth?: boolean;
   isFormData?: boolean;
   isStream?: boolean;
   retryCount?: number;
 }
+
+/*
+  Serialises query params, dropping null/undefined entries so an optional
+  filter never reaches the API as the literal string "undefined".
+*/
+const buildQueryString = (
+  queryParams?: Record<string, QueryParamValue>
+): string => {
+  if (!queryParams) return "";
+
+  const search = new URLSearchParams();
+
+  Object.entries(queryParams).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    search.append(key, String(value));
+  });
+
+  const queryString = search.toString();
+
+  return queryString ? `?${queryString}` : "";
+};
 
 // Env
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -51,18 +86,29 @@ const createHttpError = async (
   response: Response,
   endpoint: string
 ): Promise<ApiError> => {
+  /*
+    Read the body once as text. Calling response.json() first and then
+    falling back to response.text() cannot work — the first read already
+    consumes the stream, so the fallback always failed and the server's
+    error message was replaced by the bare status text.
+  */
+  const raw = await response.text().catch(() => "");
+
   let message = response.statusText;
 
-  try {
-    const data = await response.json();
+  if (raw) {
+    try {
+      const data: unknown = JSON.parse(raw);
 
-    message =
-      data?.message ||
-      data?.error ||
-      response.statusText;
-  } catch {
-    const text = await response.text().catch(() => "");
-    message = text || response.statusText;
+      const parsed =
+        typeof data === "object" && data !== null
+          ? (data as { message?: string; error?: string })
+          : null;
+
+      message = parsed?.message || parsed?.error || response.statusText;
+    } catch {
+      message = raw;
+    }
   }
 
   return new ApiError({
@@ -77,39 +123,73 @@ const createHttpError = async (
 // Location Headers
 // ==============================
 
+/*
+  Every request carries the caller's coordinates for backend auditing.
+  A fix used to be requested per request with maximumAge: 0, so each call
+  waited on a fresh GPS lock (up to the 5s timeout) and a page issuing a
+  dozen parallel requests triggered a dozen independent lookups.
+
+  The fix is cached for LOCATION_TTL_MS and concurrent callers share one
+  in-flight lookup, so the headers are unchanged but the wait happens once.
+*/
+const LOCATION_TTL_MS = 60_000;
+
+/*
+  A denied permission or a signal-less device makes every lookup run to the
+  5s timeout, so failures are cached too — briefly, so that granting the
+  permission mid-session is still picked up quickly.
+*/
+const LOCATION_FAILURE_TTL_MS = 10_000;
+
+let cachedLocationHeaders: HeadersInit | null = null;
+let cachedLocationExpiresAt = 0;
+let pendingLocationRequest: Promise<HeadersInit> | null = null;
+
+const requestPosition = (): Promise<GeolocationPosition> =>
+  new Promise<GeolocationPosition>((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: LOCATION_TTL_MS,
+    });
+  });
+
 const getLocationHeaders = async (): Promise<HeadersInit> => {
   if (!navigator.geolocation) {
     return {};
   }
 
-  try {
-    const position = await new Promise<GeolocationPosition>(
-      (resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          reject,
-          {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0,
-          }
-        );
-      }
-    );
-
-    const latitude = position.coords.latitude.toString();
-    const longitude = position.coords.longitude.toString();
-
-    return {
-      "x-latitude": latitude,
-      "x-longitude": longitude,
-    };
-  } 
-  catch (error) {
-    console.error("Cannot get location:", error);
-
-    return {};
+  if (cachedLocationHeaders && Date.now() < cachedLocationExpiresAt) {
+    return cachedLocationHeaders;
   }
+
+  pendingLocationRequest ??= requestPosition()
+    .then((position) => {
+      const headers: HeadersInit = {
+        "x-latitude": position.coords.latitude.toString(),
+        "x-longitude": position.coords.longitude.toString(),
+      };
+
+      cachedLocationHeaders = headers;
+      cachedLocationExpiresAt = Date.now() + LOCATION_TTL_MS;
+
+      return headers;
+    })
+    .catch((error: unknown) => {
+      console.error("Cannot get location:", error);
+
+      const headers: HeadersInit = {};
+
+      cachedLocationHeaders = headers;
+      cachedLocationExpiresAt = Date.now() + LOCATION_FAILURE_TTL_MS;
+
+      return headers;
+    })
+    .finally(() => {
+      pendingLocationRequest = null;
+    });
+
+  return pendingLocationRequest;
 };
 
 // ==============================
@@ -185,9 +265,7 @@ export const fetchClient = async <T>(
     ...fetchOptions
   } = options;
 
-  const queryString = queryParams
-    ? `?${new URLSearchParams(queryParams).toString()}`
-    : "";
+  const queryString = buildQueryString(queryParams);
 
   const makeRequest = async (token?: string): Promise<T> => {
     const locationHeaders = await getLocationHeaders();

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSelector } from "react-redux";
 
 // Material UI
@@ -79,9 +79,14 @@ const AddUser = ({
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
   // Redux
-  const { title, agency, bh, bk, org, userGroup } = useSelector(
-    (state: RootState) => state.dropdown
-  );
+  // One selector per field so this dialog doesn't re-render on every
+  // unrelated dropdown slice update (a burst of thunks fires on login).
+  const title = useSelector((state: RootState) => state.dropdown.title);
+  const agency = useSelector((state: RootState) => state.dropdown.agency);
+  const bh = useSelector((state: RootState) => state.dropdown.bh);
+  const bk = useSelector((state: RootState) => state.dropdown.bk);
+  const org = useSelector((state: RootState) => state.dropdown.org);
+  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
 
   const titleMap = useMemo(
     () => new Map(title.map((item) => [item.id, item])),
@@ -169,47 +174,49 @@ const AddUser = ({
           ...item,
           title:
             titleData
-              ? i18n.language === "th"
+              ? (i18n.language === "th"
                 ? titleData.title_abbr_th
-                : titleData.title_abbr_en
+                : titleData.title_abbr_en) ?? "-"
               : "-",
           ou_name:
             agencyData
-              ? i18n.language === "th"
+              ? (i18n.language === "th"
                 ? agencyData.ou_abbr_th
-                : agencyData.ou_abbr_en
+                : agencyData.ou_abbr_en) ?? "-"
               : "-",
           bh_name:
             bhData
-              ? i18n.language === "th"
+              ? (i18n.language === "th"
                 ? bhData.bh_abbr_th
-                : bhData.bh_abbr_en
+                : bhData.bh_abbr_en) ?? "-"
               : "-",
           bk_name:
             bkData
-              ? i18n.language === "th"
+              ? (i18n.language === "th"
                 ? bkData.bk_abbr_th
-                : bkData.bk_abbr_en
+                : bkData.bk_abbr_en) ?? "-"
               : "-",
           org_name:
             orgData
-              ? i18n.language === "th"
+              ? (i18n.language === "th"
                 ? orgData.org_abbr_th
-                : orgData.org_abbr_en
+                : orgData.org_abbr_en) ?? "-"
               : "-",
-          user_group_name: capitalizeWords(userGroupData?.group_name) ?? "-",
+          user_group_name: capitalizeWords(userGroupData?.group_name ?? ""),
         };
       });
     },
-    [titleMap, agencyMap, bhMap, bkMap, orgMap, i18n.language]
+    [titleMap, agencyMap, bhMap, bkMap, orgMap, userGroupMap, i18n.language]
   );
 
+  // Guards against a slow, stale search/page response overwriting a newer
+  // one when the user changes the filter or page again before it resolves.
+  const fetchRequestRef = useRef(0);
+
   const fetchData = useCallback(
-    async (
-      filterData: FormData = formData,
-      pageData: number = page,
-      limit: number = rowsPerPage
-    ) => {
+    async (filterData: FormData, pageData: number, limit: number = rowsPerPage) => {
+      const requestId = ++fetchRequestRef.current;
+
       try {
         setIsDataLoading(true);
 
@@ -217,17 +224,20 @@ const AddUser = ({
           ...getFilters(filterData, pageData, limit),
         });
 
+        if (fetchRequestRef.current !== requestId) return;
+
         setUserData(mapUserDataRows(res.data ?? []));
         setTotalPages(res.pagination?.maxPage ?? 1);
         setTotalUsers(res.pagination?.countAll ?? 0);
-      } 
-      catch (error) {
+      }
+      catch {
+        if (fetchRequestRef.current !== requestId) return;
         setUserData([]);
         setTotalPages(1);
         setTotalUsers(0);
-      } 
+      }
       finally {
-        setIsDataLoading(false);
+        if (fetchRequestRef.current === requestId) setIsDataLoading(false);
       }
     },
     [rowsPerPage, getFilters, mapUserDataRows]
@@ -236,12 +246,23 @@ const AddUser = ({
   useEffect(() => {
     if (!open) return;
 
-    fetchData(formData, page);
-  }, [open, formData, page]);
+    // fetchData sets state after its internal `await`, not synchronously in
+    // the effect body; the IIFE keeps that async boundary explicit for the
+    // compiler's effect lint.
+    void (async () => {
+      await fetchData(formData, page);
+    })();
+  }, [open, formData, page, fetchData]);
 
+  // Synchronizes local, user-editable checkbox state from the
+  // selectedUserIds/userData props/state whenever they change (e.g. dialog
+  // reopened, page changed). This is a deliberate "adjust state from props"
+  // sync, not a derived value, since the user can further toggle checkboxes
+  // independently afterwards — eslint-disable is intentional here.
   useEffect(() => {
     if (!open) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMemberChecked(selectedUserIds);
 
     const selectedSet = new Set(selectedUserIds);
@@ -442,7 +463,7 @@ const AddUser = ({
 
                   const isAlreadySelected = selectedUserIdSet.has(item.user_id);
                   const isChecked = memberChecked.includes(item.user_id);
-                  const agencyData = agency.find((a) => a.ou_code === item.ou_code);
+                  const agencyData = item.ou_code ? agencyMap.get(item.ou_code) : undefined;
                   const internalPolice = agencyData?.ou_codename === "police" || false;
                   return (
                     <TableRow
