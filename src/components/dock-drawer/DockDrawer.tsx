@@ -14,6 +14,9 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 import { useDockItems } from "../../hooks/useDockItems";
 
+// Constants
+import { transitionOf } from "../../constants/motion";
+
 type DockDrawerProps = {
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -110,7 +113,12 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
             : "translateY(120%) scale(0.9)",
           opacity: open ? 1 : 0,
           pointerEvents: open ? "auto" : "none",
-          transition: "all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          /*
+            ระบุ property ให้ชัด แทน `all` — เดิมเบราว์เซอร์เฝ้าดูทุก property
+            รวมถึงสีพื้นหลังที่มาจาก CSS variable ทำให้ตอนสลับธีมสีของ dock
+            ค่อย ๆ ไล่ 0.35 วินาทีพร้อมเด้ง overshoot แทนที่จะเปลี่ยนทันที
+          */
+          transition: transitionOf(["transform", "opacity"], "slow", "emphasized"),
         }}
       >
         {dockItems.map((item, index) => (
@@ -134,7 +142,7 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
               flexDirection: "column",
               alignItems: "center",
               cursor: "pointer",
-              transition: "transform 0.25s ease",
+              transition: transitionOf(["transform"], "fast"),
               "&:hover": {
                 transform: "translateY(-10px) scale(1.15)",
               },

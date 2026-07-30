@@ -6,7 +6,18 @@
   "navbar": {
     "logout": "ออกจากระบบ",
     "language": "ภาษา",
-    "theme": "ธีม"
+    "theme": "ธีม",
+    "nav-position": "ตำแหน่งเมนู"
+  },
+  "nav-position": {
+    "left": "ซ้าย",
+    "top": "บน",
+    "right": "ขวา",
+    "bottom": "ล่าง"
+  },
+  "nav": {
+    "menu": "เมนู",
+    "close": "ปิดเมนู"
   },
   "pages": {
     "add-approve-user": "จัดการคำร้อง",
@@ -19,7 +30,14 @@
     "manage-watch-list-checkpoint": "จัดการกลุ่มด่านตรวจเฝ้าระวัง",
     "manage-checkpoint-group": "จัดการกลุ่มด่านตรวจ",
     "statistics": "สถิติการเข้าใช้",
-    "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center"
+    "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center",
+    "not-found": "ไม่พบหน้าที่ค้นหา"
+  },
+  "not-found": {
+    "title": "ไม่พบหน้าที่ค้นหา",
+    "description": "หน้าที่คุณเรียกดูอาจถูกย้าย เปลี่ยนชื่อ หรือไม่มีอยู่ในระบบ กรุณาตรวจสอบที่อยู่เว็บอีกครั้ง",
+    "back-home": "กลับหน้าหลัก",
+    "go-back": "ย้อนกลับ"
   },
   "dock": {
     "home": "หน้าหลัก",
@@ -42,6 +60,7 @@
   "button": {
     "login": "เข้าสู่ระบบ",
     "loading": "กำลังโหลด...",
+    "skip-intro": "ข้ามอินโทร",
     "import": "Import",
     "example-file": "ตัวอย่างไฟล์",
     "import-file": "นำเข้าไฟล์",

@@ -6,7 +6,10 @@ import { useNavigate } from "react-router-dom";
 
 // Material UI
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+
+import SkipNextIcon from "@mui/icons-material/SkipNext";
 
 // Components
 import MatrixRainingCode from "../components/matrix-raining-effect/MatrixRainingEffect";
@@ -16,6 +19,12 @@ import LetterChargeEffect from "../components/letter-charge-effect/LetterChargeE
 
 // i18n
 import { useTranslation } from "react-i18next";
+
+// Hooks
+import { useReducedMotion } from "../hooks/useReducedMotion";
+
+// Constants
+import { MOTION_DURATION } from "../constants/motion";
 
 // API
 import { loginApi } from "../features/login/api/LoginApi";
@@ -42,9 +51,16 @@ const Login = () => {
   // i18n
   const { t } = useTranslation();
 
+  const prefersReducedMotion = useReducedMotion();
+
+  /*
+    ผู้ที่เปิด "ลดการเคลื่อนไหว" ไว้จะข้ามอินโทรตั้งแต่เฟรมแรก ไม่ต้องรอแล้ว
+    ค่อยข้าม — ตั้งค่าเริ่มต้นจาก media query โดยตรงแทนที่จะ setState ใน effect
+    เพื่อไม่ให้เห็นอินโทรแวบหนึ่งก่อนหายไป
+  */
   // State
-  const [introDone, setIntroDone] = useState(false);
-  const [skipIntro, setSkipIntro] = useState(false);
+  const [introDone, setIntroDone] = useState(prefersReducedMotion);
+  const [skipIntro, setSkipIntro] = useState(prefersReducedMotion);
   const [loading, setLoading] = useState(false);
 
   // Form Data
@@ -61,17 +77,39 @@ const Login = () => {
   } = useForm<FormData>();
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+
     const timer = setTimeout(() => {
       setIntroDone(true);
     }, 5500);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [prefersReducedMotion]);
 
   const finishIntro = () => {
     setSkipIntro(true);
     setIntroDone(true);
   };
+
+  /*
+    อินโทรบังฟอร์ม login อยู่ 5.5 วินาที เดิมข้ามได้ทางการคลิกพื้นหลังเท่านั้น
+    ซึ่งไม่มีอะไรบอกผู้ใช้ และผู้ที่ใช้คีย์บอร์ดล้วนข้ามไม่ได้เลย ต้องนั่งรอ
+    ทุกครั้งที่เข้าระบบ ปุ่มข้ามด้านล่างแก้เรื่องการมองเห็น ส่วนตัวจับปุ่มนี้
+    แก้เรื่องคีย์บอร์ด
+  */
+  useEffect(() => {
+    if (introDone) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" || event.key === "Enter" || event.key === " ") {
+        finishIntro();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [introDone]);
 
   const handleTextChange = (key: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -149,21 +187,53 @@ const Login = () => {
             initial={{ opacity: 1 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
+            /* 1 วินาทีคือเวลาที่ผู้ใช้ต้องรออีกต่อหนึ่งหลัง intro จบแล้ว ย่อลงมา
+               อยู่ในงบของ overlay (400ms) */
+            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
           >
             <CinematicTitle skipIntro={skipIntro} />
+
+            {/* ปุ่มข้าม — โฟกัสได้ด้วยคีย์บอร์ดและ screen reader อ่านออก
+                ต่างจากการคลิกที่พื้นหลังซึ่งไม่มีอะไรบอกว่าทำได้ */}
+            <Button
+              variant="outlined"
+              startIcon={<SkipNextIcon />}
+              onClick={(event) => {
+                event.stopPropagation();
+                finishIntro();
+              }}
+              sx={{
+                position: "absolute",
+                bottom: 32,
+                right: 32,
+                zIndex: 60,
+                fontSize: "14px",
+                height: "36px",
+                px: 2.5,
+                textTransform: "capitalize",
+                border: "1px solid var(--primary-color)",
+                color: "var(--primary-color)",
+                backgroundColor: "rgba(var(--tertiary-color-rgb), 0.6)",
+                "&:hover": {
+                  border: "1px solid var(--primary-color)",
+                  backgroundColor: "rgba(var(--primary-color-rgb), 0.1)",
+                },
+              }}
+            >
+              {t("button.skip-intro")}
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* LOGIN CARD */}
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
+        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 40 }}
         animate={{
           opacity: introDone ? 1 : 0,
-          y: introDone ? 0 : 40,
+          y: introDone || prefersReducedMotion ? 0 : 40,
         }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: MOTION_DURATION.slow / 1000 }}
         className="flex flex-col w-122 h-90 rounded-lg z-30"
         style={{
           backgroundColor: "rgba(var(--tertiary-color-rgb),0.8)",
@@ -247,7 +317,7 @@ const Login = () => {
           <motion.button
             type="submit"
             disabled={loading}
-            whileHover={{ scale: loading ? 1 : 1.05 }}
+            whileHover={{ scale: loading || prefersReducedMotion ? 1 : 1.05 }}
             style={{
               backgroundColor: "var(--primary-color)",
               width: "100%",

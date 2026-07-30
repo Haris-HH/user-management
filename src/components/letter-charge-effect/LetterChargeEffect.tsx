@@ -4,6 +4,18 @@ import { motion, AnimatePresence } from "framer-motion";
 // i18n
 import { useTranslation } from "react-i18next";
 
+// Hooks
+import { useReducedMotion } from "../../hooks/useReducedMotion";
+
+/*
+  จำนวน particle ต่อการคลิกหนึ่งครั้ง และเพดานรวมที่อยู่บนจอพร้อมกัน
+
+  เดิมไม่มีเพดาน คลิกรัว ๆ จึงสะสมได้หลายร้อยชิ้น แต่ละชิ้นมี textShadow เรืองแสง
+  ซึ่ง paint แพง เพดานนี้ทำให้กรณีแย่สุดถูกจำกัดไว้ที่สามชุดพร้อมกัน
+*/
+const PARTICLES_PER_BURST = 45;
+const MAX_PARTICLES = 135;
+
 type Particle = {
   id: number;
   char: string;
@@ -19,6 +31,8 @@ const LetterChargeEffect = () => {
 
   // i18n
   const { t } = useTranslation();
+
+  const prefersReducedMotion = useReducedMotion();
 
   // Data
   const [particles, setParticles] = useState<Particle[]>([]);
@@ -43,10 +57,15 @@ const LetterChargeEffect = () => {
   const CHARS = t('project.title');
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    /* เอฟเฟกต์นี้เป็นการตกแต่งล้วน ๆ ไม่มีข้อมูลใดหายไปถ้าไม่แสดง */
+    if (prefersReducedMotion) return;
+
     const clickX = e.clientX;
     const clickY = e.clientY;
 
-    const newParticles: Particle[] = Array.from({ length: 45 }).map(() => {
+    const newParticles: Particle[] = Array.from({
+      length: PARTICLES_PER_BURST,
+    }).map(() => {
       const angle = Math.random() * Math.PI * 2;
       const distance = 50 + Math.random() * 350;
 
@@ -65,7 +84,11 @@ const LetterChargeEffect = () => {
 
     const newIds = new Set(newParticles.map((particle) => particle.id));
 
-    setParticles((prev) => [...prev, ...newParticles]);
+    /*
+      ตัดชุดที่เก่าที่สุดทิ้งเมื่อเกินเพดาน ชุดที่ถูกตัดจะมี timeout ค้างอยู่แต่
+      ไม่เป็นไร เพราะ filter ตาม id ทำงานได้แม้ particle นั้นถูกลบไปแล้ว
+    */
+    setParticles((prev) => [...prev, ...newParticles].slice(-MAX_PARTICLES));
 
     const timeoutId = window.setTimeout(() => {
       setParticles((prev) => prev.filter((p) => !newIds.has(p.id)));

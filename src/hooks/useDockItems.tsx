@@ -22,6 +22,15 @@ export type DockItem = {
   subMenu?: DockSubMenuItem[];
 };
 
+/*
+  A menu entry is active when it *is* the current page, or when it owns it.
+  Shared by every navigation shape (sidebar, top menu) so they agree on which
+  entry to highlight.
+*/
+export const isDockItemActive = (item: DockItem, pathname: string): boolean => {
+  return item.path === pathname || !!item.subMenu?.some((sub) => sub.path === pathname);
+};
+
 export const useDockItems = (): DockItem[] => {
   // i18n
   const { t, i18n } = useTranslation();

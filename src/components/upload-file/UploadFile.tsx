@@ -893,7 +893,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             <Box className="w-full px-20 pt-5 flex flex-col gap-5">
               <Box
                 {...getRootProps()}
-                className="w-full h-60 flex flex-col justify-center items-center gap-6 px-6 rounded-lg shadow-md border-2 border-(--primary-color) border-dashed cursor-pointer hover:scale-[1.01] transition-transform duration-300"
+                className="w-full h-60 flex flex-col justify-center items-center gap-6 px-6 rounded-lg shadow-md border-2 border-(--primary-color) border-dashed cursor-pointer hover:scale-[1.01] transition-transform duration-150"
               >
                 <input {...getInputProps()} />
 
@@ -1196,7 +1196,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           </Box>
         ) : (
           <Box className="w-full px-20 pt-5 flex flex-col gap-5">
-            <Box className="w-full h-17.5 flex justify-between items-center p-3 gap-3 border rounded-lg border-red-400 bg-red-50 hover:scale-[1.01] transition-transform duration-300">
+            <Box className="w-full h-17.5 flex justify-between items-center p-3 gap-3 border rounded-lg border-red-400 bg-red-50 hover:scale-[1.01] transition-transform duration-150">
               <Box className="flex justify-start items-center gap-2">
                 <FaRegCircleXmark color="red" size={18} />
                 <Typography

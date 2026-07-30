@@ -1,5 +1,9 @@
 import { useEffect, useRef } from "react";
 
+// Hooks
+import { useTheme } from "../../hooks/useTheme";
+import { useReducedMotion } from "../../hooks/useReducedMotion";
+
 // Add props type so className is accepted
 type MatrixRainingCodeProps = {
   className?: string;
@@ -9,48 +13,90 @@ const MatrixRainingCode = ({ className = "" }: MatrixRainingCodeProps) => {
   // Properly type canvas ref
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+  const { theme } = useTheme();
+  const prefersReducedMotion = useReducedMotion();
+
+  /*
+    สีถูกอ่านจาก ThemeProvider แล้วเก็บไว้ใน ref
+
+    เดิม draw() เรียก getComputedStyle(document.documentElement) สองครั้งต่อเฟรม
+    = 50 ครั้งต่อวินาที ทั้งที่ค่าเปลี่ยนเฉพาะตอนสลับธีม แต่ละครั้งบังคับให้
+    เบราว์เซอร์คำนวณ style ใหม่ ตอนนี้อ่านจาก context ตรง ๆ และเก็บใน ref เพื่อ
+    ให้ลูป rAF เห็นค่าล่าสุดโดยไม่ต้องรีสตาร์ต animation ตอนเปลี่ยนธีม
+  */
+  const colorsRef = useRef({
+    primary: theme.colors["--primary-color"],
+    tertiaryRgb: theme.colors["--tertiary-color-rgb"],
+  });
+
   useEffect(() => {
+    colorsRef.current = {
+      primary: theme.colors["--primary-color"],
+      tertiaryRgb: theme.colors["--tertiary-color-rgb"],
+    };
+  }, [theme]);
+
+  useEffect(() => {
+    /* ตัวอักษรตกเต็มจอแบบไม่หยุดเป็นตัวกระตุ้นอาการเวียนศีรษะโดยตรง */
+    if (prefersReducedMotion) return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-    let columns = Math.floor(width / 20);
+    const COLUMN_WIDTH = 20;
+
+    let width = 0;
+    let height = 0;
+    let drops: number[] = [];
+
+    /*
+      ปรับขนาด backing store ตาม devicePixelRatio ไม่อย่างนั้นตัวอักษรจะเบลอ
+      บนจอความละเอียดสูง เพราะ canvas ถูกยืดจากบัฟเฟอร์ที่เล็กกว่าจริง
+    */
+    const resize = () => {
+      const dpr = window.devicePixelRatio || 1;
+
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const columns = Math.floor(width / COLUMN_WIDTH);
+
+      drops = new Array(columns).fill(1);
+    };
+
+    resize();
 
     const characters = "nsbusermanagement";
     const charArray = characters.split("");
-    let drops: number[] = [];
-
-    for (let i = 0; i < columns; i++) {
-      drops[i] = 1;
-    }
 
     const frameRate = 25;
-    let lastFrameTime = Date.now();
+    let lastFrameTime = 0;
     let animationId: number;
 
     const draw = () => {
-      const secondaryColor = getComputedStyle(document.documentElement)
-        .getPropertyValue("--tertiary-color-rgb")
-        .trim();
-      ctx.fillStyle = `rgba(${secondaryColor}, 0.12)`;
+      const { primary, tertiaryRgb } = colorsRef.current;
+
+      ctx.fillStyle = `rgba(${tertiaryRgb}, 0.12)`;
       ctx.fillRect(0, 0, width, height);
 
-      const primaryColor = getComputedStyle(document.documentElement)
-        .getPropertyValue("--primary-color")
-        .trim();
-
-      ctx.fillStyle = primaryColor;
+      ctx.fillStyle = primary;
       ctx.font = "15px Noto Sans Thai, sans-serif";
 
       for (let i = 0; i < drops.length; i++) {
         const text = charArray[Math.floor(Math.random() * charArray.length)];
-        ctx.fillText(text, i * 20, drops[i] * 20);
+        ctx.fillText(text, i * COLUMN_WIDTH, drops[i] * COLUMN_WIDTH);
 
-        if (drops[i] * 20 > height && Math.random() > 0.975) {
+        if (drops[i] * COLUMN_WIDTH > height && Math.random() > 0.975) {
           drops[i] = 0;
         }
 
@@ -58,49 +104,36 @@ const MatrixRainingCode = ({ className = "" }: MatrixRainingCodeProps) => {
       }
     };
 
-    const animate = () => {
-      const currentTime = Date.now();
-      const elapsedTime = currentTime - lastFrameTime;
-
-      if (elapsedTime > 1000 / frameRate) {
+    /* rAF ส่ง timestamp มาให้อยู่แล้ว จึงไม่ต้องเรียก Date.now() ทุกเฟรม */
+    const animate = (timestamp: number) => {
+      if (timestamp - lastFrameTime > 1000 / frameRate) {
         draw();
-        lastFrameTime = currentTime;
+        lastFrameTime = timestamp;
       }
 
       animationId = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationId = requestAnimationFrame(animate);
 
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      columns = Math.floor(width / 20);
-
-      drops = [];
-      for (let i = 0; i < columns; i++) {
-        drops[i] = 1;
-      }
-    };
-
-    const isMobileDevice = /Mobi/i.test(window.navigator.userAgent);
-
-    if (!isMobileDevice) {
-      window.addEventListener("resize", handleResize);
-    }
+    /*
+      เดิมมือถือไม่ผูก listener นี้ไว้เลย ทำให้หมุนจอแล้ว canvas ค้างขนาดเดิม
+      จนภาพยืด ตอนนี้ผูกทุกอุปกรณ์ — resize บนมือถือเกิดไม่บ่อยจนต้องกังวล
+    */
+    window.addEventListener("resize", resize);
 
     return () => {
       cancelAnimationFrame(animationId);
-
-      if (!isMobileDevice) {
-        window.removeEventListener("resize", handleResize);
-      }
+      window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [prefersReducedMotion]);
+
+  if (prefersReducedMotion) return null;
 
   return (
     <canvas
       ref={canvasRef}
+      aria-hidden="true"
       className={`fixed top-0 left-0 z-[-1] ${className}`}
     />
   );

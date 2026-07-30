@@ -23,10 +23,13 @@ import ColorLensIcon from "@mui/icons-material/ColorLens";
 import LanguageIcon from "@mui/icons-material/Language";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import ViewSidebarIcon from "@mui/icons-material/ViewSidebar";
+import MenuIcon from "@mui/icons-material/Menu";
 
 // Components
 import HoverSelectMenu from "../components/select-menu/HoverSelectMenu";
 import LoadingScreen from "../components/loading-screen/LoadingScreen";
+import NavTopMenu from "../components/nav-top-menu/NavTopMenu";
 
 // Constants
 import { LANGUAGES } from "../constants/language";
@@ -43,6 +46,12 @@ import type { RootState } from "../store/store";
 // Hook
 import { useTheme } from "../hooks/useTheme";
 import { useForceLogout } from "../hooks/useForceLogout";
+import {
+  useNavPosition,
+  useNavLayout,
+  NAV_POSITIONS,
+  NAV_DESKTOP_BREAKPOINT,
+} from "../hooks/useNavPosition";
 
 dayjs.extend(buddhistEra);
 
@@ -51,6 +60,9 @@ const Navbar = () => {
 
   const version = __APP_VERSION__;
   const { themeName, setThemeName, theme, themes } = useTheme();
+  const { setNavPosition, sidebarOpen, setSidebarOpen, setMobileNavOpen } =
+    useNavPosition();
+  const { navPosition, showNav, isWideViewport, sidebarOffset } = useNavLayout();
   const primaryColor = theme.colors["--primary-color"];
 
   // State
@@ -71,9 +83,52 @@ const Navbar = () => {
   // Redux
   const { user } = useSelector((state: RootState) => state.authUser);
 
-  const isDesktop = useMediaQuery("(min-width:1024px)");
-
   const isMenuOpen = Boolean(anchorEl);
+
+  /*
+    Opening the sidebar takes 264px off the navbar without changing the
+    viewport, so a plain viewport breakpoint would keep insisting there is room
+    and the controls would overflow. Shifting every threshold by the sidebar's
+    width makes each one describe the space the navbar *actually* has, so
+    opening the sidebar degrades it exactly as if the window had been narrowed
+    by the same amount.
+  */
+  const hasRoomFor = (width: number) =>
+    `(min-width:${width + sidebarOffset}px)`;
+
+  /* Full control cluster, or collapse everything into the settings menu. */
+  const showFullControls = useMediaQuery(hasRoomFor(NAV_DESKTOP_BREAKPOINT));
+
+  /* Two intermediate tiers, dropped longest-first, so the cluster thins out
+     gradually instead of snapping straight to the compact form. */
+  const showUserName = useMediaQuery(hasRoomFor(1180));
+  const showClock = useMediaQuery(hasRoomFor(1320));
+
+  /*
+    The hamburger only ever OPENS the drawer; it is closed by the drawer's own
+    X (pinned) or its backdrop (overlay). So it shows only while the drawer is
+    hidden, and it sits on whichever side the drawer opens from. Below the
+    desktop breakpoint every position except the dock collapses into that same
+    drawer. These track the *viewport* rather than the navbar's own space,
+    because they must agree with the variant NavSidebar picks.
+  */
+  const openNav = () => {
+    if (isWideViewport) {
+      setSidebarOpen(true);
+    } else {
+      setMobileNavOpen(true);
+    }
+  };
+
+  const showStartHamburger =
+    showNav &&
+    ((!isWideViewport && navPosition !== "bottom") ||
+      (isWideViewport && navPosition === "left" && !sidebarOpen));
+
+  const showEndHamburger =
+    showNav && isWideViewport && navPosition === "right" && !sidebarOpen;
+
+  const showTopMenu = showNav && showFullControls && navPosition === "top";
 
   const themeItems = Object.entries(themes).map(([key, value]) => ({
     key: key as keyof typeof themes,
@@ -85,6 +140,53 @@ const Navbar = () => {
 
   const selectedTheme =
     themeItems.find((item) => item.key === themeName) ?? themeItems[0];
+
+  const navPositionItems = NAV_POSITIONS.map((position) => ({
+    key: position,
+    label: t(`nav-position.${position}`),
+  }));
+
+  const selectedNavPosition =
+    navPositionItems.find((item) => item.key === navPosition) ??
+    navPositionItems[0];
+
+  /*
+    A 16px miniature of the viewport with the dock's edge filled in, so the
+    option reads at a glance without relying on the label alone — the same role
+    the colour dot plays for themes and the flag for languages.
+  */
+  const renderNavPositionPrefix = (
+    item: (typeof navPositionItems)[number],
+    isSelected: boolean
+  ) => {
+    const isVertical = item.key === "left" || item.key === "right";
+    const edgeColor = isSelected ? primaryColor : "var(--secondary-color)";
+
+    return (
+      <Box
+        sx={{
+          width: 16,
+          height: 16,
+          flexShrink: 0,
+          borderRadius: "3px",
+          border: `1px solid ${edgeColor}`,
+          display: "flex",
+          alignItems: item.key === "bottom" ? "flex-end" : "flex-start",
+          justifyContent: item.key === "right" ? "flex-end" : "flex-start",
+          p: "1.5px",
+        }}
+      >
+        <Box
+          sx={{
+            width: isVertical ? "4px" : "100%",
+            height: isVertical ? "100%" : "4px",
+            borderRadius: "1px",
+            backgroundColor: edgeColor,
+          }}
+        />
+      </Box>
+    );
+  };
 
   const userFullName = user
     ? `${i18n.language === "th" ? user.title_name_th : user.title_name_en}${user.first_name} ${user.last_name}`
@@ -102,15 +204,18 @@ const Navbar = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Close the mobile menu once the viewport becomes desktop-sized. Adjusted
-  // during render (rather than in an effect) to avoid a synchronous
-  // setState-in-effect and the extra render that effect would cause.
-  const [prevIsDesktop, setPrevIsDesktop] = useState(isDesktop);
+  // Close the compact menu once the navbar regains room for the full controls,
+  // which now also happens when the sidebar is closed rather than only when the
+  // window is resized — otherwise the menu would be left open with its own
+  // trigger button gone. Adjusted during render (rather than in an effect) to
+  // avoid a synchronous setState-in-effect and the extra render that would cause.
+  const [prevShowFullControls, setPrevShowFullControls] =
+    useState(showFullControls);
 
-  if (isDesktop !== prevIsDesktop) {
-    setPrevIsDesktop(isDesktop);
+  if (showFullControls !== prevShowFullControls) {
+    setPrevShowFullControls(showFullControls);
 
-    if (isDesktop) {
+    if (showFullControls) {
       closeMenu();
     }
   }
@@ -150,6 +255,11 @@ const Navbar = () => {
     closeMenu();
   };
 
+  const handleChangeNavPosition = (position: (typeof NAV_POSITIONS)[number]) => {
+    setNavPosition(position);
+    closeMenu();
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -161,6 +271,18 @@ const Navbar = () => {
         boxShadow: "1px 1px 5px rgba(var(--secondary-color-rgb), 0.1)",
         color: "var(--primary-color)",
         minHeight: "64px",
+        /*
+          The pinned sidebar runs the full height of the viewport, so the navbar
+          steps aside for it instead of covering it. `left` is set explicitly
+          because a fixed AppBar defaults to `left: auto; right: 0`, which would
+          silently put the gap on the wrong side for a right-anchored sidebar;
+          pinning `left` and `right: auto` makes one rule cover every position.
+          The transition matches the page content's so the layout shifts as one.
+        */
+        width: `calc(100% - ${sidebarOffset}px)`,
+        left: navPosition === "left" ? `${sidebarOffset}px` : 0,
+        right: "auto",
+        transition: "width 0.25s ease, left 0.25s ease",
       }}
     >
       {isLoading && <LoadingScreen />}
@@ -175,7 +297,18 @@ const Navbar = () => {
         }}
       >
         {/* left */}
-        <div className="flex min-w-0">
+        <div className="flex min-w-0 items-center gap-1">
+          {showStartHamburger && (
+            <IconButton
+              onClick={openNav}
+              aria-label={t("nav.menu")}
+              aria-expanded={isWideViewport ? sidebarOpen : undefined}
+              sx={{ color: primaryColor }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+
           <div className="flex gap-2 items-center justify-center min-w-0">
             <Avatar alt="Logo" src="/project-logo/logo.png" />
 
@@ -186,6 +319,8 @@ const Navbar = () => {
                   fontSize: "1.2rem",
                   fontWeight: "bold",
                   whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
                 }}
               >
                 {t("project.title")}
@@ -210,174 +345,242 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* desktop */}
-        <div className="hidden lg:flex items-center justify-center gap-4">
-          <HoverSelectMenu
-            icon={
-              <LanguageIcon
-                sx={{
-                  color: primaryColor,
-                  width: 18,
-                  height: 18,
-                }}
-              />
-            }
-            selectedItem={selectedLanguage}
-            items={LANGUAGES}
-            getLabel={(lang) => lang.label}
-            getKey={(lang) => lang.code}
-            selectedColor={primaryColor}
-            onSelect={handleChangeLanguage}
-            renderItemPrefix={(lang) => (
-              <div className="w-4 h-4 rounded-full overflow-hidden">
-                {lang.code === "th" ? (
-                  <Th style={{ width: "100%", height: "100%" }} />
-                ) : (
-                  <Gb style={{ width: "100%", height: "100%" }} />
-                )}
-              </div>
-            )}
-          />
+        {/* top-position navigation — absorbs the free space so the branding and
+            the controls stay pinned to their respective ends */}
+        {showTopMenu && (
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <NavTopMenu />
+          </Box>
+        )}
 
-          <Divider
-            orientation="vertical"
-            sx={{
-              borderColor: primaryColor,
-              opacity: 0.2,
-              height: "20px",
-            }}
-          />
+        <Box sx={{ display: "flex", gap: 2 }}>
+          {/* desktop — gated on the navbar's own space, not the viewport's, so an
+            open sidebar collapses it the same way a narrow window does */}
+          {showFullControls && (
+          <div className="flex items-center justify-center gap-4">
+            <HoverSelectMenu
+              icon={
+                <LanguageIcon
+                  sx={{
+                    color: primaryColor,
+                    width: 18,
+                    height: 18,
+                  }}
+                />
+              }
+              selectedItem={selectedLanguage}
+              items={LANGUAGES}
+              getLabel={(lang) => lang.label}
+              getKey={(lang) => lang.code}
+              selectedColor={primaryColor}
+              onSelect={handleChangeLanguage}
+              renderItemPrefix={(lang) => (
+                <div className="w-4 h-4 rounded-full overflow-hidden">
+                  {lang.code === "th" ? (
+                    <Th style={{ width: "100%", height: "100%" }} />
+                  ) : (
+                    <Gb style={{ width: "100%", height: "100%" }} />
+                  )}
+                </div>
+              )}
+            />
 
-          <HoverSelectMenu
-            icon={
-              <ColorLensIcon
-                sx={{
-                  color: primaryColor,
-                  width: 18,
-                  height: 18,
-                }}
-              />
-            }
-            selectedItem={selectedTheme}
-            groups={[
-              {
-                label: "Light",
-                items: lightThemes,
-              },
-              {
-                label: "Dark",
-                items: darkThemes,
-              },
-            ]}
-            getLabel={(item) => item.name}
-            getKey={(item) => item.key}
-            selectedColor={primaryColor}
-            onSelect={(item) => setThemeName(item.key)}
-            renderItemPrefix={(item, isSelected) => (
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{
-                  backgroundColor: item.colors["--primary-color"],
-                  boxShadow: isSelected
-                    ? `0 0 6px ${item.colors["--primary-color"]}`
-                    : "none",
-                }}
-              />
-            )}
-          />
-
-          <Divider
-            orientation="vertical"
-            sx={{
-              borderColor: primaryColor,
-              opacity: 0.2,
-              height: "20px",
-            }}
-          />
-
-          <div className="flex gap-2 items-center">
-            <Typography
-              variant="body1"
+            <Divider
+              orientation="vertical"
               sx={{
-                fontSize: "1rem",
-                color: primaryColor,
-                fontWeight: "bold",
-              }}
-            >
-              {userFullName}
-            </Typography>
-
-            <Avatar
-              alt="User"
-              src={user?.image_url}
-              sx={{
-                width: 34,
-                height: 34,
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
-                color: "var(--tertiary-color)",
+                borderColor: primaryColor,
+                opacity: 0.2,
+                height: "20px",
               }}
             />
-          </div>
 
-          <Divider
-            orientation="vertical"
-            flexItem
-            sx={{
-              borderColor: primaryColor,
-              opacity: 0.2,
-            }}
-          />
+            <HoverSelectMenu
+              icon={
+                <ColorLensIcon
+                  sx={{
+                    color: primaryColor,
+                    width: 18,
+                    height: 18,
+                  }}
+                />
+              }
+              selectedItem={selectedTheme}
+              groups={[
+                {
+                  label: "Light",
+                  items: lightThemes,
+                },
+                {
+                  label: "Dark",
+                  items: darkThemes,
+                },
+              ]}
+              getLabel={(item) => item.name}
+              getKey={(item) => item.key}
+              selectedColor={primaryColor}
+              onSelect={(item) => setThemeName(item.key)}
+              renderItemPrefix={(item, isSelected) => (
+                <div
+                  className="w-4 h-4 rounded-full"
+                  style={{
+                    backgroundColor: item.colors["--primary-color"],
+                    boxShadow: isSelected
+                      ? `0 0 6px ${item.colors["--primary-color"]}`
+                      : "none",
+                  }}
+                />
+              )}
+            />
 
-          <div className="flex flex-col w-17.5">
-            <Typography
-              variant="body1"
+            <Divider
+              orientation="vertical"
               sx={{
-                fontSize: "0.6rem",
-                color: "var(--secondary-color)",
-                opacity: 0.8,
-                textAlign: "right",
+                borderColor: primaryColor,
+                opacity: 0.2,
+                height: "20px",
               }}
-            >
-              {dayjs(currentTime)
-                .locale(i18n.language)
-                .format("dd DD/MM/BBBB")}
-            </Typography>
+            />
 
-            <Typography
-              variant="body1"
+            <HoverSelectMenu
+              icon={
+                <ViewSidebarIcon
+                  sx={{
+                    color: primaryColor,
+                    width: 18,
+                    height: 18,
+                  }}
+                />
+              }
+              selectedItem={selectedNavPosition}
+              items={navPositionItems}
+              getLabel={(item) => item.label}
+              getKey={(item) => item.key}
+              selectedColor={primaryColor}
+              onSelect={(item) => setNavPosition(item.key)}
+              renderItemPrefix={renderNavPositionPrefix}
+            />
+
+            <Divider
+              orientation="vertical"
               sx={{
-                fontSize: "1rem",
-                color: primaryColor,
-                textAlign: "right",
-                fontWeight: "bold",
+                borderColor: primaryColor,
+                opacity: 0.2,
+                height: "20px",
               }}
+            />
+
+            {/* The name is the longest item here, so it is the first to go; the
+                avatar stays as the identity cue. `title` keeps the full name
+                reachable once the text itself is dropped. */}
+            <div className="flex gap-2 items-center min-w-0">
+              {showUserName && (
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: "1rem",
+                    color: primaryColor,
+                    fontWeight: "bold",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {userFullName}
+                </Typography>
+              )}
+
+              <Avatar
+                alt="User"
+                title={userFullName}
+                src={user?.image_url}
+                sx={{
+                  width: 34,
+                  height: 34,
+                  flexShrink: 0,
+                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  color: "var(--tertiary-color)",
+                }}
+              />
+            </div>
+
+            {showClock && (
+            <Divider
+              orientation="vertical"
+              flexItem
+              sx={{
+                borderColor: primaryColor,
+                opacity: 0.2,
+              }}
+            />
+            )}
+
+            {showClock && (
+            <div className="flex flex-col w-17.5">
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: "0.6rem",
+                  color: "var(--secondary-color)",
+                  opacity: 0.8,
+                  textAlign: "right",
+                }}
+              >
+                {dayjs(currentTime)
+                  .locale(i18n.language)
+                  .format("dd DD/MM/BBBB")}
+              </Typography>
+
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: "1rem",
+                  color: primaryColor,
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                {dayjs(currentTime).format("HH:mm:ss")}
+              </Typography>
+            </div>
+            )}
+
+            <Button
+              variant="outlined"
+              sx={{
+                border: "1px solid var(--danger-color)",
+                color: "var(--danger-color)",
+                fontSize: "14px",
+                width: "120px",
+                flexShrink: 0,
+                height: "30px",
+                textTransform: "capitalize",
+                "&:hover": {
+                  backgroundColor: "var(--danger-color)",
+                  color: "white",
+                },
+              }}
+              onClick={handleLogout}
             >
-              {dayjs(currentTime).format("HH:mm:ss")}
-            </Typography>
+              {t("navbar.logout")}
+            </Button>
           </div>
+          )}
+          {/* A right-anchored drawer opens from this end, so its hamburger lives here. */}
+          {showEndHamburger && (
+            <IconButton
+              onClick={openNav}
+              aria-label={t("nav.menu")}
+              aria-expanded={sidebarOpen}
+              sx={{ color: primaryColor }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+        </Box>
 
-          <Button
-            variant="outlined"
-            sx={{
-              border: "1px solid var(--danger-color)",
-              color: "var(--danger-color)",
-              fontSize: "14px",
-              width: "120px",
-              height: "30px",
-              textTransform: "capitalize",
-              "&:hover": {
-                backgroundColor: "var(--danger-color)",
-                color: "white",
-              },
-            }}
-            onClick={handleLogout}
-          >
-            {t("navbar.logout")}
-          </Button>
-        </div>
-
-        {/* mobile / tablet */}
-        <div className="flex lg:hidden items-center gap-1">
+        {/* compact — everything folds into the settings menu */}
+        {!showFullControls && (
+        <div className="flex items-center gap-1">
           <Avatar
             alt="User"
             src={user?.image_url}
@@ -610,6 +813,54 @@ const Navbar = () => {
             <Divider />
 
             <MenuItem
+              disabled
+              sx={{
+                opacity: "1 !important",
+                color: "var(--primary-color) !important",
+
+                "&.Mui-disabled": {
+                  opacity: "1 !important",
+                  color: "var(--primary-color) !important",
+                },
+
+                "& .MuiSvgIcon-root": {
+                  color: "var(--primary-color) !important",
+                },
+
+                "& .MuiTypography-root": {
+                  color: "var(--primary-color) !important",
+                },
+              }}
+            >
+              <ViewSidebarIcon sx={{ mr: 1, fontSize: 18 }} />
+              {t("navbar.nav-position")}
+            </MenuItem>
+
+            {navPositionItems.map((item) => (
+              <MenuItem
+                key={item.key}
+                selected={navPosition === item.key}
+                onClick={() => handleChangeNavPosition(item.key)}
+                sx={{
+                  pl: 4,
+                  "&.Mui-selected": {
+                    border: "1px solid var(--primary-color)",
+                    borderRadius: "12px",
+                    backgroundColor: "rgba(var(--primary-color-rgb), 0.06)",
+                  },
+                }}
+              >
+                <Box sx={{ mr: 1, display: "flex" }}>
+                  {renderNavPositionPrefix(item, navPosition === item.key)}
+                </Box>
+
+                {item.label}
+              </MenuItem>
+            ))}
+
+            <Divider />
+
+            <MenuItem
               onClick={() => {
                 closeMenu();
                 handleLogout();
@@ -623,6 +874,7 @@ const Navbar = () => {
             </MenuItem>
           </Menu>
         </div>
+        )}
       </Toolbar>
     </AppBar>
   );

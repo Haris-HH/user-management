@@ -414,7 +414,7 @@ const PermissionTable = ({
                           e.stopPropagation();
                           handleToggleUiEnabled(uiKey);
                         }}
-                        className={`rounded-sm p-2 transition-all duration-200 ${
+                        className={`rounded-sm p-2 transition-colors duration-150 ${
                           disabled ? "cursor-not-allowed" : "cursor-pointer"
                         } ${
                           uiIsEnabled

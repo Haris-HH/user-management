@@ -6,7 +6,18 @@
   "navbar": {
     "logout": "Logout",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "nav-position": "Menu Position"
+  },
+  "nav-position": {
+    "left": "Left",
+    "top": "Top",
+    "right": "Right",
+    "bottom": "Bottom"
+  },
+  "nav": {
+    "menu": "Menu",
+    "close": "Close menu"
   },
   "pages": {
     "add-approve-user": "Handle the request.",
@@ -19,7 +30,14 @@
     "manage-watch-list-checkpoint": "Manage Watch List - Checkpoint",
     "manage-checkpoint-group": "Manage Checkpoints",
     "statistics": "Usage statistics",
-    "manage-lpr-center-group": "LPR Center Permission Groups"
+    "manage-lpr-center-group": "LPR Center Permission Groups",
+    "not-found": "Page Not Found"
+  },
+  "not-found": {
+    "title": "Page not found",
+    "description": "The page you are looking for may have been moved, renamed, or does not exist. Please check the address and try again.",
+    "back-home": "Back to home",
+    "go-back": "Go back"
   },
   "dock": {
     "home": "Home",
@@ -42,6 +60,7 @@
   "button": {
     "login": "Login",
     "loading": "Loading...",
+    "skip-intro": "Skip intro",
     "import": "Import",
     "example-file": "Example File",
     "import-file": "Import File",

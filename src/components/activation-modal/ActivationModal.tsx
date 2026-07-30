@@ -21,6 +21,9 @@ import EventIcon from "@mui/icons-material/Event";
 // Components
 import DatePickerBuddhist from "../date-picker-buddhist/DatePickerBuddhist";
 
+// Constants
+import { transitionOf } from "../../constants/motion";
+
 // i18n
 import { useTranslation } from "react-i18next";
 
@@ -84,7 +87,9 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
       backgroundColor: isSelected
         ? "rgba(var(--primary-color-rgb), 0.12)"
         : "var(--tertiary-color)",
-      transition: "0.2s",
+      /* `transition: "0.2s"` เดิมย่อมาจาก `all 0.2s` — ระบุ property ให้ชัดว่ามี
+         แค่พื้นหลังกับเส้นขอบที่เปลี่ยนตอนเลือก/hover */
+      transition: transitionOf(["background-color", "border-color"], "fast"),
       "&:hover": {
         backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
       },

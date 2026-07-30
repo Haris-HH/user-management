@@ -38,3 +38,26 @@ body {
   margin: 0;
   padding: 0;
 }
+
+/*
+  ตาข่ายนิรภัยสำหรับ animation ที่มาจาก CSS ล้วน (เช่น LoadingScreen.css) และ
+  จากไลบรารีภายนอกอย่าง MUI/SweetAlert2 ที่เราไม่ได้คุมโค้ดโดยตรง
+
+  ตั้ง duration เป็นค่าที่สั้นมากแทนที่จะเป็น `none` เพราะ `animation: none` จะ
+  ทำให้ event `animationend` ไม่ยิง ซึ่งไลบรารีบางตัวใช้เป็นตัวจบ transition
+  สถานะปลายทางยังเปลี่ยนครบทุกอย่าง แค่ไปถึงทันทีโดยไม่ต้องเคลื่อนที่ให้เห็น
+
+  ส่วน animation ที่เขียนด้วย framer-motion ไม่ได้อยู่ใต้กฎนี้ (มันใช้ JS ไม่ใช่
+  CSS transition) จึงจัดการเป็นราย ๆ ผ่าน `useReducedMotion` เพื่อให้ยังคง
+  cross-fade ที่สื่อความหมายไว้ได้ แทนที่จะถูกตัดออกทั้งหมด
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -61,7 +61,7 @@ function HoverSelectMenu<T>({
     >
       <div
         ref={setAnchorEl}
-        className="flex gap-1 items-center opacity-80 hover:opacity-100 cursor-pointer transition-all duration-200"
+        className="flex gap-1 items-center opacity-80 hover:opacity-100 cursor-pointer transition-opacity duration-150"
       >
         {icon}
 

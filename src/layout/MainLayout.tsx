@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useSelector } from 'react-redux';
 
 // Components
 import Navbar from "./Navbar";
 import DockDrawer from "../components/dock-drawer/DockDrawer";
+import NavSidebar from "../components/nav-sidebar/NavSidebar";
 import Watermark from "../components/watermark/WaterMark";
 
 // Assets
@@ -12,6 +13,13 @@ import backgroundVideo from "../assets/video/background_video.mp4";
 
 // i18n
 import { useTranslation } from "react-i18next";
+
+// Hooks
+import { useNavLayout } from "../hooks/useNavPosition";
+import { useReducedMotion } from "../hooks/useReducedMotion";
+
+// Constants
+import { transitionOf } from "../constants/motion";
 
 // Store
 import type { RootState } from "../store/store";
@@ -23,7 +31,10 @@ const MainLayout = () => {
   // State
   const [open, setOpen] = useState(false);
 
-  const location = useLocation();
+  const { navPosition, showNav, isSidebarPosition, isWideViewport, sidebarOffset } =
+    useNavLayout();
+
+  const prefersReducedMotion = useReducedMotion();
 
   const { user } = useSelector((state: RootState) => state.authUser);
 
@@ -32,26 +43,43 @@ const MainLayout = () => {
   // `user?.agency.x` still throws for a signed-in user without an agency.
   const nsbOu = i18n.language === "th" ? user?.agency?.ou_abbr_th || "-" : user?.agency?.ou_abbr_en || "-";
 
+  /*
+    `top` renders inline in the Navbar, but there is no room for that beside the
+    branding on a phone, so it borrows the drawer at mobile widths.
+  */
+  const useDrawerNav =
+    isSidebarPosition || (!isWideViewport && navPosition === "top");
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <Navbar />
 
       <Watermark text={nsbOu} hashPid={hashPid} />
-      
+
       <main
         style={{
           height: "calc(100vh - 64px)",
           position: "relative",
           overflow: "hidden",
           marginTop: "64px",
+          marginLeft: navPosition === "left" ? sidebarOffset : 0,
+          marginRight: navPosition === "right" ? sidebarOffset : 0,
+          transition: transitionOf(["margin"]),
         }}
       >
-        {/* Background Video */}
+        {/*
+          Background Video
+
+          วิดีโอที่เล่นวนอยู่เบื้องหลังทุกหน้าคือการเคลื่อนไหวถาวรที่ผู้ใช้หยุด
+          ไม่ได้ และยังต้องถอดรหัสวิดีโอตลอดเวลา เมื่อผู้ใช้ขอลดการเคลื่อนไหวจึง
+          หยุดที่เฟรมแรกแทน (ยังคงภาพพื้นหลังไว้ ไม่ได้ตัดทิ้งจนหน้าจอโล่ง)
+        */}
         <video
-          autoPlay
-          loop
+          autoPlay={!prefersReducedMotion}
+          loop={!prefersReducedMotion}
           muted
           playsInline
+          aria-hidden="true"
           style={{
             position: "absolute",
             inset: 0,
@@ -79,13 +107,13 @@ const MainLayout = () => {
           <Outlet />
         </div>
       </main>
-      
-      {/* Dock Drawer */}
-      {
-        location.pathname !== "/" && (
-          <DockDrawer open={open} setOpen={setOpen} />
-        )
-      }
+
+      {/* Navigation — one shape per position; `top` lives in the Navbar itself. */}
+      {showNav && useDrawerNav && <NavSidebar />}
+
+      {showNav && navPosition === "bottom" && (
+        <DockDrawer open={open} setOpen={setOpen} />
+      )}
     </div>
   );
 };

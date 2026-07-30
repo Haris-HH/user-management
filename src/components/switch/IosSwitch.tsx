@@ -5,6 +5,9 @@ import { styled } from "@mui/material/styles";
 import Switch from "@mui/material/Switch";
 import type { SwitchProps } from "@mui/material/Switch";
 
+// Constants
+import { MOTION_DURATION } from "../../constants/motion";
+
 const IosSwitch = styled((props: SwitchProps) => {
   const { onChange, checked, ...rest } = props;
   const [isChecked, setIsChecked] = useState<boolean>(checked ?? false);
@@ -71,8 +74,10 @@ const IosSwitch = styled((props: SwitchProps) => {
     borderRadius: 26 / 2,
     backgroundColor: "var(--secondary-color)",
     opacity: 1,
+    /* 500ms ช้าเกินไปสำหรับ toggle — สวิตช์ต้องตอบสนองทันทีที่กด ไม่อย่างนั้น
+       ผู้ใช้จะไม่แน่ใจว่าการกดติดหรือไม่ */
     transition: theme.transitions.create(["background-color"], {
-      duration: 500,
+      duration: MOTION_DURATION.fast,
     }),
   },
 }));

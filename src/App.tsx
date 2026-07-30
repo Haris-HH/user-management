@@ -18,6 +18,7 @@ import ManageWatchListPerson from "./pages/ManageWatchListPerson";
 import ManageWatchListPlate from "./pages/ManageWatchListPlate";
 import ManageCheckpointGroup from "./pages/ManageCheckpointGroup";
 import StatisticTopUsers from "./pages/StatisticTopUsers";
+import NotFound from "./pages/NotFound";
 
 // API
 import {
@@ -147,6 +148,13 @@ function App() {
         <Route path="manage-watch-list-checkpoint" element={<ManageWatchListCheckpoint />} />
         <Route path="manage-checkpoint-group" element={<ManageCheckpointGroup />} />
         <Route path="statistic-top-users" element={<StatisticTopUsers />} />
+
+        {/*
+          Catch-all อยู่ใต้ MainLayout เพื่อให้หน้า 404 ยังมีแถบเมนูและ
+          navigation ครบ ผู้ใช้จึงไปหน้าอื่นต่อได้ทันที ไม่ใช่เจอทางตัน
+          ต้องอยู่ท้ายสุดเสมอ เพราะ route ที่ประกาศก่อนจะถูกจับคู่ก่อน
+        */}
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

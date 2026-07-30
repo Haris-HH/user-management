@@ -1,3 +1,19 @@
+/*
+  ตัวอักษร "LOADING" ที่วิ่งผ่านกลางจอ
+
+  ไฟล์นี้เคยยาว 219 บรรทัดเพราะมี @keyframes ซ้ำกันสี่ชุด (unprefixed, -moz-,
+  -webkit-, -o-) เบราว์เซอร์ปัจจุบันรองรับแบบไม่มี prefix ทั้งหมดแล้ว
+  (-o- คือ Opera Presto ซึ่งเลิกใช้ตั้งแต่ปี 2013) จึงเหลือชุดเดียว
+
+  จุดสำคัญกว่านั้นคือเดิม animate property `left` ซึ่งเป็น layout property
+  บังคับให้เบราว์เซอร์คำนวณ layout ใหม่ทุกเฟรม คูณ 10 elements ตอนนี้ใช้
+  translateX แทนซึ่งทำงานบน compositor ไม่แตะ layout เลย ระยะทางเท่าเดิมทุกจุด
+  (#load กว้าง 600px คงที่: 41% = 246px, 59% = 354px, 100% = 600px)
+
+  easing ยังเป็น linear โดยตั้งใจ — นี่คือลูปต่อเนื่องแบบสายพาน การใส่ ease
+  จะทำให้เห็นการกระตุกตรงรอยต่อของแต่ละรอบ
+*/
+
 #load {
   position: absolute;
   width: 600px;
@@ -6,9 +22,6 @@
   bottom: 12%;
   margin-left: -300px;
   overflow: visible;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
   user-select: none;
   cursor: default;
   font-size: 25px;
@@ -19,201 +32,65 @@
   width: 20px;
   height: 36px;
   opacity: 0;
-  animation: move 3s linear infinite;
-  -o-animation: move 3s linear infinite;
-  -moz-animation: move 3s linear infinite;
-  -webkit-animation: move 3s linear infinite;
-  transform: rotate(180deg);
-  -o-transform: rotate(180deg);
-  -moz-transform: rotate(180deg);
-  -webkit-transform: rotate(180deg);
   color: var(--primary-color);
+  transform: translateX(0) rotate(180deg);
+  animation: move 3s linear infinite;
 }
 
 #load div:nth-child(2) {
   animation-delay: 0.2s;
-  -o-animation-delay: 0.2s;
-  -moz-animation-delay: 0.2s;
-  -webkit-animation-delay: 0.2s;
 }
 
 #load div:nth-child(3) {
   animation-delay: 0.4s;
-  -o-animation-delay: 0.4s;
-  -webkit-animation-delay: 0.4s;
-  -webkit-animation-delay: 0.4s;
 }
 
 #load div:nth-child(4) {
   animation-delay: 0.6s;
-  -o-animation-delay: 0.6s;
-  -moz-animation-delay: 0.6s;
-  -webkit-animation-delay: 0.6s;
 }
 
 #load div:nth-child(5) {
   animation-delay: 0.8s;
-  -o-animation-delay: 0.8s;
-  -moz-animation-delay: 0.8s;
-  -webkit-animation-delay: 0.8s;
 }
 
 #load div:nth-child(6) {
   animation-delay: 1s;
-  -o-animation-delay: 1s;
-  -moz-animation-delay: 1s;
-  -webkit-animation-delay: 1s;
 }
 
 #load div:nth-child(7) {
   animation-delay: 1.2s;
-  -o-animation-delay: 1.2s;
-  -moz-animation-delay: 1.2s;
-  -webkit-animation-delay: 1.2s;
 }
 
 #load div:nth-child(8) {
   animation-delay: 1.4s;
-  -o-animation-delay: 1.4s;
-  -moz-animation-delay: 1.4s;
-  -webkit-animation-delay: 1.4s;
 }
 
 #load div:nth-child(9) {
   animation-delay: 1.6s;
-  -o-animation-delay: 1.6s;
-  -moz-animation-delay: 1.6s;
-  -webkit-animation-delay: 1.6s;
 }
 
 #load div:nth-child(10) {
   animation-delay: 1.8s;
-  -o-animation-delay: 1.8s;
-  -moz-animation-delay: 1.8s;
-  -webkit-animation-delay: 1.8s;
-}
-
-#load div:nth-child(11) {
-  animation-delay:  2.0s;
-  -o-animation-delay: 2.0s;
-  -moz-animation-delay: 2.0s;
-  -webkit-animation-delay:  2.0s;
 }
 
 @keyframes move {
   0% {
-    left: 0;
+    transform: translateX(0) rotate(180deg);
     opacity: 0;
   }
 
   35% {
-    left: 41%;
-    -moz-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    transform: rotate(0deg);
+    transform: translateX(246px) rotate(0deg);
     opacity: 1;
   }
 
   65% {
-    left: 59%;
-    -moz-transform: rotate(0deg);
-    -webkit-transform: rotate(0deg);
-    -o-transform: rotate(0deg);
-    transform: rotate(0deg);
+    transform: translateX(354px) rotate(0deg);
     opacity: 1;
   }
 
   100% {
-    left: 100%;
-    -moz-transform: rotate(-180deg);
-    -webkit-transform: rotate(-180deg);
-    -o-transform: rotate(-180deg);
-    transform: rotate(-180deg);
-    opacity: 0;
-  }
-}
-
-@-moz-keyframes move {
-  0% {
-    left: 0;
-    opacity: 0;
-  }
-
-  35% {
-    left: 41%;
-    -moz-transform: rotate(0deg);
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-
-  65% {
-    left: 59%;
-    -moz-transform: rotate(0deg);
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-
-  100% {
-    left: 100%;
-    -moz-transform: rotate(-180deg);
-    transform: rotate(-180deg);
-    opacity: 0;
-  }
-}
-
-@-webkit-keyframes move {
-  0% {
-    left: 0;
-    opacity: 0;
-  }
-
-  35% {
-    left: 41%;
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-
-  65% {
-    left: 59%;
-    -webkit-transform: rotate(0deg);
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-
-  100% {
-    left: 100%;
-    -webkit-transform: rotate(-180deg);
-    transform: rotate(-180deg);
-    opacity: 0;
-  }
-}
-
-@-o-keyframes move {
-  0% {
-    left: 0;
-    opacity: 0;
-  }
-
-  35% {
-    left: 41%;
-    -o-transform: rotate(0deg);
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-
-  65% {
-    left: 59%;
-    -o-transform: rotate(0deg);
-    transform: rotate(0deg);
-    opacity: 1;
-  }
-
-  100% {
-    left: 100%;
-    -o-transform: rotate(-180deg);
-    transform: rotate(-180deg);
+    transform: translateX(600px) rotate(-180deg);
     opacity: 0;
   }
 }
