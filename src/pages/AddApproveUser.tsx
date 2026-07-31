@@ -1262,10 +1262,9 @@ const AddApproveUser = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {isDataLoading && (
+                  {isDataLoading ? (
                     <TableSkeleton headerColumn={visibleColumns.length} />
-                  )}
-                  {
+                  ) : 
                     userData.length > 0 ? (
                     userData.map((data, index) => (
                       <TableRow key={data.user_id}>
