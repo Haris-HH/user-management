@@ -47,6 +47,7 @@ import type { Column } from "../hooks/useColumnItems";
 // Hooks
 import useColumnItems from "../hooks/useColumnItems";
 import usePageTitle from "../hooks/usePageTitle";
+import { usePermission } from "../hooks/usePermission";
 
 // i18n
 import { useTranslation } from 'react-i18next';
@@ -64,6 +65,7 @@ import type { RootState } from "../store/store";
 
 // Constants
 import { MAX_SUB_AGENCY } from "../hooks/useColumnItems";
+import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
 
 interface FormData {
   pid: string;
@@ -83,6 +85,12 @@ const ManageUser = () => {
 
   // i18n
   const { t, i18n } = useTranslation();
+
+  // Permission
+  const { canEdit, canPrint } = usePermission(
+    USER_MANAGEMENT_UI_KEY,
+    "manage-user"
+  );
 
   // Set Page Title
   usePageTitle(t('pages.manage-user'));
@@ -288,7 +296,9 @@ const ManageUser = () => {
         column.id !== "approve_date" &&
         column.id !== "un_approve_date" &&
         column.id !== "un_approve_reason" &&
-        column.id !== "active_date_time"
+        column.id !== "active_date_time" &&
+        // The edit column is nothing but a link into the user form.
+        (column.id !== "edit" || canEdit)
     );
 
     const first = ["actions", "edit", "id", "account_status", "last_login", "pid"];
@@ -299,7 +309,7 @@ const ManageUser = () => {
         .filter(Boolean) as Column[],
       ...filtered.filter((column) => !first.includes(column.id)),
     ];
-  }, [columns]);
+  }, [columns, canEdit]);
 
   const mapUserDataRows = useCallback((data: User[]) => {
     return data.map((item) => {
@@ -1092,42 +1102,46 @@ const ManageUser = () => {
               {`${t('text.all')} ${totalUsers} ${t('text.name-list')}`}
             </Typography>
             <Box className="flex gap-2">
-              <Button
-                variant="contained"
-                sx={{
-                  width: 140,
-                  height: 35,
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
-                  "&:hover": {
-                    backgroundColor:  "rgba(var(--primary-color-rgb), 0.8)",
-                  },
-                  textTransform: "capitalize"
-                }}
-                onClick={() => setOpenUpdateProfileDialog(true)}
-              >
-                {t('button.update-profile')}
-              </Button>
-              <Button
-                variant="outlined"
-                sx={{
-                  width: 130,
-                  height: 35,
-                  backgroundColor: "var(--tertiary-color)",
-                  color: "var(--primary-color)",
-                  border: "1px solid var(--primary-color)",
-                  "&:hover": {
-                    backgroundColor:  "rgba(var(--tertiary-color-rgb), 0.8)",
-                  },
-                  textTransform: "capitalize"
-                }}
-                startIcon={
-                  <img src={ExcelIcon} alt='Excel' className='w-5 h-6' />
-                }
-                onClick={handleExportExcel}
-              >
-                {t('button.export')}
-              </Button>
+              {canEdit && (
+                <Button
+                  variant="contained"
+                  sx={{
+                    width: 140,
+                    height: 35,
+                    backgroundColor: "var(--primary-color)",
+                    color: "var(--tertiary-color)",
+                    "&:hover": {
+                      backgroundColor:  "rgba(var(--primary-color-rgb), 0.8)",
+                    },
+                    textTransform: "capitalize"
+                  }}
+                  onClick={() => setOpenUpdateProfileDialog(true)}
+                >
+                  {t('button.update-profile')}
+                </Button>
+              )}
+              {canPrint && (
+                <Button
+                  variant="outlined"
+                  sx={{
+                    width: 130,
+                    height: 35,
+                    backgroundColor: "var(--tertiary-color)",
+                    color: "var(--primary-color)",
+                    border: "1px solid var(--primary-color)",
+                    "&:hover": {
+                      backgroundColor:  "rgba(var(--tertiary-color-rgb), 0.8)",
+                    },
+                    textTransform: "capitalize"
+                  }}
+                  startIcon={
+                    <img src={ExcelIcon} alt='Excel' className='w-5 h-6' />
+                  }
+                  onClick={handleExportExcel}
+                >
+                  {t('button.export')}
+                </Button>
+              )}
             </Box>
           </Box>
           <TableContainer

@@ -34,6 +34,10 @@ import type {
 // Hooks
 import usePermissionUiList from "../hooks/usePermissionUiList";
 import usePageTitle from "../hooks/usePageTitle";
+import { usePermission } from "../hooks/usePermission";
+
+// Constants
+import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
 
 // i18n
 import { useTranslation } from "react-i18next";
@@ -94,6 +98,12 @@ const UserGroupManagement = () => {
 
   const { t, i18n } = useTranslation();
   usePageTitle(t("pages.user-group-management"));
+
+  // Permission
+  const { canEdit } = usePermission(
+    USER_MANAGEMENT_UI_KEY,
+    "user-group-management"
+  );
 
   // A ref-counted loading flag: fetchUserGroups() and fetchData() both run
   // (and can be in flight) independently, so a plain boolean would let
@@ -557,6 +567,12 @@ const UserGroupManagement = () => {
                   />
                 </Box>
 
+                {/*
+                  Search stays available at "active"; everything that creates a
+                  group goes away with the edit right.
+                */}
+                {canEdit && (
+                <>
                 <Box className="w-full md:w-125">
                   <Controller
                     name="group_name"
@@ -668,6 +684,8 @@ const UserGroupManagement = () => {
                 >
                   {t("button.add-user-group")}
                 </Button>
+                </>
+                )}
               </Box>
             </form>
           </Box>
@@ -703,9 +721,11 @@ const UserGroupManagement = () => {
                       <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color)">
                         {t("table.header.life-date")}
                       </th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color) text-right">
-                        {t("table.header.delete")}
-                      </th>
+                      {canEdit && (
+                        <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color) text-right">
+                          {t("table.header.delete")}
+                        </th>
+                      )}
                     </tr>
                   </thead>
 
@@ -775,6 +795,7 @@ const UserGroupManagement = () => {
                               placeholder=""
                               labelFontSize="16px"
                               value={row.approved_lifetime}
+                              disabled={!canEdit}
                               onChange={(event) =>
                                 handleRowChange(
                                   row.group_id,
@@ -796,6 +817,7 @@ const UserGroupManagement = () => {
                               placeholder=""
                               labelFontSize="16px"
                               value={row.login_lifetime}
+                              disabled={!canEdit}
                               onChange={(event) =>
                                 handleRowChange(
                                   row.group_id,
@@ -807,6 +829,7 @@ const UserGroupManagement = () => {
                           </div>
                         </td>
 
+                        {canEdit && (
                         <td className="px-5 py-4 text-right">
                           {row.locked ? (
                             <Typography
@@ -833,6 +856,7 @@ const UserGroupManagement = () => {
                             </IconButton>
                           )}
                         </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -846,7 +870,7 @@ const UserGroupManagement = () => {
               permissionUiList={permissionUiList}
               checkpointList={checkpointData}
               permissions={selectedUserGroup?.permissions ?? {}}
-              disabled={!selectedUserGroup}
+              disabled={!selectedUserGroup || !canEdit}
               onPermissionsChange={handleGroupPermissionsChange}
             />
           </Box>
@@ -875,6 +899,7 @@ const UserGroupManagement = () => {
               </Typography>
             </Box>
 
+            {canEdit && (
             <Box className="flex gap-2">
               <Button
                 variant="outlined"
@@ -921,6 +946,7 @@ const UserGroupManagement = () => {
                 {t("button.save")}
               </Button>
             </Box>
+            )}
           </Box>
         </Box>
       </Box>

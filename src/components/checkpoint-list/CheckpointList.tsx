@@ -54,6 +54,8 @@ type Prop = {
   checkpointList: string[];
   isDisable: boolean;
   group_id: string | null;
+  /** "edit" on the owning page; at "active" the list is read-only. */
+  canEdit: boolean;
   onDataChange: () => void;
 }
 
@@ -61,6 +63,7 @@ const CheckpointList = ({
   checkpointList,
   isDisable = true,
   group_id,
+  canEdit,
   onDataChange,
 }: Prop) => {
   // i18n
@@ -311,6 +314,10 @@ const CheckpointList = ({
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
+  /* The delete column only exists at "edit", so skeleton rows and the
+     empty-state row have to follow it. */
+  const columnCount = canEdit ? 6 : 5;
+
   return (
     <section id='checkpoint-list'>
       { isLoading && <LoadingScreen /> }
@@ -319,30 +326,32 @@ const CheckpointList = ({
           <Typography component="span" style={{ color: "var(--primary-color)", fontWeight: 500 }}>
             {t('text.checkpoint-list')}
           </Typography>
-          <Button
-            variant="contained"
-            sx={{
-              width: 140,
-              height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
-              "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
-              },
-              textTransform: "capitalize",
-              "&.Mui-disabled": {
+          {canEdit && (
+            <Button
+              variant="contained"
+              sx={{
+                width: 140,
+                height: 35,
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
-                opacity: 0.5,
-                cursor: "not-allowed"
-              },
-            }}
-            startIcon={<AddIcon />}
-            onClick={() => setIsAddCheckpointOpen(true)}
-            disabled={isDisable}
-          >
-            {t('button.add-checkpoint')}
-          </Button>
+                "&:hover": {
+                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                },
+                textTransform: "capitalize",
+                "&.Mui-disabled": {
+                  backgroundColor: "var(--primary-color)",
+                  color: "var(--tertiary-color)",
+                  opacity: 0.5,
+                  cursor: "not-allowed"
+                },
+              }}
+              startIcon={<AddIcon />}
+              onClick={() => setIsAddCheckpointOpen(true)}
+              disabled={isDisable}
+            >
+              {t('button.add-checkpoint')}
+            </Button>
+          )}
         </Box>
         <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
           <Box className="flex justify-between items-center">
@@ -421,29 +430,31 @@ const CheckpointList = ({
                   >
                     {t('table.header.checkpoint')}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      width: "10%",
-                      textAlign: "center",
-                    }}
-                  >
-                    <IconButton onClick={() => handleDeleteAllCheckpoints()}>
-                      <DeleteIcon 
-                        sx={{ 
-                          fontSize: 20, 
-                          color: selectedCheckpointIds.length > 0 ? "var(--trash-active-icon)" : "var(--trash-icon)",
-                          "&:hover": {
-                            scale: 1.3,
-                          }
-                        }} 
-                        />
-                    </IconButton>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell
+                      sx={{
+                        width: "10%",
+                        textAlign: "center",
+                      }}
+                    >
+                      <IconButton onClick={() => handleDeleteAllCheckpoints()}>
+                        <DeleteIcon
+                          sx={{
+                            fontSize: 20,
+                            color: selectedCheckpointIds.length > 0 ? "var(--trash-active-icon)" : "var(--trash-icon)",
+                            "&:hover": {
+                              scale: 1.3,
+                            }
+                          }}
+                          />
+                      </IconButton>
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {isDataLoading && (
-                  <TableSkeleton headerColumn={6} />
+                  <TableSkeleton headerColumn={columnCount} />
                 )}
                 {filterSelectedCheckpoints.length > 0 ? (
                   filterSelectedCheckpoints.map((checkpoint, index) => {
@@ -462,19 +473,21 @@ const CheckpointList = ({
                         <TableCell align="center">{checkpoint.province_name || "-"}</TableCell>
                         <TableCell align="center">{checkpoint.police_station_name || "-"}</TableCell>
                         <TableCell align="center">{checkpoint.camera_name || "-"}</TableCell>
-                        <TableCell align="center">
-                          <IconButton onClick={() => handleDeleteCheckpoint(checkpoint.camera_id)}>
-                            <DeleteIcon 
-                              sx={{ 
-                                fontSize: 20, 
-                                color: "var(--trash-active-icon)",
-                                "&:hover": {
-                                  scale: 1.3,
-                                }
-                              }} 
-                            />
-                          </IconButton>
-                        </TableCell>
+                        {canEdit && (
+                          <TableCell align="center">
+                            <IconButton onClick={() => handleDeleteCheckpoint(checkpoint.camera_id)}>
+                              <DeleteIcon
+                                sx={{
+                                  fontSize: 20,
+                                  color: "var(--trash-active-icon)",
+                                  "&:hover": {
+                                    scale: 1.3,
+                                  }
+                                }}
+                              />
+                            </IconButton>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })
@@ -486,7 +499,7 @@ const CheckpointList = ({
                       }
                     }}
                   >
-                    <TableCell colSpan={6} align="center" sx={{ color: "var(--secondary-color)" }}>
+                    <TableCell colSpan={columnCount} align="center" sx={{ color: "var(--secondary-color)" }}>
                       {t("text.no-data")}
                     </TableCell>
                   </TableRow>

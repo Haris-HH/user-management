@@ -48,12 +48,15 @@ type Props = {
   onSelectChanged: (group: CheckpointGroup | null) => void;
   selectedGroupId: string | null;
   refreshKey: number;
+  /** "edit" on the owning page; at "active" the list is read-only. */
+  canEdit: boolean;
 };
 
 const GroupList = ({
   onSelectChanged,
   selectedGroupId,
   refreshKey,
+  canEdit,
 }: Props) => {
   // i18n
   const { t } = useTranslation();
@@ -82,6 +85,10 @@ const GroupList = ({
   useEffect(() => {
     onSelectChangedRef.current = onSelectChanged;
   }, [onSelectChanged]);
+
+  /* The delete column only exists at "edit", so skeleton rows and the
+     empty-state row have to follow it. */
+  const columnCount = canEdit ? 4 : 3;
 
   const filteredGroups = useMemo(() => {
     const keyword = formData.search.trim().toLowerCase();
@@ -196,23 +203,25 @@ const GroupList = ({
           <Typography component="span" style={{ color: "var(--primary-color)", fontWeight: 500 }}>
             {t('text.checkpoint-list')}
           </Typography>
-          <Button
-            variant="contained"
-            sx={{
-              width: t('button.add-group'),
-              height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
-              "&:hover": {
-                backgroundColor:  "rgba(var(--primary-color-rgb), 0.8)",
-              },
-              textTransform: "capitalize",
-            }}
-            startIcon={<AddIcon />}
-            onClick={() => setIsAddGroupOpen(true)}
-          >
-            {t('button.add-group')}
-          </Button>
+          {canEdit && (
+            <Button
+              variant="contained"
+              sx={{
+                width: t('button.add-group'),
+                height: 35,
+                backgroundColor: "var(--primary-color)",
+                color: "var(--tertiary-color)",
+                "&:hover": {
+                  backgroundColor:  "rgba(var(--primary-color-rgb), 0.8)",
+                },
+                textTransform: "capitalize",
+              }}
+              startIcon={<AddIcon />}
+              onClick={() => setIsAddGroupOpen(true)}
+            >
+              {t('button.add-group')}
+            </Button>
+          )}
         </Box>
         <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
           <Box className="flex justify-between items-center">
@@ -275,19 +284,21 @@ const GroupList = ({
                   >
                     {t('table.header.checkpoint-count')}
                   </TableCell>
-                  <TableCell
-                    sx={{
-                      width: "10%",
-                      textAlign: "center",
-                    }}
-                  >
-                    {t('table.header.delete')}
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell
+                      sx={{
+                        width: "10%",
+                        textAlign: "center",
+                      }}
+                    >
+                      {t('table.header.delete')}
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
                 {isDataLoading ? (
-                  <TableSkeleton headerColumn={4} />
+                  <TableSkeleton headerColumn={columnCount} />
                 ) : filteredGroups.length > 0 ? (
                   filteredGroups.map((group, index) => (
                     <TableRow
@@ -330,24 +341,26 @@ const GroupList = ({
                           : 0}
                       </TableCell>
 
-                      <TableCell align="center">
-                        <IconButton
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDeleteGroup(group.group_id);
-                          }}
-                        >
-                          <DeleteIcon
-                            sx={{
-                              fontSize: 20,
-                              color: "var(--trash-active-icon)",
-                              "&:hover": {
-                                transform: "scale(1.3)",
-                              },
+                      {canEdit && (
+                        <TableCell align="center">
+                          <IconButton
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleDeleteGroup(group.group_id);
                             }}
-                          />
-                        </IconButton>
-                      </TableCell>
+                          >
+                            <DeleteIcon
+                              sx={{
+                                fontSize: 20,
+                                color: "var(--trash-active-icon)",
+                                "&:hover": {
+                                  transform: "scale(1.3)",
+                                },
+                              }}
+                            />
+                          </IconButton>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 ) : (
@@ -360,7 +373,7 @@ const GroupList = ({
                       },
                     }}
                   >
-                    <TableCell colSpan={4} align="center">
+                    <TableCell colSpan={columnCount} align="center">
                       {t("text.no-data")}
                     </TableCell>
                   </TableRow>

@@ -20,6 +20,12 @@ import ManageCheckpointGroup from "./pages/ManageCheckpointGroup";
 import StatisticTopUsers from "./pages/StatisticTopUsers";
 import NotFound from "./pages/NotFound";
 
+// Components
+import PermissionRoute from "./components/permission-route/PermissionRoute";
+
+// Constants
+import { USER_MANAGEMENT_UI_KEY } from "./constants/permissions";
+
 // API
 import {
   fetchArea,
@@ -46,6 +52,33 @@ import { useTranslation } from "react-i18next";
 // Hooks
 import { useForceLogout } from "./hooks/useForceLogout";
 import { useSse } from "./hooks/useSse";
+
+/*
+  UserForm is reached from two different pages - manage-user's pen icon and
+  add-approve-user's "add user" - so the permission that governs it is the one
+  belonging to whichever page sent the user here, carried in the navigation
+  state. It exists only to create or edit, so "active" is not enough to open
+  it; the calling pages already hide their own entry points at that level and
+  this covers the hand-typed URL.
+*/
+const UserFormRoute = () => {
+  const { state } = useLocation();
+
+  const groupKey =
+    (state as { page?: string } | null)?.page === "manage_user"
+      ? "manage-user"
+      : "add-approve-user";
+
+  return (
+    <PermissionRoute
+      uiKey={USER_MANAGEMENT_UI_KEY}
+      groupKey={groupKey}
+      requireEdit
+    >
+      <UserForm />
+    </PermissionRoute>
+  );
+};
 
 function App() {
   const dispatch = useAppDispatch();
@@ -139,15 +172,78 @@ function App() {
 
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Home />} />
-        <Route path="add-approve-user" element={<AddApproveUser />} />
-        <Route path="add-approve-user/add" element={<UserForm />} />
-        <Route path="user-group-management" element={<UserGroupManagement />} />
-        <Route path="manage-user" element={<ManageUser />} />
-        <Route path="manage-watch-list-person" element={<ManageWatchListPerson />} />
-        <Route path="manage-watch-list-plate" element={<ManageWatchListPlate />} />
-        <Route path="manage-watch-list-checkpoint" element={<ManageWatchListCheckpoint />} />
-        <Route path="manage-checkpoint-group" element={<ManageCheckpointGroup />} />
-        <Route path="statistic-top-users" element={<StatisticTopUsers />} />
+
+        {/*
+          Every page below is gated on the permission tree: "none" (or a
+          disabled service) redirects home. UserForm is the exception - it is
+          reached from two different pages, so it resolves its own group key
+          from the navigation state instead of being wrapped here.
+        */}
+        <Route
+          path="add-approve-user"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="add-approve-user">
+              <AddApproveUser />
+            </PermissionRoute>
+          }
+        />
+        <Route path="add-approve-user/add" element={<UserFormRoute />} />
+        <Route
+          path="user-group-management"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="user-group-management">
+              <UserGroupManagement />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="manage-user"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="manage-user">
+              <ManageUser />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="manage-watch-list-person"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="manage-watch-list-person">
+              <ManageWatchListPerson />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="manage-watch-list-plate"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="manage-watch-list-plate">
+              <ManageWatchListPlate />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="manage-watch-list-checkpoint"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="manage-watch-list-checkpoint">
+              <ManageWatchListCheckpoint />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="manage-checkpoint-group"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="manage-checkpoint-group">
+              <ManageCheckpointGroup />
+            </PermissionRoute>
+          }
+        />
+        <Route
+          path="statistic-top-users"
+          element={
+            <PermissionRoute uiKey={USER_MANAGEMENT_UI_KEY} groupKey="statistics">
+              <StatisticTopUsers />
+            </PermissionRoute>
+          }
+        />
 
         {/*
           Catch-all อยู่ใต้ MainLayout เพื่อให้หน้า 404 ยังมีแถบเมนูและ

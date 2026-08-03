@@ -51,6 +51,10 @@ import type { ActivationConfirmData } from '../components/activation-modal/Activ
 // Hooks
 import useColumnItems from "../hooks/useColumnItems";
 import usePageTitle from "../hooks/usePageTitle";
+import { usePermission } from "../hooks/usePermission";
+
+// Constants
+import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
 
 // API
 import { searchUserApi, deleteUserApi, approveUserApi, updateUserApi } from "../features/users/api/UsersApi";
@@ -78,10 +82,16 @@ interface FormData {
 
 const AddApproveUser = () => {
   const navigate = useNavigate();
-  const columns = useColumnItems();
+  const allColumns = useColumnItems();
 
   // i18n
   const { t, i18n } = useTranslation();
+
+  // Permission
+  const { canEdit, canPrint } = usePermission(
+    USER_MANAGEMENT_UI_KEY,
+    "add-approve-user"
+  );
 
   // Set Page Title
   usePageTitle(t('pages.statistics'));
@@ -402,6 +412,17 @@ const AddApproveUser = () => {
   }, [fetchOrgList, formData.bk_id]);
 
   const visibleColumns = useMemo<Column[]>(() => {
+    /*
+      At "active" the row checkbox and the pen icon have nothing left to drive -
+      approve/reject/delete and the user form are all gone - so both columns go
+      with them rather than sitting there inert.
+    */
+    const columns = canEdit
+      ? allColumns
+      : allColumns.filter(
+          (column) => column.id !== "actions" && column.id !== "edit"
+        );
+
     if (tabValue === 0) {
       return columns.filter((column) =>
         column.id !== "approve_date" &&
@@ -429,7 +450,7 @@ const AddApproveUser = () => {
       column.id !== "account_status" &&
       column.id !== "remark"
     );
-  }, [columns, tabValue]);
+  }, [allColumns, tabValue, canEdit]);
 
   useEffect(() => {
     if (openImportDialog) return;
@@ -849,6 +870,8 @@ const AddApproveUser = () => {
       {/* Main Title */}
       <MainTitle title={t("pages.add-approve-user")} />
       <div className='flex flex-col p-4 bg-(--main-bg-color) flex-1 min-h-0 w-full rounded-lg border border-(--primary-color) overflow-y-auto gap-2'>
+        {/* Import and Add User both create records - "active" hides the row. */}
+        {canEdit && (
         <Box className="flex justify-end items-center">
           <Box className="flex gap-2">
             <Button
@@ -935,6 +958,7 @@ const AddApproveUser = () => {
             </Button>
           </Box>
         </Box>
+        )}
         <Accordion
           expanded={isAccordionOpen}
           onChange={() => setIsAccordionOpen((prev) => !prev)}
@@ -1185,11 +1209,13 @@ const AddApproveUser = () => {
         </Accordion>
 
         <Box className="flex flex-col">
-          <ApproveActionBar 
+          <ApproveActionBar
             tab={tabValue}
-            onTabSelectChange={handleTabSelectChange} 
-            data={userData} 
+            onTabSelectChange={handleTabSelectChange}
+            data={userData}
             userSelected={userSelected}
+            canEdit={canEdit}
+            canPrint={canPrint}
             onDelete={handleDeleteClick}
             onApprove={handleApproveClick}
             onReject={handleRejectClick}

@@ -13,6 +13,10 @@ import { useTranslation } from "react-i18next";
 
 // Hooks
 import usePageTitle from "../hooks/usePageTitle";
+import { usePermission } from "../hooks/usePermission";
+
+// Constants
+import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
 
 // Types
 import type { CheckpointGroup } from "../types/common";
@@ -20,6 +24,12 @@ import type { CheckpointGroup } from "../types/common";
 const ManageCheckpointGroup = () => {
   // i18n
   const { t } = useTranslation();
+
+  // Permission
+  const { canEdit } = usePermission(
+    USER_MANAGEMENT_UI_KEY,
+    "manage-checkpoint-group"
+  );
 
   // Set page title
   usePageTitle(t("pages.manage-checkpoint-group"));
@@ -55,6 +65,7 @@ const ManageCheckpointGroup = () => {
           <CheckpointGroupList
             selectedGroupId={selectedGroup?.group_id ?? null}
             refreshKey={refreshGroupListKey}
+            canEdit={canEdit}
             onSelectChanged={handleSelectChange}
           />
 
@@ -62,6 +73,7 @@ const ManageCheckpointGroup = () => {
             checkpointList={selectedCheckpointIds}
             group_id={selectedGroup?.group_id ?? null}
             isDisable={!selectedGroup}
+            canEdit={canEdit}
             onDataChange={handleDataChange}
           />
         </Box>

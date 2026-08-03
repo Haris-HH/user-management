@@ -10,10 +10,20 @@ import { useTranslation } from 'react-i18next';
 
 // Hooks
 import usePageTitle from "../hooks/usePageTitle";
+import { usePermission } from "../hooks/usePermission";
+
+// Constants
+import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
 
 const ManageWatchListPlate = () => {
   // i18n
   const { t } = useTranslation();
+
+  // Permission
+  const { canEdit } = usePermission(
+    USER_MANAGEMENT_UI_KEY,
+    "manage-watch-list-plate"
+  );
 
   // Set Page Title
   usePageTitle(t('pages.manage-watch-list-plate'));
@@ -24,7 +34,7 @@ const ManageWatchListPlate = () => {
         {/* Main Title */}
         <MainTitle title={t('pages.manage-watch-list-plate')} />
 
-        <ManageGroup group_type="plate" />
+        <ManageGroup group_type="plate" canEdit={canEdit} />
       </Box>
     </section>
   )

@@ -54,8 +54,7 @@
     "manage-watch-list-plate": "Manage Watch List - Plate",
     "manage-watch-list-checkpoint": "Manage Watch List - Checkpoint",
     "manage-checkpoint-group": "Manage Checkpoints",
-    "statistics": "Top users",
-    "manage-lpr-center-group": "LPR Center Permission Groups"
+    "statistics": "Top users"
   },
   "button": {
     "login": "Login",
@@ -351,8 +350,7 @@
         "manage-watch-list-plate": "Manage Watch List - Plate",
         "manage-watch-list-checkpoint": "Manage Watch List - Checkpoint",
         "manage-checkpoint-group": "Manage Checkpoints",
-        "statistics": "Top users",
-        "manage-lpr-center-group": "LPR Center Permission Groups"
+        "statistics": "Top users"
       },
       "lpr-center": {
         "name": "LPR Center"

@@ -11,9 +11,15 @@ export type GroupType = "watchlist" | "plate" | "checkpoint";
 
 type Props = {
   group_type: GroupType;
+  /*
+    Passed down rather than read from usePermission here: the same component
+    backs three pages (person / plate / checkpoint watch lists) and each has
+    its own permission group key.
+  */
+  canEdit: boolean;
 };
 
-const ManageGroup = ({ group_type }: Props) => {
+const ManageGroup = ({ group_type, canEdit }: Props) => {
   const [refreshGroupListKey, setRefreshGroupListKey] = useState(0);
   const [selectedGroup, setSelectedGroup] =
     useState<WatchlistGroup | null>(null);
@@ -40,6 +46,7 @@ const ManageGroup = ({ group_type }: Props) => {
         group_type={group_type}
         selectedGroupId={selectedGroup?.group_id ?? null}
         refreshKey={refreshGroupListKey}
+        canEdit={canEdit}
         onSelectChanged={handleSelectChange}
       />
 
@@ -48,6 +55,7 @@ const ManageGroup = ({ group_type }: Props) => {
         group_id={selectedGroup?.group_id ?? null}
         userList={selectedUserIds}
         isDisable={!selectedGroup}
+        canEdit={canEdit}
         onDataChange={handleDataChange}
       />
     </Box>

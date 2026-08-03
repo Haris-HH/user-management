@@ -37,6 +37,10 @@ type Props = {
   onTabSelectChange: (tabIndex: number) => void;
   data: User[];
   userSelected: string[];
+  /** "edit" on add-approve-user; at "active" approve/reject/delete are hidden. */
+  canEdit: boolean;
+  /** `prints["add-approve-user"]`; gates the PDF and Excel buttons. */
+  canPrint: boolean;
   onDelete: () => void;
   onApprove: (data: ActivationConfirmData) => void;
   onReject: () => void;
@@ -45,9 +49,11 @@ type Props = {
 
 const ApproveActionBar = ({
   tab,
-  onTabSelectChange, 
+  onTabSelectChange,
   data,
   userSelected,
+  canEdit,
+  canPrint,
   onDelete,
   onApprove,
   onReject,
@@ -246,6 +252,7 @@ const ApproveActionBar = ({
       </Tabs>
 
       <Box className="flex gap-2 ml-2">
+        {canPrint && (
         <Button
           variant="outlined"
           sx={{
@@ -272,6 +279,8 @@ const ApproveActionBar = ({
         >
           {t('button.export')}
         </Button>
+        )}
+        {canPrint && (
         <Button
           variant="outlined"
           sx={{
@@ -298,6 +307,9 @@ const ApproveActionBar = ({
         >
           {t('button.export')}
         </Button>
+        )}
+        {/* Approve / reject / pending / delete all mutate - "edit" only. */}
+        {canEdit && (
         <>
           {
             tab === 1 && (
@@ -429,20 +441,21 @@ const ApproveActionBar = ({
               </Button>
             )
           }
+          <Button
+            sx={{
+              height: "35px",
+              minWidth: "30px",
+            }}
+            disabled={!hasSelectedUser}
+            onClick={handleDeleteClick}
+          >
+            <FaTrash
+              color={!hasSelectedUser ? "var(--trash-icon)" : "var(--trash-active-icon)"}
+              size={20}
+            />
+          </Button>
         </>
-        <Button
-          sx={{
-            height: "35px",
-            minWidth: "30px",
-          }}
-          disabled={!hasSelectedUser}
-          onClick={handleDeleteClick}
-        >
-          <FaTrash
-            color={!hasSelectedUser ? "var(--trash-icon)" : "var(--trash-active-icon)"}
-            size={20}
-          />
-        </Button>
+        )}
       </Box>
 
       {

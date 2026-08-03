@@ -9,9 +9,21 @@ import usePageTitle from "../hooks/usePageTitle";
 import MainTitle from "../components/main-title/MainTitle";
 import ManageGroup from "../components/manage-group/ManageGroup";
 
+// Hooks
+import { usePermission } from "../hooks/usePermission";
+
+// Constants
+import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
+
 const ManageWatchListPerson = () => {
   // i18n
   const { t } = useTranslation();
+
+  // Permission
+  const { canEdit } = usePermission(
+    USER_MANAGEMENT_UI_KEY,
+    "manage-watch-list-person"
+  );
 
   // Set Page Title
   usePageTitle(t("pages.manage-watch-list-person"));
@@ -21,7 +33,7 @@ const ManageWatchListPerson = () => {
       <Box className="p-6 flex flex-col gap-4">
         <MainTitle title={t("pages.manage-watch-list-person")} />
 
-        <ManageGroup group_type="watchlist" />
+        <ManageGroup group_type="watchlist" canEdit={canEdit} />
       </Box>
     </section>
   );

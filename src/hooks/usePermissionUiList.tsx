@@ -195,12 +195,6 @@ const usePermissionUiList = () => {
             edit: false,
           },
           {
-            key: "manage-lpr-center-group",
-            name: t("permission.ui.user-management.manage-lpr-center-group"),
-            active: false,
-            edit: false,
-          },
-          {
             key: "manage-user",
             name: t("permission.ui.user-management.manage-user"),
             active: false,

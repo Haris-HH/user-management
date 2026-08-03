@@ -30,7 +30,6 @@
     "manage-watch-list-checkpoint": "จัดการกลุ่มด่านตรวจเฝ้าระวัง",
     "manage-checkpoint-group": "จัดการกลุ่มด่านตรวจ",
     "statistics": "สถิติการเข้าใช้",
-    "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center",
     "not-found": "ไม่พบหน้าที่ค้นหา"
   },
   "not-found": {
@@ -54,8 +53,7 @@
     "manage-watch-list-plate": "จัดการกลุ่มทะเบียนเฝ้าระวัง",
     "manage-watch-list-checkpoint": "จัดการกลุ่มด่านตรวจเฝ้าระวัง",
     "manage-checkpoint-group": "จัดการกลุ่มด่านตรวจ",
-    "statistics": "ผู้ใช้งานสูงสุด",
-    "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center"
+    "statistics": "ผู้ใช้งานสูงสุด"
   },
   "button": {
     "login": "เข้าสู่ระบบ",
@@ -349,8 +347,7 @@
         "manage-watch-list-plate": "จัดการกลุ่มทะเบียนเฝ้าระวัง",
         "manage-watch-list-checkpoint": "จัดการกลุ่มด่านตรวจเฝ้าระวัง",
         "manage-checkpoint-group": "จัดการกลุ่มด่านตรวจ",
-        "statistics": "ผู้ใช้งานสูงสุด",
-        "manage-lpr-center-group": "จัดการกลุ่มสิทธิ์ LPR Center"
+        "statistics": "ผู้ใช้งานสูงสุด"
       },
       "lpr-center": {
         "name": "LPR Center"

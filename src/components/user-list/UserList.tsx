@@ -59,6 +59,8 @@ type Prop = {
   userList: string[];
   isDisable: boolean;
   group_id: string | null;
+  /** "edit" on the owning page; at "active" the list is read-only. */
+  canEdit: boolean;
   onDataChange: () => void;
 }
 
@@ -66,6 +68,7 @@ const UserList = ({
   userList,
   isDisable = true,
   group_id,
+  canEdit,
   onDataChange,
 }: Prop) => {
   // i18n
@@ -342,6 +345,10 @@ const UserList = ({
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
+  /* The delete column only exists at "edit", so skeleton rows and the
+     empty-state row have to follow it. */
+  const columnCount = canEdit ? 6 : 5;
+
   return (
     <section id="user-list">
       { isLoading && <LoadingScreen /> }
@@ -354,30 +361,32 @@ const UserList = ({
             {t("text.user-list")}
           </Typography>
 
-          <Button
-            variant="contained"
-            sx={{
-              width: 140,
-              height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
-              "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
-              },
-              textTransform: "capitalize",
-              "&.Mui-disabled": {
+          {canEdit && (
+            <Button
+              variant="contained"
+              sx={{
+                width: 140,
+                height: 35,
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
-                opacity: 0.5,
-                cursor: "not-allowed"
-              },
-            }}
-            startIcon={<AddIcon />}
-            onClick={() => setIsAddUserOpen(true)}
-            disabled={isDisable}
-          >
-            {t("button.add-user-2")}
-          </Button>
+                "&:hover": {
+                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                },
+                textTransform: "capitalize",
+                "&.Mui-disabled": {
+                  backgroundColor: "var(--primary-color)",
+                  color: "var(--tertiary-color)",
+                  opacity: 0.5,
+                  cursor: "not-allowed"
+                },
+              }}
+              startIcon={<AddIcon />}
+              onClick={() => setIsAddUserOpen(true)}
+              disabled={isDisable}
+            >
+              {t("button.add-user-2")}
+            </Button>
+          )}
         </Box>
 
         <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
@@ -433,25 +442,27 @@ const UserList = ({
                   <TableCell sx={{ width: "20%", textAlign: "center" }}>
                     {t("table.header.user-group")}
                   </TableCell>
-                  <TableCell sx={{ width: "10%", textAlign: "center" }}>
-                    <IconButton onClick={() => handleDeleteAllUsers()}>
-                      <DeleteIcon 
-                        sx={{ 
-                          fontSize: 20, 
-                          color: selectedUsers.length > 0 ? "var(--trash-active-icon)" : "var(--trash-icon)",
-                          "&:hover": {
-                            scale: 1.3,
-                          }
-                        }} 
-                        />
-                    </IconButton>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell sx={{ width: "10%", textAlign: "center" }}>
+                      <IconButton onClick={() => handleDeleteAllUsers()}>
+                        <DeleteIcon
+                          sx={{
+                            fontSize: 20,
+                            color: selectedUsers.length > 0 ? "var(--trash-active-icon)" : "var(--trash-icon)",
+                            "&:hover": {
+                              scale: 1.3,
+                            }
+                          }}
+                          />
+                      </IconButton>
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {isDataLoading && (
-                  <TableSkeleton headerColumn={6} />
+                  <TableSkeleton headerColumn={columnCount} />
                 )}
                 {filterSelectedUsers.length > 0 ? (
                   filterSelectedUsers.map((user, index) => {
@@ -474,19 +485,21 @@ const UserList = ({
                         <TableCell align="center">{user.ou_name || "-"}</TableCell>
                         <TableCell align="center">{formatPhone(user.phone) || "-"}</TableCell>
                         <TableCell align="center">{user.user_group_name || "-"}</TableCell>
-                        <TableCell align="center">
-                          <IconButton onClick={() => handleDeleteUser(user.user_id)}>
-                            <DeleteIcon 
-                              sx={{ 
-                                fontSize: 20, 
-                                color: "var(--trash-active-icon)",
-                                "&:hover": {
-                                  scale: 1.3,
-                                }
-                              }} 
-                            />
-                          </IconButton>
-                        </TableCell>
+                        {canEdit && (
+                          <TableCell align="center">
+                            <IconButton onClick={() => handleDeleteUser(user.user_id)}>
+                              <DeleteIcon
+                                sx={{
+                                  fontSize: 20,
+                                  color: "var(--trash-active-icon)",
+                                  "&:hover": {
+                                    scale: 1.3,
+                                  }
+                                }}
+                              />
+                            </IconButton>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })
@@ -498,7 +511,7 @@ const UserList = ({
                       }
                     }}
                   >
-                    <TableCell colSpan={6} align="center" sx={{ color: "var(--secondary-color)" }}>
+                    <TableCell colSpan={columnCount} align="center" sx={{ color: "var(--secondary-color)" }}>
                       {t("text.no-data")}
                     </TableCell>
                   </TableRow>

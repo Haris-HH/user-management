@@ -54,6 +54,8 @@ type Props = {
   group_type: GroupType;
   selectedGroupId: string | null;
   refreshKey: number;
+  /** "edit" on the owning page; at "active" the list is read-only. */
+  canEdit: boolean;
   onSelectChanged: (group: WatchlistGroup | null) => void;
 };
 
@@ -61,6 +63,7 @@ const GroupList = ({
   group_type,
   selectedGroupId,
   refreshKey,
+  canEdit,
   onSelectChanged,
 }: Props) => {
   const { t } = useTranslation();
@@ -89,6 +92,10 @@ const GroupList = ({
   useEffect(() => {
     onSelectChangedRef.current = onSelectChanged;
   }, [onSelectChanged]);
+
+  /* The delete column only exists at "edit", so skeleton rows and the
+     empty-state row have to follow it. */
+  const columnCount = canEdit ? 4 : 3;
 
   const filteredGroups = useMemo(() => {
     const keyword = formData.search.trim().toLowerCase();
@@ -234,24 +241,26 @@ const GroupList = ({
             {t("text.group-list")}
           </Typography>
 
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setIsAddGroupOpen(true)}
-            sx={{
-              width: t("button.add-group-size"),
-              height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
-              textTransform: "capitalize",
-              "&:hover": {
-                backgroundColor:
-                  "rgba(var(--primary-color-rgb), 0.8)",
-              },
-            }}
-          >
-            {t("button.add-group")}
-          </Button>
+          {canEdit && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setIsAddGroupOpen(true)}
+              sx={{
+                width: t("button.add-group-size"),
+                height: 35,
+                backgroundColor: "var(--primary-color)",
+                color: "var(--tertiary-color)",
+                textTransform: "capitalize",
+                "&:hover": {
+                  backgroundColor:
+                    "rgba(var(--primary-color-rgb), 0.8)",
+                },
+              }}
+            >
+              {t("button.add-group")}
+            </Button>
+          )}
         </Box>
 
         <Box className="flex flex-col gap-2 bg-(--main-bg-color) p-2">
@@ -305,15 +314,17 @@ const GroupList = ({
                     {t("table.header.member-count")}
                   </TableCell>
 
-                  <TableCell align="center" sx={{ width: "10%" }}>
-                    {t("table.header.delete")}
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell align="center" sx={{ width: "10%" }}>
+                      {t("table.header.delete")}
+                    </TableCell>
+                  )}
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {isDataLoading ? (
-                  <TableSkeleton headerColumn={4} />
+                  <TableSkeleton headerColumn={columnCount} />
                 ) : filteredGroups.length > 0 ? (
                   filteredGroups.map((group, index) => (
                     <TableRow
@@ -356,30 +367,32 @@ const GroupList = ({
                           : 0}
                       </TableCell>
 
-                      <TableCell align="center">
-                        <IconButton
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void handleDeleteGroup(group.group_id);
-                          }}
-                        >
-                          <DeleteIcon
-                            sx={{
-                              fontSize: 20,
-                              color: "var(--trash-active-icon)",
-                              "&:hover": {
-                                transform: "scale(1.3)",
-                              },
+                      {canEdit && (
+                        <TableCell align="center">
+                          <IconButton
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleDeleteGroup(group.group_id);
                             }}
-                          />
-                        </IconButton>
-                      </TableCell>
+                          >
+                            <DeleteIcon
+                              sx={{
+                                fontSize: 20,
+                                color: "var(--trash-active-icon)",
+                                "&:hover": {
+                                  transform: "scale(1.3)",
+                                },
+                              }}
+                            />
+                          </IconButton>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={columnCount}
                       align="center"
                       sx={{
                         color: "var(--secondary-color)",

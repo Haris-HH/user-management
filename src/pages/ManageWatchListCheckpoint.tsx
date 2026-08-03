@@ -10,10 +10,20 @@ import { useTranslation } from 'react-i18next';
 
 // Hooks
 import usePageTitle from "../hooks/usePageTitle";
+import { usePermission } from "../hooks/usePermission";
+
+// Constants
+import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
 
 const ManageWatchListCheckpoint = () => {
   // i18n
   const { t } = useTranslation();
+
+  // Permission
+  const { canEdit } = usePermission(
+    USER_MANAGEMENT_UI_KEY,
+    "manage-watch-list-checkpoint"
+  );
 
   // Set Page Title
   usePageTitle(t('pages.manage-watch-list-checkpoint'));
@@ -24,7 +34,7 @@ const ManageWatchListCheckpoint = () => {
         {/* Main Title */}
         <MainTitle title={t('pages.manage-watch-list-checkpoint')} />
 
-        <ManageGroup group_type="checkpoint" />
+        <ManageGroup group_type="checkpoint" canEdit={canEdit} />
       </Box>
     </section>
   )
