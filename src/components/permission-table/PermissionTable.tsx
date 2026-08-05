@@ -388,7 +388,7 @@ const PermissionTable = ({
 
                             {editPermissionCount > 0 && (
                               <div className="bg-(--waiting-approve-bg-color) px-2 py-1 rounded-sm">
-                                <p className="text-xs text-(--tertiary-color)">
+                                <p className="text-xs text-black">
                                   {`${t(
                                     "table.header.can-visit-and-edit"
                                   )} : ${editPermissionCount}`}
@@ -575,8 +575,6 @@ const PermissionTable = ({
                             <TableRow
                               key={`${uiKey}-${groupKey}-${groupIndex}`}
                               sx={{
-                                backgroundColor:
-                                  "rgba(var(--primary-color-rgb), 0.3)",
                                 "& td": { border: "none" },
                                 "& .MuiTableCell-root": { fontSize: "14px" },
                               }}
@@ -599,7 +597,10 @@ const PermissionTable = ({
                                   }
                                   sx={{
                                     color: "var(--primary-color)",
-                                    "&.Mui-checked": {
+                                    "& .MuiSvgIcon-root": {
+                                      color: "var(--primary-color)",
+                                    },
+                                    "&.Mui-checked .MuiSvgIcon-root": {
                                       color: "var(--primary-color)",
                                     },
                                   }}
@@ -619,7 +620,10 @@ const PermissionTable = ({
                                   }
                                   sx={{
                                     color: "var(--primary-color)",
-                                    "&.Mui-checked": {
+                                    "& .MuiSvgIcon-root": {
+                                      color: "var(--primary-color)",
+                                    },
+                                    "&.Mui-checked .MuiSvgIcon-root": {
                                       color: "var(--primary-color)",
                                     },
                                   }}
@@ -633,7 +637,10 @@ const PermissionTable = ({
                                   onChange={() => handleTogglePrintPermission(uiKey, groupKey)}
                                   sx={{
                                     color: "var(--primary-color)",
-                                    "&.Mui-checked": {
+                                    "& .MuiSvgIcon-root": {
+                                      color: "var(--primary-color)",
+                                    },
+                                    "&.Mui-checked .MuiSvgIcon-root": {
                                       color: "var(--primary-color)",
                                     },
                                   }}

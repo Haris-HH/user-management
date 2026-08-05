@@ -63,7 +63,10 @@ export const LPR_CENTER_PERMISSION_TREE: readonly LprCenterPermissionNode[] = [
   {
     key: "lpr_watch",
     labelKey: "lpr-center-permission.lpr-watch",
-    children: [{ key: "wl_manage", labelKey: "lpr-center-permission.wl-manage" }],
+    children: [
+      { key: "wl_manage", labelKey: "lpr-center-permission.wl-manage" },
+      { key: "wl_person_manage", labelKey: "lpr-center-permission.wl-person-manage" },
+    ],
   },
   {
     key: "analysis",
