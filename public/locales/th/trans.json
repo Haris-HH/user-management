@@ -102,6 +102,7 @@
   },
   "text": {
     "app-version": "App Version",
+    "signed-in-elsewhere": "บัญชีนี้ถูกเข้าสู่ระบบจากที่อื่น ระบบจึงออกจากระบบนี้ให้อัตโนมัติ",
     "search-condition": "เงื่อนไขการค้นหา",
     "username": "Username",
     "information": "ข้อมูลส่วนตัว",

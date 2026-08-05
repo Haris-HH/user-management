@@ -34,6 +34,8 @@ import { getTitle, getAgency } from "../features/dropdown/api/DropdownApi";
 
 // Utils
 import { PopupMessage } from "../utils/popupMessage";
+import { consumeLogoutReason } from "../utils/logoutReason";
+import type { LogoutReason } from "../utils/logoutReason";
 
 // Store
 import { useAppDispatch } from "../store/hooks";
@@ -62,6 +64,12 @@ const Login = () => {
   const [introDone, setIntroDone] = useState(prefersReducedMotion);
   const [skipIntro, setSkipIntro] = useState(prefersReducedMotion);
   const [loading, setLoading] = useState(false);
+
+  /*
+    อ่านครั้งเดียวตอน mount แล้วค่าจะถูกล้างทิ้ง ถ้าเข้าหน้านี้เองโดยไม่ได้ถูกไล่
+    ออกมาก็จะได้ null และไม่มีอะไรแสดง
+  */
+  const [endedReason] = useState<LogoutReason | null>(consumeLogoutReason);
 
   // Form Data
   const [formData, setFormData] = useState<FormData>({
@@ -227,6 +235,31 @@ const Login = () => {
       </AnimatePresence>
 
       {/* LOGIN CARD */}
+      <div className="flex flex-col items-center gap-3 z-30">
+      {/*
+        บอกว่าทำไมถึงกลับมาอยู่หน้า login - ไม่งั้นการถูกไล่ออกจากระบบเพราะมีการ
+        เข้าใช้งานบัญชีเดียวกันที่อื่น จะดูไม่ต่างจาก session หมดอายุตามปกติ
+      */}
+      {endedReason === "signed-in-elsewhere" && (
+        <motion.p
+          role="status"
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : -12 }}
+          animate={{
+            opacity: introDone ? 1 : 0,
+            y: introDone || prefersReducedMotion ? 0 : -12,
+          }}
+          transition={{ duration: MOTION_DURATION.slow / 1000 }}
+          className="w-122 px-4 py-2.5 rounded-lg text-center text-sm"
+          style={{
+            backgroundColor: "rgba(var(--tertiary-color-rgb), 0.8)",
+            border: "1px solid var(--primary-color)",
+            color: "var(--primary-color)",
+          }}
+        >
+          {t("text.signed-in-elsewhere")}
+        </motion.p>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 40 }}
         animate={{
@@ -351,6 +384,7 @@ const Login = () => {
           </Typography>
         </div>
       </motion.div>
+      </div>
     </section>
   );
 };

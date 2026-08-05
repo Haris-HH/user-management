@@ -103,6 +103,7 @@
   },
   "text": {
     "app-version": "App Version",
+    "signed-in-elsewhere": "This account was signed in elsewhere, so this session was ended.",
     "search-condition": "Search Condition",
     "username": "Username",
     "information": "Information",
