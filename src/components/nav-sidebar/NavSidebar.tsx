@@ -17,7 +17,7 @@ import type { DockItem } from "../../hooks/useDockItems";
 
 // Hooks
 import { useDockItems, isDockItemActive } from "../../hooks/useDockItems";
-import { useNavPosition, NAV_SIDEBAR_WIDTH } from "../../hooks/useNavPosition";
+import { useNavPosition, NAV_SIDEBAR_WIDTH, NAV_DESKTOP_BREAKPOINT } from "../../hooks/useNavPosition";
 
 // i18n
 import { useTranslation } from "react-i18next";
@@ -87,7 +87,7 @@ const NavSidebar = () => {
   // i18n
   const { t } = useTranslation();
 
-  const isDesktop = useMediaQuery("(min-width:1024px)");
+  const isDesktop = useMediaQuery(`(min-width:${NAV_DESKTOP_BREAKPOINT}px)`);
 
   /* `top` only reaches this component on mobile, where it opens from the left. */
   const anchor = navPosition === "right" ? "right" : "left";

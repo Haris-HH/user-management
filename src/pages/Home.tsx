@@ -48,7 +48,7 @@ const Home = () => {
   };
 
   return (
-    <section id="home" className="h-full w-full">
+    <section id="home" className="h-full w-full overflow-y-auto">
       <div className="grid h-full grid-cols-2 [@media(max-height:780px)]:grid-cols-1 gap-4 p-4">
         {dockItems.filter((item) => item.subMenu).map((item, index) => {
           const isHovered = hovered?.index === index;

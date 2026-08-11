@@ -501,12 +501,12 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           const posRow = getCellValue(row, "table.header.position");
           const ouRow = getCellValue(row, "table.header.agency");
 
-          const ouData = agencyMap.get(normalizeText(ouRow));
-          const bhData = bhMap.get(normalizeText(bhRow));
-          const bkData = bkMap.get(normalizeText(bkRow));
-          const orgData = orgMap.get(normalizeText(orgRow));
-          const titleData = titleMap.get(normalizeText(prefixRow));
-          const positionData = positionMap.get(normalizeText(posRow));
+          const ouData = agencyMap.get(normalizeText(ouRow  === "-" ? "" : ouRow));
+          const bhData = bhMap.get(normalizeText(bhRow === "-" ? "" : bhRow));
+          const bkData = bkMap.get(normalizeText(bkRow === "-" ? "" : bkRow));
+          const orgData = orgMap.get(normalizeText(orgRow === "-" ? "" : orgRow));
+          const titleData = titleMap.get(normalizeText(prefixRow === "-" ? "" : prefixRow));
+          const positionData = positionMap.get(normalizeText(posRow === "-" ? "" : posRow));
 
           const nationalId = normalizeNationalId(
             getCellValue(row, "table.header.pid")
@@ -530,13 +530,15 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
 
           const errorDetail: string[] = [];
 
-          if (!bhData) {
+          const isPoliceOu = ouData?.ou_code === "police";
+
+          if (isPoliceOu && !bhData) {
             errorDetail.push(t("text.invalid-bh"));
           }
-          if (!bkData) {
+          if (isPoliceOu && !bkData) {
             errorDetail.push(t("text.invalid-bk"));
           }
-          if (!orgData) {
+          if (isPoliceOu && !orgData) {
             errorDetail.push(t("text.invalid-org"));
           }
 
@@ -1089,29 +1091,30 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   <TableHead>
                     <TableRow>
                       {[
-                        "",
-                        t("table.header.no"),
-                        t("table.header.pid"),
-                        t("table.header.prefix"),
-                        t("table.header.first-name"),
-                        t("table.header.last-name"),
-                        t("table.header.position"),
-                        t("table.header.agency"),
-                        t("table.header.bh"),
-                        t("table.header.bk"),
-                        t("table.header.org"),
-                        t("table.header.email"),
-                        t("table.header.mobile"),
-                      ].map((header, index) => (
+                        { label: "" },
+                        { label: t("table.header.no") },
+                        { label: t("table.header.pid"), minWidth: 160 },
+                        { label: t("table.header.prefix"), minWidth: 120 },
+                        { label: t("table.header.first-name"), minWidth: 120 },
+                        { label: t("table.header.last-name"), minWidth: 120 },
+                        { label: t("table.header.position"), minWidth: 120 },
+                        { label: t("table.header.agency"), minWidth: 120 },
+                        { label: t("table.header.bh"), minWidth: 120 },
+                        { label: t("table.header.bk"), minWidth: 120 },
+                        { label: t("table.header.org"), minWidth: 120 },
+                        { label: t("table.header.email"), minWidth: 120 },
+                        { label: t("table.header.mobile"), minWidth: 160 },
+                      ].map(({ label, minWidth }, index) => (
                         <TableCell
-                          key={`${header}-${index}`}
+                          key={`${label}-${index}`}
                           align="center"
                           sx={{
                             color: "var(--tertiary-color)",
                             backgroundColor: "var(--primary-color)",
+                            ...(minWidth && { minWidth }),
                           }}
                         >
-                          {header}
+                          {label}
                         </TableCell>
                       ))}
                     </TableRow>
