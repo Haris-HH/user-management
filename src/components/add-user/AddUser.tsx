@@ -33,6 +33,7 @@ import { useTranslation } from "react-i18next";
 
 // Utils
 import { capitalizeWords, formatPhone, formatThaiID } from "../../utils/commonFunctions";
+import { PopupMessage } from "../../utils/popupMessage";
 
 const initialFormData: FormData = {
   pid: "",
@@ -47,14 +48,21 @@ const initialFormData: FormData = {
 type Props = {
   open: boolean;
   onClose: () => void;
-  selectedUserIds?: string[];
+  // The already-selected users arrive as whole rows, not just ids: the dialog
+  // has to hand every checked user back on save, including ones sitting on a
+  // page the table never loaded, and an id alone can't rebuild a row.
+  selectedUsers?: User[];
   onSave?: (users: User[]) => void;
 };
+
+// "Select all" walks every page of the current search, so it asks for far
+// bigger pages than the table itself uses.
+const SELECT_ALL_PAGE_LIMIT = 1500;
 
 const AddUser = ({
   open,
   onClose,
-  selectedUserIds = [],
+  selectedUsers = [],
   onSave,
 }: Props) => {
   // i18n
@@ -63,12 +71,21 @@ const AddUser = ({
   // State
   const [isSearchFilterOpen, setIsSearchFilterOpen] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
-  const [selectAll, setSelectAll] = useState(false);
+  const [isSelectingAll, setIsSelectingAll] = useState(false);
+  // Set once "select all" has pulled every page, so the header checkbox stays
+  // ticked while the user pages through the result.
+  const [allPagesSelected, setAllPagesSelected] = useState(false);
 
   // Data
   const [userData, setUserData] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
-  const [memberChecked, setMemberChecked] = useState<string[]>([]);
+
+  // Checked users are kept as whole rows keyed by id rather than as a list of
+  // ids: a selection spans pages `userData` no longer holds, so the rows on
+  // screen are not enough to rebuild what has to be saved.
+  const [memberChecked, setMemberChecked] = useState<Map<string, User>>(
+    new Map()
+  );
 
   // Pagination
   const [totalPages, setTotalPages] = useState(1);
@@ -119,9 +136,18 @@ const AddUser = ({
   );
 
   const selectedUserIdSet = useMemo(
-    () => new Set(selectedUserIds),
-    [selectedUserIds]
+    () => new Set(selectedUsers.map((user) => user.user_id)),
+    [selectedUsers]
   );
+
+  // Ticked once every page is covered; otherwise it falls back to "is this
+  // page fully ticked" so the box still reflects a manual page selection.
+  const selectAll =
+    allPagesSelected ||
+    (userData.length > 0 &&
+      userData.every((user) => memberChecked.has(user.user_id)));
+
+  const isIndeterminate = !selectAll && memberChecked.size > 0;
 
   const getFilters = useCallback(
     (filterData: FormData, pageData: number, limit: number) => {
@@ -254,24 +280,23 @@ const AddUser = ({
     })();
   }, [open, formData, page, fetchData]);
 
-  // Synchronizes local, user-editable checkbox state from the
-  // selectedUserIds/userData props/state whenever they change (e.g. dialog
-  // reopened, page changed). This is a deliberate "adjust state from props"
-  // sync, not a derived value, since the user can further toggle checkboxes
-  // independently afterwards — eslint-disable is intentional here.
+  // Re-seeds the user-editable checkbox state from the incoming selection when
+  // the dialog opens or that selection changes. This is a deliberate "adjust
+  // state from props" sync, not a derived value, since the user toggles
+  // checkboxes independently afterwards — eslint-disable is intentional here.
+  //
+  // NOTE: it must NOT depend on `userData`. It used to, which meant every page
+  // change reset the checkboxes back to the incoming selection and made a
+  // selection spanning pages impossible to build.
   useEffect(() => {
     if (!open) return;
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMemberChecked(selectedUserIds);
-
-    const selectedSet = new Set(selectedUserIds);
-
-    setSelectAll(
-      userData.length > 0 &&
-      userData.every(user => selectedSet.has(user.user_id))
+    setMemberChecked(
+      new Map(selectedUsers.map((user) => [user.user_id, user]))
     );
-  }, [open, selectedUserIds, userData]);
+    setAllPagesSelected(false);
+  }, [open, selectedUsers]);
 
   const handlePageChange = (
     event: React.ChangeEvent<unknown>,
@@ -282,28 +307,82 @@ const AddUser = ({
     setPage(newPage);
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
+  // Walks every page of the current search so the checked set covers rows the
+  // table never loaded — the backend caps a page at 1500 rows.
+  const fetchAllMatchingUsers = useCallback(async () => {
+    const collected: User[] = [];
 
-    if (checked) {
-      setMemberChecked((prev) =>
-        Array.from(new Set([...prev, ...userData.map((item) => item.user_id)]))
-      );
+    let currentPage = 1;
+
+    for (;;) {
+      const res = await searchUserApi(undefined, {
+        ...getFilters(formData, currentPage, SELECT_ALL_PAGE_LIMIT),
+      });
+
+      const users = res.data ?? [];
+
+      if (users.length === 0) break;
+
+      collected.push(...users);
+
+      const maxPage = res.pagination?.maxPage ?? 1;
+
+      if (currentPage >= maxPage) break;
+
+      currentPage++;
+    }
+
+    return mapUserDataRows(collected);
+  }, [formData, getFilters, mapUserDataRows]);
+
+  const handleSelectAll = async (checked: boolean) => {
+    // Unticking clears the whole selection, not just this page — the box
+    // stands for every row behind the current search.
+    if (!checked) {
+      setAllPagesSelected(false);
+      setMemberChecked(new Map());
       return;
     }
 
-    setMemberChecked((prev) =>
-      prev.filter((id) => !userData.some((user) => user.user_id === id))
-    );
+    try {
+      setIsSelectingAll(true);
+
+      const allUsers = await fetchAllMatchingUsers();
+
+      setMemberChecked((prev) => {
+        const next = new Map(prev);
+
+        allUsers.forEach((user) => next.set(user.user_id, user));
+
+        return next;
+      });
+
+      setAllPagesSelected(true);
+    }
+    catch {
+      await PopupMessage(t("popup.fetch-error"), "", "error");
+    }
+    finally {
+      setIsSelectingAll(false);
+    }
   };
 
-  const handleCheckMember = (userId: string, checked: boolean) => {
+  const handleCheckMember = (user: User, checked: boolean) => {
+    // Any manual untick means the selection is no longer "everything".
+    if (!checked) {
+      setAllPagesSelected(false);
+    }
+
     setMemberChecked((prev) => {
+      const next = new Map(prev);
+
       if (checked) {
-        return Array.from(new Set([...prev, userId]));
+        next.set(user.user_id, user);
+      } else {
+        next.delete(user.user_id);
       }
 
-      return prev.filter((id) => id !== userId);
+      return next;
     });
   };
 
@@ -313,8 +392,8 @@ const AddUser = ({
     setUserData([]);
     setTotalUsers(0);
     setTotalPages(1);
-    setSelectAll(false);
-    setMemberChecked([]);
+    setAllPagesSelected(false);
+    setMemberChecked(new Map());
     setIsSearchFilterOpen(false);
   };
 
@@ -330,18 +409,12 @@ const AddUser = ({
   const handleSearch = (data: FormData) => {
     setFormData(data);
     setPage(1);
+    // A new search means a different "all", so the flag can't carry over.
+    setAllPagesSelected(false);
   };
 
   const handleSave = () => {
-    const selectedMap = new Map<string, User>();
-
-    userData.forEach((user) => {
-      if (memberChecked.includes(user.user_id)) {
-        selectedMap.set(user.user_id, user);
-      }
-    });
-
-    onSave?.(Array.from(selectedMap.values()));
+    onSave?.(Array.from(memberChecked.values()));
   };
 
   return (
@@ -355,6 +428,8 @@ const AddUser = ({
         <div className="flex justify-between items-end">
           <p className="text-[14px] text-(--secondary-color) font-medium">
             {`${totalUsers} ${t("text.list")}`}
+            {memberChecked.size > 0 &&
+              ` | ${t("text.select")} ${memberChecked.size} ${t("text.list")}`}
           </p>
 
           <Button
@@ -438,7 +513,9 @@ const AddUser = ({
                 <TableCell align="center" sx={{ padding: 0, width: "5%" }}>
                   <Checkbox
                     checked={selectAll}
-                    onChange={(event) => handleSelectAll(event.target.checked)}
+                    indeterminate={isIndeterminate}
+                    disabled={isSelectingAll}
+                    onChange={(event) => void handleSelectAll(event.target.checked)}
                     sx={{
                       color: "var(--tertiary-color)",
                       "&.Mui-checked": {
@@ -451,7 +528,7 @@ const AddUser = ({
             </TableHead>
 
             <TableBody>
-              {isDataLoading ? (
+              {isDataLoading || isSelectingAll ? (
                 <TableSkeleton headerColumn={10} />
               ) : userData.length > 0 ? (
                 userData.map((item, index) => {
@@ -462,7 +539,7 @@ const AddUser = ({
                   );
 
                   const isAlreadySelected = selectedUserIdSet.has(item.user_id);
-                  const isChecked = memberChecked.includes(item.user_id);
+                  const isChecked = memberChecked.has(item.user_id);
                   const agencyData = item.ou_code ? agencyMap.get(item.ou_code) : undefined;
                   const internalPolice = agencyData?.ou_codename === "police" || false;
                   return (
@@ -496,7 +573,7 @@ const AddUser = ({
                         <Checkbox
                           checked={isChecked}
                           onChange={(event) =>
-                            handleCheckMember(item.user_id, event.target.checked)
+                            handleCheckMember(item, event.target.checked)
                           }
                           sx={{
                             color: isAlreadySelected
@@ -600,7 +677,7 @@ const AddUser = ({
                   opacity: 0.5,
                 },
               }}
-              disabled={memberChecked.length === 0}
+              disabled={memberChecked.size === 0 || isSelectingAll}
               onClick={handleSave}
             >
               {t("button.save")}

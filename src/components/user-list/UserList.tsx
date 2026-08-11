@@ -98,11 +98,6 @@ const UserList = ({
   const title = useSelector((state: RootState) => state.dropdown.title);
   const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
 
-  const selectedUserIds = useMemo(
-    () => selectedUsers.map((user) => user.user_id),
-    [selectedUsers]
-  );
-
   const filterSelectedUsers = useMemo(() => {
     const keyword = formData.search.trim().toLowerCase();
 
@@ -525,7 +520,7 @@ const UserList = ({
       {isAddUserOpen && (
         <AddUser
           open={isAddUserOpen}
-          selectedUserIds={selectedUserIds}
+          selectedUsers={selectedUsers}
           onSave={handleSaveUsers}
           onClose={() => setIsAddUserOpen(false)}
         />

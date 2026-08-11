@@ -513,7 +513,7 @@ const CheckpointList = ({
         isAddCheckpointOpen && (
           <AddCheckpoint
             open={isAddCheckpointOpen}
-            selectedCheckpointIds={selectedCheckpointIds}
+            selectedCheckpoints={selectedCheckpoints}
             onSave={handleSaveCheckpoint}
             onClose={() => setIsAddCheckpointOpen(false)}
           />

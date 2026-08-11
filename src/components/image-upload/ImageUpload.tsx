@@ -149,7 +149,7 @@ const ImageUpload = ({ initialImage, onImageChange, onImageDelete }: Props) => {
         }
       </Box>
       {
-        isFileOverSize && (<label className="text-[#9F0C0C] text-xs mt-2">{`*${t('text.upload-image-not-over-2-mb')}`}</label>)
+        isFileOverSize && (<label className="text-(--danger-color) text-xs mt-2">{`*${t('text.upload-image-not-over-2-mb')}`}</label>)
       }
     </Box>
   )

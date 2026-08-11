@@ -17,7 +17,7 @@ There is no test framework configured in this project.
 
 `.env` (Vite, all vars must be `VITE_`-prefixed):
 
-- `VITE_API_BASE_URL` — gateway base, e.g. `https://nsb-core.local/api/v0`
+- `VITE_API_BASE_URL` — gateway base, e.g. `https://nsb-api.corelpr.com/api/v0`
 - `VITE_API_SERVICE_CHANNEL` — sent as the `x-service-channel` header on every request and used to filter SSE events; currently `user-management`
 - `VITE_IS_DEV` — when truthy, `DropdownApi`, `CoreDataApi`, and `UsageChartApi` short-circuit to the fixtures in `src/mocks/` instead of hitting the network. Set it when the backend is unavailable.
 

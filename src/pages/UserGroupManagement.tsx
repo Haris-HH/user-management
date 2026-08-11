@@ -46,7 +46,7 @@ import { useTranslation } from "react-i18next";
 import type { RootState } from "../store/store";
 
 // API
-import { getCameras, getPoliceStation } from "../features/dropdown/api/DropdownApi";
+import { getPoliceStation } from "../features/dropdown/api/DropdownApi";
 import {
   createUserGroup,
   updateUserGroup,
@@ -54,7 +54,8 @@ import {
   deleteUserGroup,
 } from "../features/users/api/UsersApi";
 import {
-  getCameraGroup,
+  getAllCameraGroup,
+  getCamerasByIds,
 } from "../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -177,7 +178,7 @@ const UserGroupManagement = () => {
     try {
       beginLoading();
 
-      const cameraGroupResponse = await getCameraGroup({
+      const cameraGroupResponse = await getAllCameraGroup({
         filter: "deleted=false",
       });
 
@@ -200,11 +201,7 @@ const UserGroupManagement = () => {
         return;
       }
 
-      const cameraResponse = await getCameras({
-        filter: `camera_id=${allCameraIds.join("|")}`,
-      });
-
-      const cameras = cameraResponse?.data ?? [];
+      const cameras = await getCamerasByIds(allCameraIds);
 
       const allPoliceStationIds = [
         ...new Set(

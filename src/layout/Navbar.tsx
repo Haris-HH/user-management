@@ -611,7 +611,6 @@ const Navbar = () => {
                   mt: 1,
                   minWidth: 240,
                   borderRadius: "16px",
-                  opacity: 0.8,
                   backgroundColor: "var(--tertiary-color)",
                   boxShadow: "0 8px 24px rgba(var(--secondary-color-rgb), 0.15)",
                   border: "1px solid rgba(var(--secondary-color-rgb), 0.18)",

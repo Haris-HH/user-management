@@ -708,13 +708,13 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
       case WAITING_STATE:
         return { color: "var(--secondary-color)", bgColor: "var(--tertiary-color-rgb)" };
       case SUCCESS_STATE:
-        return { color: "var(--tertiary-color)", bgColor: "#F1FBE4" };
+        return { color: "#1A1A1A", bgColor: "#F1FBE4" };
       case SAVE_BUT_NOT_APPROVE_STATE:
-        return { color: "var(--tertiary-color)", bgColor: "#F9DFDF" };
+        return { color: "#1A1A1A", bgColor: "#F9DFDF" };
       case SUSPEND_STATE:
-        return { color: "var(--tertiary-color)", bgColor: "#FEBE43" };
+        return { color: "#1A1A1A", bgColor: "#FEBE43" };
       default:
-        return { color: "var(--tertiary-color)", bgColor: "#BDBDBD" };
+        return { color: "#1A1A1A", bgColor: "#BDBDBD" };
     }
   };
 

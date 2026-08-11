@@ -66,6 +66,12 @@ function buildTheme(
       "--tertiary-color-rgb": hex2rgb(tertiaryColor),
 
       "--text-color": isDark ? "white" : "black",
+
+      // Fixed-severity color for warning/error copy shown on non-themed
+      // (semantic) backgrounds — needs its own light/dark variant since a
+      // single hue can't hit 4.5:1 against both a near-white and a
+      // near-black body bg.
+      "--danger-color": isDark ? "#FF6B6B" : "#9F0C0C",
     },
   };
 }
@@ -124,7 +130,7 @@ const themes = {
     '#FFF0E6',  // Linen
     '#E04A00',  // Orange Pantone
     '#7A2500',  // Dark Burnt Orange (accentSoft — was pale Copper #CF8B64)
-    '#EAD0C0',  // Dust Storm
+    '#F3E5DC',  // Dust Storm, lightened (was #EAD0C0 — only 2.77:1 against primary, failed AA UI-contrast for on-primary button text)
   ),
 
   pacific: buildTheme(
@@ -133,7 +139,7 @@ const themes = {
     '#EEF4F8',  // Light Blue Tint
     '#2E7EC0',  // Carolina Blue
     '#0F3860',  // Deep Navy (accentSoft — was Sea Serpent #53BAC1)
-    '#C0D8EE',  // Light Blue
+    '#D3E4F3',  // Light Blue, lightened (was #C0D8EE — only 2.94:1 against primary, failed AA UI-contrast for on-primary button text)
   ),
 
   crimson: buildTheme(
@@ -200,7 +206,7 @@ const themes = {
     '#2E2E32',  // Onyx
     '#3C9CB0',  // Queen Blue
     '#C8C8C5',  // Bright Taupe (accentSoft — was dark Taupe Gray #8D8C8A)
-    '#404044',  // Dim Gray
+    '#3E3E42',  // Dim Gray, darkened slightly (was #404044 — only 3.23:1 against primary, just under AA UI-contrast for on-primary button text)
     true,
   ),
 
@@ -240,7 +246,7 @@ const themes = {
     '#1C1A2E',  // Very dark indigo (body bg)
     '#5B4CF7',  // Vibrant purple (accent: buttons, active, glow)
     '#C6F754',  // Bright lime (accentSoft: titles, nav labels — 14:1 on dark bg)
-    '#272440',  // Dark purple panel
+    '#151323',  // Dark purple panel, darkened (was #272440 — only 2.71:1 against primary, failed AA UI-contrast for on-primary button text)
     true,
   ),
 };
@@ -287,6 +293,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       '--tertiary-color': theme.colors['--tertiary-color'],
       '--tertiary-color-rgb': theme.colors['--tertiary-color-rgb'],
       '--text-color': theme.colors['--text-color'],
+      '--danger-color': theme.colors['--danger-color'],
     }).forEach(([key, value]) => root.style.setProperty(key, value));
   }, [themeName, theme]);
 

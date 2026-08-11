@@ -64,7 +64,7 @@ import {
 import { PopupMessage, PopupMessageWithCancelAndDeny, PopupMessageWithCancel } from "../utils/popupMessage";
 
 // API
-import { getCameras, getBk, getOrg, getPoliceStation } from "../features/dropdown/api/DropdownApi";
+import { getBk, getOrg, getPoliceStation } from "../features/dropdown/api/DropdownApi";
 import { requestUpload, removeUpload  } from '../features/upload/api/UploadApi';
 import { createUserApi, updateUserApi, getUserApi, requestUpdateProfile } from "../features/users/api/UsersApi";
 import { setAuthUser } from "../features/auth-user/api/AuthUserSlice";
@@ -74,7 +74,8 @@ import {
   fetchPosition,
 } from "../features/dropdown/api/DropdownSlice";
 import {
-  getCameraGroup,
+  getAllCameraGroup,
+  getCamerasByIds,
 } from "../features/core-data/api/CoreDataApi";
 
 interface FormData {
@@ -353,7 +354,7 @@ const UserForm = () => {
     try {
       setIsLoading(true);
 
-      const cameraGroupResponse = await getCameraGroup({
+      const cameraGroupResponse = await getAllCameraGroup({
         filter: "deleted=false",
       });
 
@@ -376,11 +377,7 @@ const UserForm = () => {
         return;
       }
 
-      const cameraResponse = await getCameras({
-        filter: `camera_id=${allCameraIds.join("|")}`,
-      });
-
-      const cameras = cameraResponse?.data ?? [];
+      const cameras = await getCamerasByIds(allCameraIds);
 
       const allPoliceStationIds = [
         ...new Set(

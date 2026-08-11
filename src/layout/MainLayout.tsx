@@ -51,7 +51,11 @@ const MainLayout = () => {
     isSidebarPosition || (!isWideViewport && navPosition === "top");
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="relative min-h-screen overflow-hidden"
+      style={{
+        background: "linear-gradient(180deg, rgba(var(--tertiary-color-rgb),1), rgba(var(--tertiary-color-rgb),0.92))"
+      }}
+    >
       <Navbar />
 
       <Watermark text={nsbOu} hashPid={hashPid} />

@@ -94,7 +94,7 @@ const TextBox: React.FC<TextBoxProps> = ({
           required && <span className="text-red-500"> *</span>
         }
         {
-          warningText && <span className="text-[#9F0C0C] ml-4">{warningText}</span>
+          warningText && <span className="text-(--danger-color) ml-4">{warningText}</span>
         }
       </Typography>
       <TextField

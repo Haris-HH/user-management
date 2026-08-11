@@ -2,7 +2,7 @@
 import type { WatchlistGroupResponse } from "../types/response";
 
 export const mockWatchlistGroup: WatchlistGroupResponse = {
-  "endpoint": "http://nsb-core.local:7300/api/v0/<sector>/<action>",
+  "endpoint": "http://nsb-api.corelpr.com:7300/api/v0/<sector>/<action>",
   "statusCode": 200,
   "status": "Successful",
   "success": true,

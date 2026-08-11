@@ -47,14 +47,54 @@ interface FormData {
 type Props = {
   open: boolean;
   onClose: () => void;
-  selectedCheckpointIds?: string[];
+  // The already-selected cameras arrive as whole rows, not just ids: the
+  // dialog has to hand every checked camera back on save, including ones the
+  // user never scrolled to, and there is no way to rebuild a row from an id.
+  selectedCheckpoints?: Camera[];
   onSave?: (users: Camera[]) => void;
 }
 
-const AddCheckpoint = ({ 
-  open, 
+// "Select all" pulls every page for the active search, so it asks for far
+// bigger pages than the table itself uses.
+const SELECT_ALL_PAGE_LIMIT = 1500;
+
+// Police stations are resolved by id list; chunk it so the GET query string
+// cannot grow past what the gateway accepts.
+const POLICE_STATION_ID_CHUNK_SIZE = 200;
+
+const fetchPoliceStations = async (stationIds: string[]) => {
+  const uniqueIds = [...new Set(stationIds.filter((id) => id && id !== "null"))];
+
+  if (uniqueIds.length === 0) {
+    return new Map<string, PoliceStation>();
+  }
+
+  const chunks: string[][] = [];
+
+  for (let i = 0; i < uniqueIds.length; i += POLICE_STATION_ID_CHUNK_SIZE) {
+    chunks.push(uniqueIds.slice(i, i + POLICE_STATION_ID_CHUNK_SIZE));
+  }
+
+  const responses = await Promise.all(
+    chunks.map((chunk) =>
+      getPoliceStation({
+        filter: `id=${chunk.join("|")}`,
+        limit: String(chunk.length),
+      })
+    )
+  );
+
+  return new Map(
+    responses
+      .flatMap((res) => res.data ?? [])
+      .map((station) => [String(station.id), station])
+  );
+};
+
+const AddCheckpoint = ({
+  open,
   onClose,
-  selectedCheckpointIds = [],
+  selectedCheckpoints = [],
   onSave,
 }: Props) => {
   // i18n
@@ -70,8 +110,18 @@ const AddCheckpoint = ({
   const [selectedProvince, setSelectedProvince] = useState<string[]>([]);
   const [selectedStation, setSelectedStation] = useState<string[]>([]);
   const [selectedCheckpoint, setSelectedCheckpoint] = useState<string[]>([]);
-  const [checkpointChecked, setCheckpointChecked] = useState<string[]>([]);
   const [rows, setRows] = useState<Camera[]>([]);
+
+  // Checked cameras are kept as whole rows keyed by id rather than as a list
+  // of ids: a selection spans pages the table no longer holds, so `rows` is
+  // not enough to rebuild what has to be saved.
+  const [checkpointChecked, setCheckpointChecked] = useState<Map<string, Camera>>(
+    new Map()
+  );
+  // Set once "select all" has pulled every page, so the header checkbox stays
+  // ticked while the user pages through the result.
+  const [allPagesSelected, setAllPagesSelected] = useState(false);
+  const [isSelectingAll, setIsSelectingAll] = useState(false);
 
   // Pagination
   const [totalItems, setTotalItems] = useState(0);
@@ -89,15 +139,9 @@ const AddCheckpoint = ({
   const province = useSelector((state: RootState) => state.dropdown.province);
 
   const selectedCheckpointIdSet = useMemo(
-    () => new Set(selectedCheckpointIds),
-    [selectedCheckpointIds]
+    () => new Set(selectedCheckpoints.map((camera) => camera.camera_id)),
+    [selectedCheckpoints]
   );
-
-  const selectAll =
-    rows.length > 0 &&
-    rows.every((camera) =>
-      checkpointChecked.includes(camera.camera_id)
-    );
 
   const areaOptions = useMemo(
     () =>
@@ -139,8 +183,10 @@ const AddCheckpoint = ({
     [rows]
   );
 
-  const filterRows = useMemo(() => {
-    return rows.filter((row) => {
+  // The column filters are applied client-side, so "select all" has to run
+  // the same predicate over the rows it pulls from the other pages.
+  const matchesColumnFilters = useCallback(
+    (row: Camera) => {
       const matchArea =
         selectedAreaRegion.length === 0 ||
         selectedAreaRegion.includes(String(row.police_region_id));
@@ -163,41 +209,52 @@ const AddCheckpoint = ({
         matchStation &&
         matchCheckpoint
       );
-    });
-  }, [
-    rows,
-    selectedAreaRegion,
-    selectedProvince,
-    selectedStation,
-    selectedCheckpoint,
-  ]);
+    },
+    [
+      selectedAreaRegion,
+      selectedProvince,
+      selectedStation,
+      selectedCheckpoint,
+    ]
+  );
+
+  const filterRows = useMemo(
+    () => rows.filter(matchesColumnFilters),
+    [rows, matchesColumnFilters]
+  );
+
+  // Ticked once every page is covered; otherwise it falls back to "is this
+  // page fully ticked" so the box still reflects a manual page selection.
+  const selectAll =
+    allPagesSelected ||
+    (filterRows.length > 0 &&
+      filterRows.every((camera) => checkpointChecked.has(camera.camera_id)));
+
+  const isIndeterminate = !selectAll && checkpointChecked.size > 0;
 
   useEffect(() => {
     if (!open) return;
 
-    setCheckpointChecked(selectedCheckpointIds);
+    // Deliberate "adjust state from props" sync, not a derived value — the
+    // user toggles these checkboxes independently afterwards.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCheckpointChecked(
+      new Map(selectedCheckpoints.map((camera) => [camera.camera_id, camera]))
+    );
+    setAllPagesSelected(false);
     // NOTE: intentionally does not depend on `rows` — this effect only needs
     // to (re)seed the checked set from the incoming selection when the
     // dialog opens or the selection prop changes. Including `rows` here
     // previously caused every page/search refetch to reset any checkboxes
-    // the user had ticked on other pages back to just `selectedCheckpointIds`.
-  }, [open, selectedCheckpointIds]);
+    // the user had ticked on other pages back to just the incoming selection.
+  }, [open, selectedCheckpoints]);
 
   const mapCameraRows = useCallback(
     async (cameras: Camera[]) => {
-      const stationCache = new Map<string, PoliceStation | undefined>();
-
-      await Promise.all(
-        cameras.map(async (item) => {
-          const stationKey = String(item.police_station_id);
-
-          if (!stationCache.has(stationKey)) {
-            const res = await getPoliceStation({
-              filter: `id=${item.police_station_id}`,
-            });
-            stationCache.set(stationKey, res.data?.[0]);
-          }
-        })
+      // Resolved in a couple of chunked requests rather than one per camera —
+      // "select all" feeds thousands of rows through here.
+      const stationCache = await fetchPoliceStations(
+        cameras.map((item) => String(item.police_station_id))
       );
 
       // Build lookup maps once instead of calling `.find()` per row.
@@ -244,21 +301,21 @@ const AddCheckpoint = ({
     ]
   )
 
-  const getFilters = useCallback((formData: FormData) => {
-    const body: Record<string, string> = {
-      page: page.toString(),
-      limit: rowsPerPage.toString(),
-    };
+  const getFilters = useCallback(
+    (filterData: FormData, pageData: number, limit: number) => {
+      const body: Record<string, string> = {
+        page: pageData.toString(),
+        limit: limit.toString(),
+      };
 
-    if (formData.search) {
-      body.filter = `camera_name~*${formData.search}*`;
-    }
-    return body;
-  }, [
-    formData.search,
-    page,
-    rowsPerPage
-  ])
+      if (filterData.search) {
+        body.filter = `camera_name~*${filterData.search}*`;
+      }
+
+      return body;
+    },
+    []
+  );
 
   // Guards against a slower, stale request (e.g. a previous page/search)
   // overwriting the result of a newer one when the user paginates or
@@ -270,7 +327,7 @@ const AddCheckpoint = ({
     setIsDataLoading(true);
     try {
       const res = await searchCameras({
-        ...getFilters(filterData),
+        ...getFilters(filterData, page, rowsPerPage),
       })
 
       const cameras = res.data ?? [];
@@ -331,43 +388,95 @@ const AddCheckpoint = ({
   ) => {
     if (event.key === "Enter") {
       setPage(1);
+      // A new search means a different "all", so the flag can't carry over.
+      setAllPagesSelected(false);
       setSearchTrigger((prev) => prev + 1);
     }
   };
 
-  const handleCheckCheckpoint = (userId: string, checked: boolean) => {
+  const handleCheckCheckpoint = (camera: Camera, checked: boolean) => {
+    // Any manual untick means the selection is no longer "everything".
+    if (!checked) {
+      setAllPagesSelected(false);
+    }
+
     setCheckpointChecked((prev) => {
+      const next = new Map(prev);
+
       if (checked) {
-        return Array.from(new Set([...prev, userId]));
+        next.set(camera.camera_id, camera);
+      } else {
+        next.delete(camera.camera_id);
       }
 
-      return prev.filter((id) => id !== userId);
+      return next;
     });
   };
 
   const handleSave = () => {
-    const selectedMap = new Map<string, Camera>();
-
-    rows.forEach((camera) => {
-      if (checkpointChecked.includes(camera.camera_id)) {
-        selectedMap.set(camera.camera_id, camera);
-      }
-    });
-
-    onSave?.(Array.from(selectedMap.values()));
+    onSave?.(Array.from(checkpointChecked.values()));
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setCheckpointChecked((prev) =>
-        Array.from(new Set([...prev, ...rows.map((item) => item.camera_id)]))
+  // Walks every page of the current search so the checked set covers rows the
+  // table never loaded — the backend caps a page at 1500 rows.
+  const fetchAllMatchingCameras = useCallback(async () => {
+    const collected: Camera[] = [];
+
+    let currentPage = 1;
+
+    for (;;) {
+      const res = await searchCameras(
+        getFilters(formData, currentPage, SELECT_ALL_PAGE_LIMIT)
       );
+
+      const cameras = res.data ?? [];
+
+      if (cameras.length === 0) break;
+
+      collected.push(...cameras);
+
+      const maxPage = res.pagination?.maxPage ?? 1;
+
+      if (currentPage >= maxPage) break;
+
+      currentPage++;
+    }
+
+    return mapCameraRows(collected);
+  }, [formData, getFilters, mapCameraRows]);
+
+  const handleSelectAll = async (checked: boolean) => {
+    // Unticking clears the whole selection, not just this page — the box
+    // stands for every row behind the current search.
+    if (!checked) {
+      setAllPagesSelected(false);
+      setCheckpointChecked(new Map());
       return;
     }
 
-    setCheckpointChecked((prev) =>
-      prev.filter((id) => !rows.some((camera) => camera.camera_id === id))
-    );
+    try {
+      setIsSelectingAll(true);
+
+      const allCameras = await fetchAllMatchingCameras();
+
+      setCheckpointChecked((prev) => {
+        const next = new Map(prev);
+
+        allCameras
+          .filter(matchesColumnFilters)
+          .forEach((camera) => next.set(camera.camera_id, camera));
+
+        return next;
+      });
+
+      setAllPagesSelected(true);
+    }
+    catch {
+      await PopupMessage(t("popup.fetch-error"), "", "error");
+    }
+    finally {
+      setIsSelectingAll(false);
+    }
   };
 
   const resetAddCheckpoint = () => {
@@ -376,7 +485,8 @@ const AddCheckpoint = ({
     });
     setPage(1);
     setTotalPages(1);
-    setCheckpointChecked([]);
+    setCheckpointChecked(new Map());
+    setAllPagesSelected(false);
   };
 
   const handleCloseAddCheckpoint = () => {
@@ -397,7 +507,11 @@ const AddCheckpoint = ({
     >
       <Box className="flex flex-col gap-4 pt-3 h-[75dvh]">
         <div className='flex justify-between items-end'>
-          <p className='text-[14px] text-(--secondary-color) font-medium'>{`${totalItems} ${t('text.list')}`}</p>
+          <p className='text-[14px] text-(--secondary-color) font-medium'>
+            {`${totalItems} ${t('text.list')}`}
+            {checkpointChecked.size > 0 &&
+              ` | ${t('text.select')} ${checkpointChecked.size} ${t('text.list')}`}
+          </p>
           <SearchInput
             value={formData.search}
             onChange={(event) =>
@@ -485,7 +599,9 @@ const AddCheckpoint = ({
                 <TableCell align="center" sx={{ padding: 0, width: "5%" }}>
                   <Checkbox
                     checked={selectAll}
-                    onChange={(event) => handleSelectAll(event.target.checked)}
+                    indeterminate={isIndeterminate}
+                    disabled={isSelectingAll}
+                    onChange={(event) => void handleSelectAll(event.target.checked)}
                     sx={{
                       color: "var(--tertiary-color)",
                       "&.Mui-checked": {
@@ -497,12 +613,12 @@ const AddCheckpoint = ({
               </TableRow>
             </TableHead>
             <TableBody>
-              {isDataLoading ? (
+              {isDataLoading || isSelectingAll ? (
                   <TableSkeleton headerColumn={6} />
                 ) : filterRows.length > 0 ? (
                   filterRows.map((row, index) => {
                     const isAlreadySelected = selectedCheckpointIdSet.has(row.camera_id);
-                    const isChecked = checkpointChecked.includes(row.camera_id);
+                    const isChecked = checkpointChecked.has(row.camera_id);
                     return (
                       <TableRow
                         key={index}
@@ -562,7 +678,7 @@ const AddCheckpoint = ({
                           <Checkbox
                             checked={isChecked}
                             onChange={(event) =>
-                              handleCheckCheckpoint(row.camera_id, event.target.checked)
+                              handleCheckCheckpoint(row, event.target.checked)
                             }
                             sx={{
                               color: isAlreadySelected
