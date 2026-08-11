@@ -16,7 +16,6 @@ import type {
   UpdateUser, 
   ApproveUser, 
   WatchListIdInUser,
-  UpdateProfile,
 } from "../../../types/common";
 
 export const getUserApi = async (param?: Record<string, string>) => {
@@ -134,9 +133,9 @@ export const removeListCheckpoints = async (body: WatchListIdInUser) => {
   });
 }
 
-export const requestUpdateProfile = async (body: UpdateProfile) => {
-  return fetchClient<UpdateProfileResponse>("/police/profile", {
-    method: "POST",
-    body: JSON.stringify(body),
+export const requestUpdateProfile = async (param: Record<string, string>) => {
+  return fetchClient<UpdateProfileResponse>("/user-management/users/get-police-profile", {
+    method: "GET",
+    queryParams: param,
   });
 }

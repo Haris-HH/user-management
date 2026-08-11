@@ -1045,7 +1045,7 @@ const UserForm = () => {
       clearErrors("pid");
 
       const response = await requestUpdateProfile({
-        idcard: pid,
+        pid: pid,
       });
 
       const profile = response?.data;
@@ -1106,26 +1106,30 @@ const UserForm = () => {
                 onImageChange={handleImageChange}
                 onImageDelete={handleImageDelete}
               />
-              <Button
-                variant="contained"
-                sx={{
-                  height: 35,
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
-                  mb: "1px",
-                  "&:hover": { backgroundColor: "rgba(var(--primary-color-rgb), 0.7)" },
-                  textTransform: "capitalize",
-                  "&.Mui-disabled": {
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
-                    opacity: 0.5,
-                  },
-                }}
-                onClick={handleUpdateProfile}
-                disabled={!canUpdateProfile}
-              >
-                {t("button.update-profile")}
-              </Button>
+              {
+                canUpdateProfile && (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      height: 35,
+                      backgroundColor: "var(--primary-color)",
+                      color: "var(--tertiary-color)",
+                      mb: "1px",
+                      "&:hover": { backgroundColor: "rgba(var(--primary-color-rgb), 0.7)" },
+                      textTransform: "capitalize",
+                      "&.Mui-disabled": {
+                        backgroundColor: "var(--primary-color)",
+                        color: "var(--tertiary-color)",
+                        opacity: 0.5,
+                      },
+                    }}
+                    onClick={handleUpdateProfile}
+                    disabled={!canUpdateProfile}
+                  >
+                    {t("button.update-profile")}
+                  </Button>
+                )
+              }
             </Box>
 
             <Box className="flex flex-col gap-4">
