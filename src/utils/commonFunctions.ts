@@ -1,5 +1,43 @@
 // Types
-import type { ValidateUserDataParams, OptionType } from "../types/common";
+import type {
+  ValidateUserDataParams,
+  OptionType,
+  CameraInCheckpoint,
+  ProjectCheckpointPermission,
+} from "../types/common";
+
+/*
+  A camera group (checkpoint) carries no project_id of its own - every camera
+  inside it does, and groups are scoped to a single project at creation time,
+  so the first camera's project_id stands in for the group's. Groups with no
+  cameras yet have nothing to derive from and fall into this bucket.
+*/
+export const UNASSIGNED_PROJECT_KEY = "unassigned";
+
+/*
+  Buckets checkpoint (camera-group) ids by their project, in the shape
+  `GroupPermissions.project_id` is persisted as - each project appears once,
+  carrying every matching group's id.
+*/
+export const groupCameraGroupIdsByProject = (
+  groups: CameraInCheckpoint[]
+): ProjectCheckpointPermission[] => {
+  const buckets = new Map<string, string[]>();
+
+  groups.forEach((group) => {
+    const projectId =
+      group.camera_list?.[0]?.project_id || UNASSIGNED_PROJECT_KEY;
+
+    const ids = buckets.get(projectId) ?? [];
+    ids.push(group.group_id);
+    buckets.set(projectId, ids);
+  });
+
+  return Array.from(buckets.entries()).map(([project_id, camera_group_ids]) => ({
+    project_id,
+    camera_group_ids,
+  }));
+};
 
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

@@ -1,12 +1,14 @@
 // Types
-import type { 
+import type {
   CameraResponse,
+  CameraUpdateResponse,
   CheckpointResponse,
   WatchlistGroupResponse,
   CreateWatchlistGroupResponse,
   CreateUserWatchlistGroupResponse,
   UserGroupResponse,
   CheckpointGroupResponse,
+  ProjectResponse,
 } from "../../../types/response";
 import type {
   MembersWatchListGroupRequest,
@@ -14,6 +16,7 @@ import type {
   CreateWatchlistGroup,
   CameraInGroup,
   Camera,
+  UpdateCamera,
 } from "../../../types/common";
 
 // Api
@@ -56,7 +59,7 @@ export const searchCameras = async (body?: Record<string, string>): Promise<Came
 export const CAMERA_PAGE_LIMIT = 1500;
 const CAMERA_ID_CHUNK_SIZE = 500;
 
-const searchAllCameraPages = async (filter: string): Promise<Camera[]> => {
+export const getCamerasByFilter = async (filter: string): Promise<Camera[]> => {
   if (isDev) {
     return mockCameras.data ?? [];
   }
@@ -105,7 +108,7 @@ export const getCamerasByIds = async (
 
   const results = await Promise.all(
     chunks.map((chunk) =>
-      searchAllCameraPages(
+      getCamerasByFilter(
         [`camera_id=${chunk.join("|")}`, ...extraFilters].join(",")
       )
     )
@@ -118,6 +121,13 @@ export const getCamerasByIds = async (
   );
 
   return [...cameraMap.values()];
+};
+
+export const updateCamera = async (body: UpdateCamera): Promise<CameraUpdateResponse> => {
+  return fetchClient<CameraUpdateResponse>("/core-data/cameras/update", {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
 };
 
 export const getCheckpoints = async (param?: Record<string, string>): Promise<CheckpointResponse> => {
@@ -220,6 +230,15 @@ export const removeListCheckpoints = async (body: UserListInGroup) => {
     method: "POST",
     body: JSON.stringify(body),
   });
+};
+
+export const getProjects = async (param?: Record<string, string>): Promise<ProjectResponse> => {
+  const res = await fetchClient<ProjectResponse>("/core-data/projects/get", {
+    method: "GET",
+    queryParams: param,
+  });
+
+  return res;
 };
 
 export const getCameraGroup = async (param?: Record<string, string>) => {

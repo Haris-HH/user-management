@@ -60,7 +60,7 @@ import {
 
 // Utils
 import { PopupMessage, PopupMessageWithCancelAndDeny } from "../utils/popupMessage";
-import { buildOptions } from "../utils/commonFunctions";
+import { buildOptions, groupCameraGroupIdsByProject } from "../utils/commonFunctions";
 
 interface AddGroupFormData {
   group_name: string;
@@ -80,6 +80,11 @@ const isBaseUserGroup = (groupName: string) => {
   const normalized = groupName.toLowerCase();
   return normalized === "admin" || normalized === "user";
 };
+
+// Matches camera-group names for police regions 1-9 ("ภาค1".."ภาค9", also
+// tolerating a space before the digit) so new user groups can default to
+// having them selected. Pure and stateless - safe to hoist.
+const REGION_1_TO_9_PATTERN = /^ภาค\s*[1-9]$/;
 
 // Pure transform, no dependency on component state/props - hoisted so it has
 // a stable identity and doesn't need to be listed in any hook's deps array.
@@ -182,7 +187,7 @@ const UserGroupManagement = () => {
         filter: "deleted=false",
       });
 
-      const cameraGroups = cameraGroupResponse?.data ?? [];
+      const cameraGroups = cameraGroupResponse?.data.sort((a, b) => a.group_name.localeCompare(b.group_name)) ?? [];
 
       const allCameraIds = [
         ...new Set(
@@ -356,10 +361,21 @@ const UserGroupManagement = () => {
       return;
     }
 
+    const defaultCheckpointGroups = checkpointData.filter((group) =>
+      REGION_1_TO_9_PATTERN.test(group.group_name.trim())
+    );
+
+    const defaultProjectSelections = groupCameraGroupIdsByProject(
+      defaultCheckpointGroups
+    );
+
     const newGroup: EditableUserGroup = {
       group_id: `new-${crypto.randomUUID()}`,
       group_name: name,
-      permissions: {},
+      permissions:
+        defaultProjectSelections.length > 0
+          ? { project_id: defaultProjectSelections }
+          : {},
       login_lifetime: Number(data.login_lifetime),
       approved_lifetime: Number(data.approved_lifetime),
       notes: "",
@@ -872,7 +888,7 @@ const UserGroupManagement = () => {
             />
           </Box>
 
-          <Box className="sticky bottom-0 bg-(--tertiary-color) border-t border-(--primary-color) p-4 flex items-center justify-between">
+          <Box className="sticky z-2 bottom-0 bg-(--tertiary-color) border-t border-(--primary-color) p-4 flex items-center justify-between">
             <Box className="flex items-center gap-2">
               <InfoOutlinedIcon
                 sx={{

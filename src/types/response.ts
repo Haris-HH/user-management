@@ -25,6 +25,7 @@ import type {
   UserListInGroup,
   CheckpointGroup,
   UpdateProfile,
+  Project,
 } from "../types/common";
 
 export interface DropdownResponse {
@@ -75,6 +76,8 @@ export type WatchListIdInUserResponse = BasicResponse<WatchListIdInUser[]>;
 
 export type CameraResponse = BasicResponse<Camera[]>;
 
+export type CameraUpdateResponse = BasicResponse<Camera>;
+
 export type PoliceStationResponse = BasicResponse<PoliceStation[]>;
 
 export type StatusResponse = BasicResponse<Dropdown[]>;
@@ -94,6 +97,8 @@ export type CreateUserWatchlistGroupResponse = BasicResponse<UserListInGroup>;
 export type WatchlistGroupResponse = BasicResponse<WatchlistGroup[]>;
 
 export type CheckpointGroupResponse = BasicResponse<CheckpointGroup[]>;
+
+export type ProjectResponse = BasicResponse<Project[]>;
 
 export type UpdateProfileResponse = BasicResponse<UpdateProfile>;
 

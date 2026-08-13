@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 
 // Material UI
 import Table from "@mui/material/Table";
@@ -26,7 +26,15 @@ import type {
   GroupPermissions,
   PermissionUiGroup,
   PermissionMode,
+  Project,
+  ProjectCheckpointPermission,
 } from "../../types/common";
+
+// API
+import { getProjects } from "../../features/core-data/api/CoreDataApi";
+
+// Utils
+import { UNASSIGNED_PROJECT_KEY } from "../../utils/commonFunctions";
 
 // A single ui[uiKey] entry of GroupPermissions, e.g. { enabled, groups, prints }.
 type UiPermissionEntry = NonNullable<GroupPermissions["ui"]>[string];
@@ -101,6 +109,81 @@ const mergeUiEntry = (
   },
 });
 
+/*
+  Reads every shape permissions.project_id has been persisted as, so a group
+  saved before this feature's data model settled still renders its checked
+  checkpoints instead of appearing empty:
+   - current:      [{ project_id, camera_group_ids: string[] }, ...]
+   - intermediate: string[] (checkpoint ids with no project association -
+                   this briefly lived under the `project_id` key before
+                   landing on the shape above)
+   - original:     permissions.checkpoint_ids: string[] (pre-dates
+                   project_id entirely)
+  Untyped/`unknown`-guarded on purpose - this is reading real backend JSONB
+  that predates the type below. Every save writes the current shape via
+  `withProjectSelections`, so a group is migrated the next time it is edited
+  here.
+*/
+const collectSelectedCheckpointIds = (permissions: GroupPermissions): Set<string> => {
+  const set = new Set<string>();
+
+  const addIfString = (value: unknown) => {
+    if (typeof value === "string") set.add(value);
+  };
+
+  const projectEntries: unknown = permissions.project_id;
+
+  if (Array.isArray(projectEntries)) {
+    projectEntries.forEach((entry) => {
+      if (typeof entry === "string") {
+        set.add(entry);
+        return;
+      }
+
+      const groupIds = (entry as { camera_group_ids?: unknown } | null)
+        ?.camera_group_ids;
+
+      if (Array.isArray(groupIds)) {
+        groupIds.forEach(addIfString);
+      }
+    });
+  }
+
+  const legacyCheckpointIds = (permissions as { checkpoint_ids?: unknown })
+    .checkpoint_ids;
+
+  if (Array.isArray(legacyCheckpointIds)) {
+    legacyCheckpointIds.forEach(addIfString);
+  }
+
+  return set;
+};
+
+// Writes the current permissions.project_id shape and drops the legacy
+// checkpoint_ids key permissions may still be carrying from before this
+// feature's data model settled - see collectSelectedCheckpointIds. Every
+// handler below that touches checkpoint selection goes through this so a
+// group is fully migrated the moment it is next saved.
+const withProjectSelections = (
+  permissions: GroupPermissions,
+  projectSelections: ProjectCheckpointPermission[]
+): GroupPermissions => {
+  const next: GroupPermissions & { checkpoint_ids?: unknown } = {
+    ...permissions,
+    project_id: projectSelections,
+  };
+
+  delete next.checkpoint_ids;
+
+  return next;
+};
+
+type ProjectBucket = {
+  projectId: string;
+  projectName: string;
+  checkpoints: CameraInCheckpoint[];
+};
+
 type Props = {
   permissionUiList: PermissionUiList[];
   checkpointList: CameraInCheckpoint[];
@@ -122,9 +205,37 @@ const PermissionTable = ({
     {}
   );
 
-  const [openCheckpointAccordion, setOpenCheckpointAccordion] = useState<
-    Record<number, boolean>
+  const [openProjectAccordion, setOpenProjectAccordion] = useState<
+    Record<string, boolean>
   >({});
+
+  // Keyed by group_id rather than list position - groups are nested one
+  // level inside their project now, so a position-based key would collide
+  // across projects and desync open/closed state on re-grouping.
+  const [openCheckpointAccordion, setOpenCheckpointAccordion] = useState<
+    Record<string, boolean>
+  >({});
+
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchProjects = async () => {
+      try {
+        const response = await getProjects({ limit: "100", page: "1" });
+        if (!cancelled) setProjects(response.data ?? []);
+      } catch {
+        if (!cancelled) setProjects([]);
+      }
+    };
+
+    fetchProjects();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const getUiPermission = (uiKey: string): UiPermissionEntry => {
     return permissions.ui?.[uiKey] ?? {};
@@ -152,10 +263,17 @@ const PermissionTable = ({
     }));
   }, []);
 
-  const handleToggleCheckpointAccordion = useCallback((index: number) => {
+  const handleToggleCheckpointAccordion = useCallback((groupId: string) => {
     setOpenCheckpointAccordion((prev) => ({
       ...prev,
-      [index]: !(prev[index] ?? false),
+      [groupId]: !(prev[groupId] ?? false),
+    }));
+  }, []);
+
+  const handleToggleProjectAccordion = useCallback((projectId: string) => {
+    setOpenProjectAccordion((prev) => ({
+      ...prev,
+      [projectId]: !(prev[projectId] ?? false),
     }));
   }, []);
 
@@ -246,17 +364,53 @@ const PermissionTable = ({
     updatePermissions(mergeUiEntry(permissions, uiKey, { prints }));
   };
 
-  const selectedCheckpointIds = permissions.checkpoint_ids ?? [];
-
-  // Built once per render (keyed off the actual prop, not the `?? []`
-  // fallback above, which would be a fresh array every render) instead of
-  // doing an O(k) Array#includes() scan for every checkpoint row and inside
-  // the "select all" checks below - turns the matrix's checkpoint column
-  // from O(n*k) into O(n+k).
+  // Flattened for row/column "is this group checked" lookups - group_ids are
+  // unique across the whole list, so which project an entry belongs to
+  // doesn't matter for membership checks. Reads every shape this data has
+  // been persisted as (see collectSelectedCheckpointIds) so a group saved
+  // before this feature's data model settled still shows its checked
+  // checkpoints.
   const selectedCheckpointIdSet = useMemo(
-    () => new Set(permissions.checkpoint_ids ?? []),
-    [permissions.checkpoint_ids]
+    () => collectSelectedCheckpointIds(permissions),
+    [permissions]
   );
+
+  // Which project a checkpoint (camera-group) belongs to - same derivation
+  // as the project buckets below, indexed by id so re-bucketing the
+  // (possibly legacy-shaped) saved selection doesn't re-derive it per group.
+  const checkpointProjectId = useMemo(() => {
+    const map = new Map<string, string>();
+
+    checkpointList.forEach((checkpoint) => {
+      map.set(
+        String(checkpoint.group_id),
+        checkpoint.camera_list?.[0]?.project_id || UNASSIGNED_PROJECT_KEY
+      );
+    });
+
+    return map;
+  }, [checkpointList]);
+
+  // The current selection, always re-bucketed into the current
+  // { project_id, camera_group_ids } shape against the current
+  // checkpointList - this is what the handlers below build on, so editing a
+  // legacy-shaped (or stale-bucketed) permissions object migrates it to the
+  // current shape as a side effect of the edit.
+  const projectSelections = useMemo<ProjectCheckpointPermission[]>(() => {
+    const buckets = new Map<string, string[]>();
+
+    selectedCheckpointIdSet.forEach((id) => {
+      const projectId = checkpointProjectId.get(id) ?? UNASSIGNED_PROJECT_KEY;
+      const ids = buckets.get(projectId) ?? [];
+      ids.push(id);
+      buckets.set(projectId, ids);
+    });
+
+    return Array.from(buckets.entries()).map(([project_id, camera_group_ids]) => ({
+      project_id,
+      camera_group_ids,
+    }));
+  }, [selectedCheckpointIdSet, checkpointProjectId]);
 
   const checkpointIds = useMemo(
     () => checkpointList.map((cp) => String(cp.group_id)),
@@ -271,24 +425,111 @@ const PermissionTable = ({
     checkpointIds.some((id) => selectedCheckpointIdSet.has(id)) &&
     !allCheckpointChecked;
 
-  const handleToggleCheckpoint = (checkpointId: number | string) => {
+  const projectMap = useMemo(
+    () => new Map(projects.map((project) => [project.project_id, project])),
+    [projects]
+  );
+
+  // Groups a group's project from its first camera - see UNASSIGNED_PROJECT_KEY.
+  const projectGroups = useMemo<ProjectBucket[]>(() => {
+    const buckets = new Map<string, CameraInCheckpoint[]>();
+
+    checkpointList.forEach((checkpoint) => {
+      const projectId =
+        checkpoint.camera_list?.[0]?.project_id || UNASSIGNED_PROJECT_KEY;
+
+      const bucket = buckets.get(projectId) ?? [];
+      bucket.push(checkpoint);
+      buckets.set(projectId, bucket);
+    });
+
+    const entries = Array.from(buckets.entries()).map<ProjectBucket>(
+      ([projectId, checkpoints]) => ({
+        projectId,
+        projectName:
+          projectId === UNASSIGNED_PROJECT_KEY
+            ? t("text.no-project")
+            : projectMap.get(projectId)?.project_name ?? projectId,
+        checkpoints,
+      })
+    );
+
+    entries.sort((a, b) => {
+      if (a.projectId === UNASSIGNED_PROJECT_KEY) return 1;
+      if (b.projectId === UNASSIGNED_PROJECT_KEY) return -1;
+      return a.projectName.localeCompare(b.projectName);
+    });
+
+    return entries;
+  }, [checkpointList, projectMap, t]);
+
+  // Replaces one project's entry with `groupIds`, dropping the entry
+  // entirely once it would be empty - keeps permissions.project_id holding
+  // only projects that actually grant something, same as the flat array it
+  // replaced never carried ids nobody selected.
+  const setProjectCameraGroupIds = (
+    entries: ProjectCheckpointPermission[],
+    projectId: string,
+    groupIds: string[]
+  ): ProjectCheckpointPermission[] => {
+    const withoutProject = entries.filter(
+      (entry) => entry.project_id !== projectId
+    );
+
+    return groupIds.length > 0
+      ? [...withoutProject, { project_id: projectId, camera_group_ids: groupIds }]
+      : withoutProject;
+  };
+
+  const handleToggleCheckpoint = (
+    projectId: string,
+    checkpointId: number | string
+  ) => {
     const id = String(checkpointId);
 
-    const updated = selectedCheckpointIdSet.has(id)
-      ? selectedCheckpointIds.filter((item) => item !== id)
-      : [...selectedCheckpointIds, id];
+    const currentIds =
+      projectSelections.find((entry) => entry.project_id === projectId)
+        ?.camera_group_ids ?? [];
 
-    updatePermissions({
-      ...permissions,
-      checkpoint_ids: updated,
-    });
+    const nextIds = currentIds.includes(id)
+      ? currentIds.filter((item) => item !== id)
+      : [...currentIds, id];
+
+    updatePermissions(
+      withProjectSelections(
+        permissions,
+        setProjectCameraGroupIds(projectSelections, projectId, nextIds)
+      )
+    );
   };
 
   const handleToggleAllCheckpoints = (checked: boolean) => {
-    updatePermissions({
-      ...permissions,
-      checkpoint_ids: checked ? checkpointIds : [],
-    });
+    updatePermissions(
+      withProjectSelections(
+        permissions,
+        checked
+          ? projectGroups.map((bucket) => ({
+              project_id: bucket.projectId,
+              camera_group_ids: bucket.checkpoints.map((checkpoint) =>
+                String(checkpoint.group_id)
+              ),
+            }))
+          : []
+      )
+    );
+  };
+
+  const handleToggleProjectCheckpoints = (
+    projectId: string,
+    groupIds: string[],
+    checked: boolean
+  ) => {
+    updatePermissions(
+      withProjectSelections(
+        permissions,
+        setProjectCameraGroupIds(projectSelections, projectId, checked ? groupIds : [])
+      )
+    );
   };
 
   const activeCount = permissionUiList.filter((ui) =>
@@ -432,7 +673,12 @@ const PermissionTable = ({
 
                 <AccordionDetails sx={{ p: 0 }}>
                   <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
-                    <Table stickyHeader>
+                    <Table 
+                      stickyHeader
+                      sx={{
+                        zIndex: 0,
+                      }}
+                    >
                       <TableHead>
                         <TableRow
                           sx={{
@@ -670,7 +916,7 @@ const PermissionTable = ({
 
           <div className="flex items-center gap-3 text-sm font-medium">
             <p className="text-(--text-color)">
-              {`${t("text.select")}: ${selectedCheckpointIds.length}`}
+              {`${t("text.select")}: ${selectedCheckpointIdSet.size}`}
             </p>
           </div>
         </div>
@@ -690,8 +936,8 @@ const PermissionTable = ({
                 <TableRow
                   sx={{
                     "& th": {
-                      fontSize: "16px",
-                      backgroundColor: "var(--primary-color)",
+                      fontSize: "14px",
+                      backgroundColor: "rgba(var(--primary-color-rgb), 0.6)",
                       color: "var(--tertiary-color)",
                       border: "none",
                       fontWeight: "bold",
@@ -704,11 +950,11 @@ const PermissionTable = ({
                   }}
                 >
                   <TableCell sx={{ width: "45%" }}>
-                    {t("table.header.checkpoint")}
+                    {t("table.header.project")}
                   </TableCell>
 
                   <TableCell sx={{ width: "35%", textAlign: "center" }}>
-                    {t("table.header.checkpoint-count")}
+                    {t("table.header.group-count")}
                   </TableCell>
 
                   <TableCell sx={{ width: "30%", textAlign: "center" }}>
@@ -739,157 +985,308 @@ const PermissionTable = ({
               </TableHead>
 
               <TableBody>
-                {checkpointList.map((checkpoint, chIndex) => (
-                  <TableRow key={`checkpoint-permission-${checkpoint.group_id}`}>
-                    <TableCell colSpan={3} sx={{ p: 0, border: "none" }}>
-                      <Accordion
-                        expanded={openCheckpointAccordion[chIndex] ?? false}
-                        onChange={() => handleToggleCheckpointAccordion(chIndex)}
-                        sx={{
-                          width: "100%",
-                          borderRadius: "0 !important",
-                          backgroundColor:
-                            "rgba(var(--primary-color-rgb), 0.8)",
-                          "&.Mui-expanded": { margin: 0 },
-                          "& .MuiSvgIcon-root": {
-                            color: "var(--tertiary-color)",
-                          },
-                        }}
-                      >
-                        <AccordionSummary
-                          expandIcon={<ArrowDropDownIcon />}
+                {projectGroups.map((bucket) => {
+                  const groupIds = bucket.checkpoints.map((checkpoint) =>
+                    String(checkpoint.group_id)
+                  );
+
+                  const allProjectChecked =
+                    groupIds.length > 0 &&
+                    groupIds.every((id) => selectedCheckpointIdSet.has(id));
+
+                  const someProjectChecked =
+                    groupIds.some((id) => selectedCheckpointIdSet.has(id)) &&
+                    !allProjectChecked;
+
+                  return (
+                    <TableRow key={`project-permission-${bucket.projectId}`}>
+                      <TableCell colSpan={3} sx={{ p: 0, border: "none" }}>
+                        <Accordion
+                          expanded={openProjectAccordion[bucket.projectId] ?? false}
+                          onChange={() =>
+                            handleToggleProjectAccordion(bucket.projectId)
+                          }
                           sx={{
-                            flexDirection: "row-reverse",
-                            "& .MuiAccordionSummary-content": {
-                              width: "100%",
-                              margin: 0,
+                            width: "100%",
+                            borderRadius: "0 !important",
+                            backgroundColor: "var(--primary-color)",
+                            "&.Mui-expanded": { margin: 0 },
+                            "& .MuiSvgIcon-root": {
+                              color: "var(--tertiary-color)",
                             },
                           }}
                         >
-                          <div className="grid grid-cols-[1fr_45%_13%] w-full items-center">
-                            <Typography
-                              component="span"
-                              sx={{
-                                color: "var(--tertiary-color)",
-                                fontWeight: 700,
-                              }}
-                            >
-                              {checkpoint.group_name}
-                            </Typography>
-
-                            <Typography
-                              component="span"
-                              sx={{
-                                color: "var(--tertiary-color)",
-                                fontWeight: 700,
-                                textAlign: "center",
-                              }}
-                            >
-                              {checkpoint.camera_list?.length ?? 0}
-                            </Typography>
-
-                            <div className="flex justify-center">
-                              <Checkbox
-                                size="small"
-                                disabled={disabled}
-                                checked={selectedCheckpointIdSet.has(
-                                  String(checkpoint.group_id)
-                                )}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={() =>
-                                  handleToggleCheckpoint(checkpoint.group_id)
-                                }
+                          <AccordionSummary
+                            expandIcon={<ArrowDropDownIcon />}
+                            sx={{
+                              flexDirection: "row-reverse",
+                              "& .MuiAccordionSummary-content": {
+                                width: "100%",
+                                margin: 0,
+                              },
+                            }}
+                          >
+                            <div className="grid grid-cols-[1fr_45%_13%] w-full items-center">
+                              <Typography
+                                component="span"
                                 sx={{
                                   color: "var(--tertiary-color)",
-                                  p: 0,
-                                  "&.Mui-checked": {
-                                    color: "var(--tertiary-color)",
-                                  },
+                                  fontWeight: 700,
                                 }}
-                              />
-                            </div>
-                          </div>
-                        </AccordionSummary>
+                              >
+                                {bucket.projectName}
+                              </Typography>
 
-                        <AccordionDetails sx={{ p: 0 }}>
-                          <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
-                            <Table stickyHeader>
-                              <TableHead>
-                                <TableRow
+                              <Typography
+                                component="span"
+                                sx={{
+                                  color: "var(--tertiary-color)",
+                                  fontWeight: 700,
+                                  textAlign: "center",
+                                }}
+                              >
+                                {bucket.checkpoints.length}
+                              </Typography>
+
+                              <div className="flex justify-center">
+                                <Checkbox
+                                  size="small"
+                                  disabled={disabled}
+                                  checked={allProjectChecked}
+                                  indeterminate={someProjectChecked}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) =>
+                                    handleToggleProjectCheckpoints(
+                                      bucket.projectId,
+                                      groupIds,
+                                      e.target.checked
+                                    )
+                                  }
                                   sx={{
-                                    "& th": { height: "56.5px" },
-                                    "& .MuiTableCell-root": {
-                                      fontSize: "14px",
-                                      backgroundColor:
-                                        "rgba(var(--primary-color-rgb), 0.5)",
+                                    color: "var(--tertiary-color)",
+                                    p: 0,
+                                    "&.Mui-checked": {
                                       color: "var(--tertiary-color)",
-                                      fontWeight: "bold",
+                                    },
+                                    "&.MuiCheckbox-indeterminate": {
+                                      color: "var(--tertiary-color)",
                                     },
                                   }}
-                                >
-                                  <TableCell sx={{ width: "25%" }}>
-                                    {t("table.header.area-region")}
-                                  </TableCell>
-                                  <TableCell sx={{ width: "25%" }}>
-                                    {t("table.header.province")}
-                                  </TableCell>
-                                  <TableCell sx={{ width: "25%", textAlign: "center" }}>
-                                    {t("table.header.station")}
-                                  </TableCell>
-                                  <TableCell sx={{ width: "25%", textAlign: "center" }}>
-                                    {t("table.header.checkpoint")}
-                                  </TableCell>
-                                </TableRow>
-                              </TableHead>
+                                />
+                              </div>
+                            </div>
+                          </AccordionSummary>
 
-                              <TableBody>
-                                {checkpoint.camera_list &&
-                                checkpoint.camera_list.length > 0 ? (
-                                  checkpoint.camera_list.map((cl, groupIndex) => (
-                                    <TableRow
-                                      key={`checkpoint-camera-${chIndex}-${groupIndex}`}
-                                      sx={{
-                                        backgroundColor:
-                                          "rgba(var(--primary-color-rgb), 0.3)",
-                                        "& td": { border: "none" },
-                                        "& .MuiTableCell-root": {
-                                          fontSize: "14px",
-                                        },
-                                      }}
-                                    >
-                                      <TableCell>
-                                        {cl.police_region_name ?? "-"}
-                                      </TableCell>
-                                      <TableCell>{cl.province_name}</TableCell>
-                                      <TableCell align="center">
-                                        {cl.police_station_name ?? "-"}
-                                      </TableCell>
-                                      <TableCell align="center">
-                                        {cl.camera_name ?? "-"}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))
-                                ) : (
+                          <AccordionDetails sx={{ p: 0 }}>
+                            <TableContainer component={Paper} sx={{ borderRadius: 0 }}>
+                              <Table stickyHeader>
+                                <TableHead>
                                   <TableRow
                                     sx={{
-                                      backgroundColor:
-                                        "rgba(var(--primary-color-rgb), 0.3)",
-                                      "& td": { border: "none" },
+                                      "& th": { height: "56.5px" },
+                                      "& .MuiTableCell-root": {
+                                        fontSize: "14px",
+                                        backgroundColor:
+                                          "rgba(var(--primary-color-rgb), 0.6)",
+                                        color: "var(--tertiary-color)",
+                                        fontWeight: "bold",
+                                      },
                                     }}
                                   >
-                                    <TableCell colSpan={4} align="center">
-                                      {t("text.no-data")}
+                                    <TableCell sx={{ width: "45%" }}>
+                                      {t("table.header.checkpoint")}
+                                    </TableCell>
+
+                                    <TableCell sx={{ width: "35%", textAlign: "center" }}>
+                                      {t("table.header.checkpoint-count")}
+                                    </TableCell>
+
+                                    <TableCell sx={{ width: "20%", textAlign: "center" }}>
+                                      {t("table.header.select")}
                                     </TableCell>
                                   </TableRow>
-                                )}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </AccordionDetails>
-                      </Accordion>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                                </TableHead>
+
+                                <TableBody>
+                                  {bucket.checkpoints.map((checkpoint) => (
+                                    <TableRow
+                                      key={`checkpoint-permission-${checkpoint.group_id}`}
+                                    >
+                                      <TableCell colSpan={3} sx={{ p: 0, border: "none" }}>
+                                        <Accordion
+                                          expanded={
+                                            openCheckpointAccordion[checkpoint.group_id] ??
+                                            false
+                                          }
+                                          onChange={() =>
+                                            handleToggleCheckpointAccordion(
+                                              checkpoint.group_id
+                                            )
+                                          }
+                                          sx={{
+                                            width: "100%",
+                                            borderRadius: "0 !important",
+                                            backgroundColor:
+                                              "rgba(var(--primary-color-rgb), 0.45)",
+                                            "&.Mui-expanded": { margin: 0 },
+                                            "& .MuiSvgIcon-root": {
+                                              color: "var(--tertiary-color)",
+                                            },
+                                          }}
+                                        >
+                                          <AccordionSummary
+                                            expandIcon={<ArrowDropDownIcon />}
+                                            sx={{
+                                              flexDirection: "row-reverse",
+                                              "& .MuiAccordionSummary-content": {
+                                                width: "100%",
+                                                margin: 0,
+                                              },
+                                            }}
+                                          >
+                                            <div className="grid grid-cols-[1fr_45%_13%] w-full items-center">
+                                              <Typography
+                                                component="span"
+                                                sx={{
+                                                  color: "var(--tertiary-color)",
+                                                  fontWeight: 700,
+                                                }}
+                                              >
+                                                {checkpoint.group_name}
+                                              </Typography>
+
+                                              <Typography
+                                                component="span"
+                                                sx={{
+                                                  color: "var(--tertiary-color)",
+                                                  fontWeight: 700,
+                                                  textAlign: "center",
+                                                }}
+                                              >
+                                                {checkpoint.camera_list?.length ?? 0}
+                                              </Typography>
+
+                                              <div className="flex justify-center">
+                                                <Checkbox
+                                                  size="small"
+                                                  disabled={disabled}
+                                                  checked={selectedCheckpointIdSet.has(
+                                                    String(checkpoint.group_id)
+                                                  )}
+                                                  onClick={(e) => e.stopPropagation()}
+                                                  onChange={() =>
+                                                    handleToggleCheckpoint(
+                                                      bucket.projectId,
+                                                      checkpoint.group_id
+                                                    )
+                                                  }
+                                                  sx={{
+                                                    color: "var(--tertiary-color)",
+                                                    p: 0,
+                                                    "&.Mui-checked": {
+                                                      color: "var(--tertiary-color)",
+                                                    },
+                                                  }}
+                                                />
+                                              </div>
+                                            </div>
+                                          </AccordionSummary>
+
+                                          <AccordionDetails sx={{ p: 0 }}>
+                                            <TableContainer
+                                              component={Paper}
+                                              sx={{ borderRadius: 0 }}
+                                            >
+                                              <Table stickyHeader>
+                                                <TableHead>
+                                                  <TableRow
+                                                    sx={{
+                                                      "& th": { height: "56.5px" },
+                                                      "& .MuiTableCell-root": {
+                                                        fontSize: "14px",
+                                                        backgroundColor:
+                                                          "rgba(var(--primary-color-rgb), 0.6)",
+                                                        color: "var(--tertiary-color)",
+                                                        fontWeight: "bold",
+                                                      },
+                                                    }}
+                                                  >
+                                                    <TableCell sx={{ width: "25%" }}>
+                                                      {t("table.header.area-region")}
+                                                    </TableCell>
+                                                    <TableCell sx={{ width: "25%" }}>
+                                                      {t("table.header.province")}
+                                                    </TableCell>
+                                                    <TableCell
+                                                      sx={{ width: "25%", textAlign: "center" }}
+                                                    >
+                                                      {t("table.header.station")}
+                                                    </TableCell>
+                                                    <TableCell
+                                                      sx={{ width: "25%", textAlign: "center" }}
+                                                    >
+                                                      {t("table.header.checkpoint")}
+                                                    </TableCell>
+                                                  </TableRow>
+                                                </TableHead>
+
+                                                <TableBody>
+                                                  {checkpoint.camera_list &&
+                                                  checkpoint.camera_list.length > 0 ? (
+                                                    checkpoint.camera_list.map(
+                                                      (cl, groupIndex) => (
+                                                        <TableRow
+                                                          key={`checkpoint-camera-${checkpoint.group_id}-${groupIndex}`}
+                                                          sx={{
+                                                            "& td": { border: "none" },
+                                                            "& .MuiTableCell-root": {
+                                                              fontSize: "14px",
+                                                            },
+                                                          }}
+                                                        >
+                                                          <TableCell>
+                                                            {cl.police_region_name ?? "-"}
+                                                          </TableCell>
+                                                          <TableCell>
+                                                            {cl.province_name}
+                                                          </TableCell>
+                                                          <TableCell align="center">
+                                                            {cl.police_station_name ?? "-"}
+                                                          </TableCell>
+                                                          <TableCell align="center">
+                                                            {cl.camera_name ?? "-"}
+                                                          </TableCell>
+                                                        </TableRow>
+                                                      )
+                                                    )
+                                                  ) : (
+                                                    <TableRow
+                                                      sx={{
+                                                        "& td": { border: "none" },
+                                                      }}
+                                                    >
+                                                      <TableCell colSpan={4} align="center">
+                                                        {t("text.no-data")}
+                                                      </TableCell>
+                                                    </TableRow>
+                                                  )}
+                                                </TableBody>
+                                              </Table>
+                                            </TableContainer>
+                                          </AccordionDetails>
+                                        </Accordion>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </TableContainer>
+                          </AccordionDetails>
+                        </Accordion>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>

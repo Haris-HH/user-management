@@ -318,6 +318,12 @@ export interface Position {
 
 export type PermissionMode = "none" | "active" | "edit";
 
+/** One project's checkpoint (camera-group) access grant. */
+export interface ProjectCheckpointPermission {
+  project_id: string;
+  camera_group_ids: string[];
+}
+
 export interface GroupPermissions {
   ui?: Record<
     string,
@@ -327,7 +333,7 @@ export interface GroupPermissions {
       prints?: Record<string, boolean>;
     }
   >;
-  checkpoint_ids?: string[];
+  project_id?: ProjectCheckpointPermission[];
 }
 
 /*
@@ -532,6 +538,17 @@ export interface Checkpoint {
   deleted_at: string;
 }
 
+export interface Project {
+  project_id: string;
+  project_name: string;
+  description?: string | null;
+  visible?: boolean;
+  active?: boolean;
+  deleted?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface ErrorRespond {
   endpoint: string;
   statusCode: number;
@@ -560,6 +577,7 @@ export interface WatchlistGroup {
 
 export interface CreateWatchlistGroup {
   group_name: string;
+  project_id?: string;
 }
 
 export interface MembersWatchListGroupRequest {
@@ -591,6 +609,11 @@ export interface UserListInGroup {
 export interface CameraInGroup {
   group_id: string;
   camera_id_list: string[];
+}
+
+export interface UpdateCamera {
+  camera_id: string;
+  project_id: string;
 }
 
 export interface CheckpointGroup {

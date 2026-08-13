@@ -26,6 +26,7 @@ import LoadingScreen from '../loading-screen/LoadingScreen';
 
 // Icons
 import DeleteIcon from '@mui/icons-material/Delete';
+import FindInPageOutlinedIcon from '@mui/icons-material/FindInPageOutlined';
 
 // i18n
 import { useTranslation } from 'react-i18next';
@@ -39,6 +40,7 @@ import {
   searchCameras,
   addCameraInGroup,
   removeCameraInGroup,
+  updateCamera,
 } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -56,6 +58,8 @@ type Prop = {
   group_id: string | null;
   /** "edit" on the owning page; at "active" the list is read-only. */
   canEdit: boolean;
+  /** Camera groups are scoped to a project; null means none is selected yet. */
+  projectId: string | null;
   onDataChange: () => void;
 }
 
@@ -64,6 +68,7 @@ const CheckpointList = ({
   isDisable = true,
   group_id,
   canEdit,
+  projectId,
   onDataChange,
 }: Prop) => {
   // i18n
@@ -258,7 +263,20 @@ const CheckpointList = ({
       camera_id_list: cameras.map((camera) => camera.camera_id),
     };
 
-    await addCameraInGroup(body);
+    // A camera added into a group under the selected project has to belong
+    // to that project too - otherwise it stays scoped to whatever project it
+    // was created under, even though the operator just filed it here.
+    const updates: Promise<unknown>[] = [addCameraInGroup(body)];
+
+    if (projectId) {
+      for (const camera of cameras) {
+        if (camera.project_id !== projectId) {
+          updates.push(updateCamera({ camera_id: camera.camera_id, project_id: projectId }));
+        }
+      }
+    }
+
+    await Promise.all(updates);
   };
 
   const handleDeleteCheckpoint = async (cameraId: string) => {
@@ -499,8 +517,34 @@ const CheckpointList = ({
                       }
                     }}
                   >
-                    <TableCell colSpan={columnCount} align="center" sx={{ color: "var(--secondary-color)" }}>
-                      {t("text.no-data")}
+                    <TableCell
+                      colSpan={columnCount}
+                      align="center"
+                      sx={{
+                        color: "var(--secondary-color)",
+                        height: projectId ? undefined : "55vh",
+                      }}
+                    >
+                      {projectId ? (
+                        t("text.no-data")
+                      ) : (
+                        <Box className="flex flex-col items-center gap-2">
+                          <FindInPageOutlinedIcon
+                            sx={{
+                              fontSize: 44,
+                              color: "rgba(var(--primary-color-rgb), 0.4)",
+                            }}
+                          />
+                          <Typography sx={{ color: "var(--secondary-color)", fontWeight: 500 }}>
+                            {t("text.no-data")}
+                          </Typography>
+                          <Typography
+                            sx={{ fontSize: 13, color: "rgba(var(--primary-color-rgb), 0.6)" }}
+                          >
+                            {t("text.select-project-hint-checkpoint")}
+                          </Typography>
+                        </Box>
+                      )}
                     </TableCell>
                   </TableRow>
                 )}

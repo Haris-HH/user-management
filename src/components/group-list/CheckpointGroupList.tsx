@@ -24,17 +24,19 @@ import LoadingScreen from '../loading-screen/LoadingScreen';
 import { useTranslation } from 'react-i18next';
 
 // Types
-import type { CheckpointGroup } from "../../types/common";
+import type { CheckpointGroup, CreateWatchlistGroup } from "../../types/common";
 import type { AddGroupFormData } from "../add-group/AddGroup";
 
 // Icons
 import DeleteIcon from '@mui/icons-material/Delete';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 
 // API
-import { 
+import {
   createCameraGroup,
   deleteCameraGroup,
-  getCameraGroup,
+  getAllCameraGroup,
+  getCamerasByFilter,
 } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -50,6 +52,8 @@ type Props = {
   refreshKey: number;
   /** "edit" on the owning page; at "active" the list is read-only. */
   canEdit: boolean;
+  /** Camera groups are scoped to a project; null means none is selected yet. */
+  projectId: string | null;
 };
 
 const GroupList = ({
@@ -57,6 +61,7 @@ const GroupList = ({
   selectedGroupId,
   refreshKey,
   canEdit,
+  projectId,
 }: Props) => {
   // i18n
   const { t } = useTranslation();
@@ -101,18 +106,39 @@ const GroupList = ({
   }, [formData.search, groupList]);
 
   const fetchData = useCallback(async () => {
+    if (!projectId) {
+      setGroupList([]);
+      setTotalGroup(0);
+      onSelectChangedRef.current(null);
+      return;
+    }
+
     try {
       setIsDataLoading(true);
 
-      const response = await getCameraGroup({
-        limit: "100",
-        page: "1",
-      });
+      // Camera groups carry no project_id of their own, so the project is
+      // resolved from its cameras: fetch every camera whose project_id
+      // matches the selection, then keep only the groups that contain at
+      // least one of those cameras.
+      const [projectCameras, groupsResponse] = await Promise.all([
+        getCamerasByFilter(`project_id=${projectId}`),
+        getAllCameraGroup(),
+      ]);
 
-      const groups = response.data ?? [];
+      const projectCameraIds = new Set(
+        projectCameras.map((camera) => camera.camera_id)
+      );
+
+      const groups = (groupsResponse.data ?? [])
+        .filter(
+          (group) =>
+            Array.isArray(group.cameras) &&
+            group.cameras.some((cameraId) => projectCameraIds.has(cameraId))
+        )
+        .sort((a, b) => a.group_name.localeCompare(b.group_name));
 
       setGroupList(groups);
-      setTotalGroup(response.pagination?.countAll ?? 0);
+      setTotalGroup(groups.length);
 
       const currentSelectedGroupId = selectedGroupIdRef.current;
 
@@ -131,7 +157,7 @@ const GroupList = ({
     } finally {
       setIsDataLoading(false);
     }
-  }, []);
+  }, [projectId]);
 
   useEffect(() => {
     fetchData();
@@ -142,10 +168,13 @@ const GroupList = ({
   };
 
   const createNewGroup = async (groupName: string) => {
+    if (!projectId) return;
+
     try {
       setIsLoading(true);
-      const body = {
+      const body: CreateWatchlistGroup = {
         group_name: groupName,
+        project_id: projectId,
       }
       await createCameraGroup(body);
       await PopupMessage(t("popup.create-watchlist-group-success"), "", "success");
@@ -206,6 +235,7 @@ const GroupList = ({
           {canEdit && (
             <Button
               variant="contained"
+              disabled={!projectId}
               sx={{
                 width: t('button.add-group'),
                 height: 35,
@@ -215,6 +245,12 @@ const GroupList = ({
                   backgroundColor:  "rgba(var(--primary-color-rgb), 0.8)",
                 },
                 textTransform: "capitalize",
+                "&.Mui-disabled": {
+                  backgroundColor: "var(--primary-color)",
+                  color: "var(--tertiary-color)",
+                  opacity: 0.5,
+                  cursor: "not-allowed",
+                },
               }}
               startIcon={<AddIcon />}
               onClick={() => setIsAddGroupOpen(true)}
@@ -299,6 +335,32 @@ const GroupList = ({
               <TableBody>
                 {isDataLoading ? (
                   <TableSkeleton headerColumn={columnCount} />
+                ) : !projectId ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columnCount}
+                      align="center"
+                      sx={{
+                        height: "55vh",
+                        borderBottom: "none",
+                        backgroundColor: "var(--tertiary-color)",
+                      }}
+                    >
+                      <Box className="flex flex-col items-center gap-2">
+                        <InfoOutlinedIcon
+                          sx={{
+                            fontSize: 44,
+                            color: "rgba(var(--primary-color-rgb), 0.4)",
+                          }}
+                        />
+                        <Typography
+                          sx={{ color: "var(--secondary-color)", fontWeight: 500 }}
+                        >
+                          {t("text.select-project-first")}
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
                 ) : filteredGroups.length > 0 ? (
                   filteredGroups.map((group, index) => (
                     <TableRow

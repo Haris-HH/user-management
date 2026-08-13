@@ -188,7 +188,11 @@
     "assigned-users": "Assigned Users",
     "assigned-users-of": "Users assigned to {{group}}",
     "select-group-first": "Please select a permission group first",
-    "missing-base-groups": "Missing base group(s): {{groups}} — create them in User Group Management"
+    "missing-base-groups": "Missing base group(s): {{groups}} — create them in User Group Management",
+    "select-project-placeholder": "- Select Project -",
+    "select-project-first": "Please select a project first",
+    "select-project-hint-checkpoint": "Please select a project to view checkpoint data",
+    "no-project": "No Project"
   },
   "component": {
     "pid": "PID",
@@ -296,6 +300,8 @@
       "edit-permission": "Edit Permission",
       "checkpoint": "Checkpoint",
       "checkpoint-count": "Checkpoint Count",
+      "project": "Project",
+      "group-count": "Group Count",
       "group-name": "Group Name",
       "member-count": "Member Count",
       "delete": "Delete",

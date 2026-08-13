@@ -187,7 +187,11 @@
     "assigned-users": "ผู้ใช้งานในกลุ่ม",
     "assigned-users-of": "ผู้ใช้งานในกลุ่ม {{group}}",
     "select-group-first": "กรุณาเลือกกลุ่มสิทธิ์ก่อน",
-    "missing-base-groups": "ยังไม่มีกลุ่มพื้นฐาน: {{groups}} — กรุณาสร้างที่หน้าจัดการสิทธิ์การใช้งาน"
+    "missing-base-groups": "ยังไม่มีกลุ่มพื้นฐาน: {{groups}} — กรุณาสร้างที่หน้าจัดการสิทธิ์การใช้งาน",
+    "select-project-placeholder": "- เลือกโครงการ -",
+    "select-project-first": "กรุณาเลือกโครงการก่อน",
+    "select-project-hint-checkpoint": "กรุณาเลือกโครงการเพื่อแสดงข้อมูลด่านตรวจ",
+    "no-project": "ไม่มีโครงการ"
   },
   "component": {
     "pid": "เลขบัตรประชาชน",
@@ -295,6 +299,8 @@
       "edit-permission": "สิทธิ์การแก้ไข",
       "checkpoint": "ด่านตรวจ",
       "checkpoint-count": "จำนวนด่านตรวจ",
+      "project": "โครงการ",
+      "group-count": "จำนวนกลุ่ม",
       "group-name": "ชื่อกลุ่ม",
       "member-count": "จำนวนสมาชิก",
       "delete": "ลบ",

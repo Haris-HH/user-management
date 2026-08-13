@@ -1,7 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import type { SelectChangeEvent } from "@mui/material/Select";
+
+// Icons
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 
 // Components
 import MainTitle from "../components/main-title/MainTitle";
@@ -19,7 +26,10 @@ import { usePermission } from "../hooks/usePermission";
 import { USER_MANAGEMENT_UI_KEY } from "../constants/permissions";
 
 // Types
-import type { CheckpointGroup } from "../types/common";
+import type { CheckpointGroup, Project } from "../types/common";
+
+// API
+import { getProjects } from "../features/core-data/api/CoreDataApi";
 
 const ManageCheckpointGroup = () => {
   // i18n
@@ -38,6 +48,37 @@ const ManageCheckpointGroup = () => {
   const [refreshGroupListKey, setRefreshGroupListKey] = useState(0);
   const [selectedGroup, setSelectedGroup] =
     useState<CheckpointGroup | null>(null);
+
+  // Projects
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [isProjectLoading, setIsProjectLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setIsProjectLoading(true);
+
+        const response = await getProjects({
+          limit: "100",
+          page: "1",
+        });
+
+        setProjects(response.data ?? []);
+      } catch {
+        setProjects([]);
+      } finally {
+        setIsProjectLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const handleProjectChange = useCallback((event: SelectChangeEvent) => {
+    setSelectedProjectId(event.target.value);
+    setSelectedGroup(null);
+  }, []);
 
   // Selected checkpoint IDs
   const selectedCheckpointIds = useMemo<string[]>(() => {
@@ -59,13 +100,90 @@ const ManageCheckpointGroup = () => {
   return (
     <section id="manage-checkpoint-group">
       <Box className="flex flex-col gap-4 p-6">
-        <MainTitle title={t("pages.manage-checkpoint-group")} />
+        <Box className="flex justify-between items-center">
+          <MainTitle title={t("pages.manage-checkpoint-group")} />
+
+          <FormControl size="small" sx={{ minWidth: 260 }}>
+            <Select
+              displayEmpty
+              value={selectedProjectId}
+              onChange={handleProjectChange}
+              disabled={isProjectLoading}
+              renderValue={(value) => {
+                const selected = projects.find(
+                  (project) => project.project_id === value
+                );
+
+                return (
+                  <Box className="flex items-center gap-2">
+                    <FolderOutlinedIcon
+                      sx={{ fontSize: 20, color: "var(--primary-color)" }}
+                    />
+                    <span>
+                      {selected
+                        ? selected.project_name
+                        : t("text.select-project-placeholder")}
+                    </span>
+                  </Box>
+                );
+              }}
+              sx={{
+                color: "var(--primary-color)",
+                border: "1px solid var(--primary-color)",
+                borderRadius: "8px",
+                backgroundColor: "var(--tertiary-color)",
+                "& .MuiSvgIcon-root": {
+                  color: "var(--primary-color)",
+                },
+              }}
+              MenuProps={{
+                slotProps: {
+                  paper: {
+                    sx: {
+                      backgroundColor: "var(--tertiary-color)",
+                      border: "1px solid var(--primary-color)",
+
+                      "& .MuiMenuItem-root": {
+                        color: "var(--primary-color)",
+                        backgroundColor: "var(--tertiary-color)",
+
+                        "&:hover": {
+                          backgroundColor: "rgba(var(--primary-color-rgb), 0.15)",
+                        },
+
+                        "&.Mui-selected": {
+                          color: "var(--tertiary-color)",
+                          backgroundColor: "var(--primary-color) !important",
+                        },
+
+                        "&.Mui-selected:hover": {
+                          backgroundColor:
+                            "rgba(var(--primary-color-rgb), 0.8) !important",
+                        },
+                      },
+                    },
+                  },
+                },
+              }}
+            >
+              <MenuItem value="">
+                <em>{t("text.select-project-placeholder")}</em>
+              </MenuItem>
+              {projects.map((project) => (
+                <MenuItem key={project.project_id} value={project.project_id}>
+                  {project.project_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
         <Box className="grid grid-cols-[30vw_1fr] gap-5">
           <CheckpointGroupList
             selectedGroupId={selectedGroup?.group_id ?? null}
             refreshKey={refreshGroupListKey}
             canEdit={canEdit}
+            projectId={selectedProjectId || null}
             onSelectChanged={handleSelectChange}
           />
 
@@ -74,6 +192,7 @@ const ManageCheckpointGroup = () => {
             group_id={selectedGroup?.group_id ?? null}
             isDisable={!selectedGroup}
             canEdit={canEdit}
+            projectId={selectedProjectId || null}
             onDataChange={handleDataChange}
           />
         </Box>

@@ -358,7 +358,7 @@ const UserForm = () => {
         filter: "deleted=false",
       });
 
-      const cameraGroups = cameraGroupResponse?.data ?? [];
+      const cameraGroups = cameraGroupResponse?.data.sort((a, b) => a.group_name.localeCompare(b.group_name)) ?? [];
 
       const allCameraIds = [
         ...new Set(

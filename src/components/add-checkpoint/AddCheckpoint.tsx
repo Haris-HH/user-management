@@ -38,7 +38,7 @@ import {
 import { buildUniqueOptions } from "../../utils/commonFunctions";
 
 // Types
-import type { Camera, PoliceStation } from "../../types/common";
+import type { Camera, OptionType, PoliceStation } from "../../types/common";
 
 interface FormData {
   search: string;
@@ -137,98 +137,69 @@ const AddCheckpoint = ({
   // Slice
   const area = useSelector((state: RootState) => state.dropdown.area);
   const province = useSelector((state: RootState) => state.dropdown.province);
+  const policeStation = useSelector(
+    (state: RootState) => state.dropdown.policeStation
+  );
 
   const selectedCheckpointIdSet = useMemo(
     () => new Set(selectedCheckpoints.map((camera) => camera.camera_id)),
     [selectedCheckpoints]
   );
 
-  const areaOptions = useMemo(
+  // Area/province/station are bounded masterdata lists already loaded
+  // app-wide, so their filter options list every possible value instead of
+  // only the ones present on the currently loaded page.
+  const areaOptions = useMemo<OptionType[]>(
     () =>
-      buildUniqueOptions(
-        rows,
-        "police_region_id",
-        "police_region_name"
-      ),
-    [rows]
+      area.map((item) => ({
+        value: String(item.id),
+        label:
+          i18n.language === "th"
+            ? item.title_abbr_th || item.title_th
+            : item.title_abbr_en || item.title_en,
+      })),
+    [area, i18n.language]
   );
 
-  const provinceOptions = useMemo(
+  const provinceOptions = useMemo<OptionType[]>(
     () =>
-      buildUniqueOptions(
-        rows,
-        "province_code",
-        "province_name"
-      ),
-    [rows]
+      province.map((item) => ({
+        value: item.province_code,
+        label: i18n.language === "th" ? item.name_th : item.name_en,
+      })),
+    [province, i18n.language]
   );
 
-  const stationOptions = useMemo(
+  const stationOptions = useMemo<OptionType[]>(
     () =>
-      buildUniqueOptions(
-        rows,
-        "police_station_id",
-        "police_station_name"
-      ),
-    [rows]
+      policeStation.map((item) => ({
+        value: String(item.id),
+        label: item.station_name,
+      })),
+    [policeStation]
   );
+
+  // Camera names are not masterdata, so their option list is built from a
+  // full pagination walk of every camera matching the current text search
+  // (see the checkpoint-options effect below) instead of a bounded list.
+  const [checkpointOptionRows, setCheckpointOptionRows] = useState<Camera[]>([]);
 
   const checkpointOptions = useMemo(
     () =>
       buildUniqueOptions(
-        rows,
+        checkpointOptionRows,
         "camera_id",
         "camera_name"
       ),
-    [rows]
-  );
-
-  // The column filters are applied client-side, so "select all" has to run
-  // the same predicate over the rows it pulls from the other pages.
-  const matchesColumnFilters = useCallback(
-    (row: Camera) => {
-      const matchArea =
-        selectedAreaRegion.length === 0 ||
-        selectedAreaRegion.includes(String(row.police_region_id));
-
-      const matchProvince =
-        selectedProvince.length === 0 ||
-        selectedProvince.includes(row.province_code);
-
-      const matchStation =
-        selectedStation.length === 0 ||
-        selectedStation.includes(String(row.police_station_id));
-
-      const matchCheckpoint =
-        selectedCheckpoint.length === 0 ||
-        selectedCheckpoint.includes(row.camera_id);
-
-      return (
-        matchArea &&
-        matchProvince &&
-        matchStation &&
-        matchCheckpoint
-      );
-    },
-    [
-      selectedAreaRegion,
-      selectedProvince,
-      selectedStation,
-      selectedCheckpoint,
-    ]
-  );
-
-  const filterRows = useMemo(
-    () => rows.filter(matchesColumnFilters),
-    [rows, matchesColumnFilters]
+    [checkpointOptionRows]
   );
 
   // Ticked once every page is covered; otherwise it falls back to "is this
   // page fully ticked" so the box still reflects a manual page selection.
   const selectAll =
     allPagesSelected ||
-    (filterRows.length > 0 &&
-      filterRows.every((camera) => checkpointChecked.has(camera.camera_id)));
+    (rows.length > 0 &&
+      rows.every((camera) => checkpointChecked.has(camera.camera_id)));
 
   const isIndeterminate = !selectAll && checkpointChecked.size > 0;
 
@@ -301,7 +272,11 @@ const AddCheckpoint = ({
     ]
   )
 
-  const getFilters = useCallback(
+  // Shared by every request that only needs the text search applied — the
+  // checkpoint filter's own option list is built from this (see
+  // checkpoint-options effect below) and must not be narrowed by the column
+  // filters it is about to offer as choices.
+  const getSearchOnlyFilter = useCallback(
     (filterData: FormData, pageData: number, limit: number) => {
       const body: Record<string, string> = {
         page: pageData.toString(),
@@ -315,6 +290,48 @@ const AddCheckpoint = ({
       return body;
     },
     []
+  );
+
+  // The header-column filters used to be applied client-side to whatever
+  // page happened to be loaded, so picking a value that only existed on
+  // another page produced an empty table. They are folded into the backend
+  // filter here instead, so pagination/"select all" reflect a match across
+  // every camera, not just the loaded page.
+  const getFilters = useCallback(
+    (filterData: FormData, pageData: number, limit: number) => {
+      const body = getSearchOnlyFilter(filterData, pageData, limit);
+
+      const filterParts: string[] = body.filter ? [body.filter] : [];
+
+      if (selectedAreaRegion.length > 0) {
+        filterParts.push(`police_region_id=${selectedAreaRegion.join("|")}`);
+      }
+
+      if (selectedProvince.length > 0) {
+        filterParts.push(`province_code=${selectedProvince.join("|")}`);
+      }
+
+      if (selectedStation.length > 0) {
+        filterParts.push(`police_station_id=${selectedStation.join("|")}`);
+      }
+
+      if (selectedCheckpoint.length > 0) {
+        filterParts.push(`camera_id=${selectedCheckpoint.join("|")}`);
+      }
+
+      if (filterParts.length > 0) {
+        body.filter = filterParts.join(",");
+      }
+
+      return body;
+    },
+    [
+      getSearchOnlyFilter,
+      selectedAreaRegion,
+      selectedProvince,
+      selectedStation,
+      selectedCheckpoint,
+    ]
   );
 
   // Guards against a slower, stale request (e.g. a previous page/search)
@@ -362,6 +379,7 @@ const AddCheckpoint = ({
     page,
     rowsPerPage,
     searchTrigger,
+    getFilters,
   ]);
 
   useEffect(() => {
@@ -372,6 +390,86 @@ const AddCheckpoint = ({
     rowsPerPage,
     searchTrigger,
   ]);
+
+  // Loads the checkpoint filter's own option list: every camera name
+  // matching the current text search, walked across every page. Deferred
+  // until the dropdown is actually opened, and re-run if the search changes
+  // while it stays open — the app-wide camera count is too large to walk
+  // eagerly every time the dialog opens.
+  const checkpointFilterLabel = t("table.header.checkpoint");
+  const loadedCheckpointOptionsSearchRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (openedFilter !== checkpointFilterLabel) return;
+    if (loadedCheckpointOptionsSearchRef.current === formData.search) return;
+
+    let cancelled = false;
+
+    const loadCheckpointOptions = async () => {
+      try {
+        const collected: Camera[] = [];
+        let currentPage = 1;
+
+        for (;;) {
+          const res = await searchCameras(
+            getSearchOnlyFilter(formData, currentPage, SELECT_ALL_PAGE_LIMIT)
+          );
+
+          const cameras = res.data ?? [];
+
+          if (cameras.length === 0) break;
+
+          collected.push(...cameras);
+
+          const maxPage = res.pagination?.maxPage ?? 1;
+
+          if (currentPage >= maxPage) break;
+
+          currentPage++;
+        }
+
+        if (cancelled) return;
+
+        setCheckpointOptionRows(collected);
+        loadedCheckpointOptionsSearchRef.current = formData.search;
+      } catch {
+        if (!cancelled) setCheckpointOptionRows([]);
+      }
+    };
+
+    loadCheckpointOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [openedFilter, checkpointFilterLabel, formData, getSearchOnlyFilter]);
+
+  // Selecting a filter value re-queries the backend across every page, so
+  // the current page and "everything selected" flag - both scoped to the
+  // previous result set - no longer apply.
+  const handleAreaFilterChange = useCallback((values: string[]) => {
+    setSelectedAreaRegion(values);
+    setPage(1);
+    setAllPagesSelected(false);
+  }, []);
+
+  const handleProvinceFilterChange = useCallback((values: string[]) => {
+    setSelectedProvince(values);
+    setPage(1);
+    setAllPagesSelected(false);
+  }, []);
+
+  const handleStationFilterChange = useCallback((values: string[]) => {
+    setSelectedStation(values);
+    setPage(1);
+    setAllPagesSelected(false);
+  }, []);
+
+  const handleCheckpointFilterChange = useCallback((values: string[]) => {
+    setSelectedCheckpoint(values);
+    setPage(1);
+    setAllPagesSelected(false);
+  }, []);
 
   // MUI's Pagination reports a generic ChangeEvent, not a mouse event.
   const onChange = (event: React.ChangeEvent<unknown>, newPage: number) => {
@@ -457,14 +555,14 @@ const AddCheckpoint = ({
     try {
       setIsSelectingAll(true);
 
+      // getFilters already applies the column filters server-side, so every
+      // camera this returns is a match — no client-side re-filtering needed.
       const allCameras = await fetchAllMatchingCameras();
 
       setCheckpointChecked((prev) => {
         const next = new Map(prev);
 
-        allCameras
-          .filter(matchesColumnFilters)
-          .forEach((camera) => next.set(camera.camera_id, camera));
+        allCameras.forEach((camera) => next.set(camera.camera_id, camera));
 
         return next;
       });
@@ -487,6 +585,10 @@ const AddCheckpoint = ({
     setTotalPages(1);
     setCheckpointChecked(new Map());
     setAllPagesSelected(false);
+    setSelectedAreaRegion([]);
+    setSelectedProvince([]);
+    setSelectedStation([]);
+    setSelectedCheckpoint([]);
   };
 
   const handleCloseAddCheckpoint = () => {
@@ -562,37 +664,37 @@ const AddCheckpoint = ({
                   option={areaOptions}
                   filter
                   selectedValues={selectedAreaRegion}
-                  onChange={setSelectedAreaRegion}
+                  onChange={handleAreaFilterChange}
                   openedFilter={openedFilter}
                   setOpenedFilter={setOpenedFilter}
                 />
-                <HeaderCell 
-                  label={t("table.header.province")} 
-                  width="10%" 
+                <HeaderCell
+                  label={t("table.header.province")}
+                  width="10%"
                   option={provinceOptions}
-                  filter={true} 
+                  filter={true}
                   selectedValues={selectedProvince}
-                  onChange={setSelectedProvince}
+                  onChange={handleProvinceFilterChange}
                   openedFilter={openedFilter}
                   setOpenedFilter={setOpenedFilter}
                 />
-                <HeaderCell 
-                  label={t("table.header.station")} 
-                  width="10%" 
+                <HeaderCell
+                  label={t("table.header.station")}
+                  width="10%"
                   option={stationOptions}
-                  filter={true} 
+                  filter={true}
                   selectedValues={selectedStation}
-                  onChange={setSelectedStation}
+                  onChange={handleStationFilterChange}
                   openedFilter={openedFilter}
                   setOpenedFilter={setOpenedFilter}
                 />
-                <HeaderCell 
-                  label={t("table.header.checkpoint")} 
-                  width="10%" 
+                <HeaderCell
+                  label={t("table.header.checkpoint")}
+                  width="10%"
                   option={checkpointOptions}
-                  filter={true} 
+                  filter={true}
                   selectedValues={selectedCheckpoint}
-                  onChange={setSelectedCheckpoint}
+                  onChange={handleCheckpointFilterChange}
                   openedFilter={openedFilter}
                   setOpenedFilter={setOpenedFilter}
                 />
@@ -615,8 +717,8 @@ const AddCheckpoint = ({
             <TableBody>
               {isDataLoading || isSelectingAll ? (
                   <TableSkeleton headerColumn={6} />
-                ) : filterRows.length > 0 ? (
-                  filterRows.map((row, index) => {
+                ) : rows.length > 0 ? (
+                  rows.map((row, index) => {
                     const isAlreadySelected = selectedCheckpointIdSet.has(row.camera_id);
                     const isChecked = checkpointChecked.has(row.camera_id);
                     return (
