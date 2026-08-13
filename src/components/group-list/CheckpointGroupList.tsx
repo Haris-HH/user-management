@@ -389,6 +389,7 @@ const GroupList = ({
             open={isAddGroupOpen}
             onClose={() => setIsAddGroupOpen(false)}
             onConfirm={handleConfirm}
+            isWatchList={false}
           />
         )
       }

@@ -29,6 +29,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   onConfirm: (data: AddGroupFormData) => void | Promise<void>;
+  isWatchList?: boolean;
   loading?: boolean;
 };
 
@@ -153,6 +154,7 @@ const AddGroup = ({
   onClose,
   onConfirm,
   loading = false,
+  isWatchList = true,
 }: Props) => {
   const { t } = useTranslation();
 
@@ -261,144 +263,150 @@ const AddGroup = ({
           )}
         />
 
-        <IntegrationSection
-          icon={<TelegramIcon fontSize="small" />}
-          title={t("text.telegram")}
-          description={t(
-            "text.telegram-description"
-          )}
-        >
-          <Controller
-            name="botToken"
-            control={control}
-            rules={{
-              validate: (value) => {
-                const chatId = getValues("chatId");
+        {
+          isWatchList && (
+            <>
+              <IntegrationSection
+                icon={<TelegramIcon fontSize="small" />}
+                title={t("text.telegram")}
+                description={t(
+                  "text.telegram-description"
+                )}
+              >
+                <Controller
+                  name="botToken"
+                  control={control}
+                  rules={{
+                    validate: (value) => {
+                      const chatId = getValues("chatId");
 
-                if (chatId.trim() && !value.trim()) {
-                  return t(
-                    "validation.telegram-bot-token-required"
-                  );
-                }
+                      if (chatId.trim() && !value.trim()) {
+                        return t(
+                          "validation.telegram-bot-token-required"
+                        );
+                      }
 
-                return true;
-              },
-            }}
-            render={({ field }) => (
-              <TextBox
-                {...field}
-                id="bot-token"
-                label={t("component.bot-token")}
-                placeholder={t("placeholder.bot-token")}
-                type="password"
-                autoComplete="new-password"
-                error={Boolean(errors.botToken)}
-                helperText={errors.botToken?.message}
-                onChange={(event) => {
-                  field.onChange(event);
-                  void trigger("chatId");
+                      return true;
+                    },
+                  }}
+                  render={({ field }) => (
+                    <TextBox
+                      {...field}
+                      id="bot-token"
+                      label={t("component.bot-token")}
+                      placeholder={t("placeholder.bot-token")}
+                      type="password"
+                      autoComplete="new-password"
+                      error={Boolean(errors.botToken)}
+                      helperText={errors.botToken?.message}
+                      onChange={(event) => {
+                        field.onChange(event);
+                        void trigger("chatId");
+                      }}
+                    />
+                  )}
+                />
+
+                <Controller
+                  name="chatId"
+                  control={control}
+                  rules={{
+                    validate: (value) => {
+                      const botToken = getValues("botToken");
+
+                      if (botToken.trim() && !value.trim()) {
+                        return t(
+                          "validation.telegram-chat-id-required"
+                        );
+                      }
+
+                      return true;
+                    },
+                  }}
+                  render={({ field }) => (
+                    <TextBox
+                      {...field}
+                      id="chat-id"
+                      label={t("component.chat-id")}
+                      placeholder={t("placeholder.chat-id")}
+                      autoComplete="off"
+                      error={Boolean(errors.chatId)}
+                      helperText={errors.chatId?.message}
+                      onChange={(event) => {
+                        field.onChange(event);
+                        void trigger("botToken");
+                      }}
+                    />
+                  )}
+                />
+              </IntegrationSection>
+
+              <IntegrationSection
+                icon={<DiscordIcon fontSize="small" style={{ color: "var(--primary-color)" }} />}
+                title={t("text.discord")}
+                description={t(
+                  "text.discord-description"
+                )}
+              >
+                <Controller
+                  name="webHookUrl"
+                  control={control}
+                  rules={{
+                    validate: validateWebhookUrl,
+                  }}
+                  render={({ field }) => (
+                    <TextBox
+                      {...field}
+                      id="webhook-url"
+                      label={t("component.webhook-url")}
+                      placeholder={t("placeholder.webhook-url")}
+                      type="url"
+                      autoComplete="url"
+                      error={Boolean(errors.webHookUrl)}
+                      helperText={errors.webHookUrl?.message}
+                    />
+                  )}
+                />
+              </IntegrationSection>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 1,
+                  px: 1.5,
+                  py: 1.25,
+                  borderRadius: "8px",
+                  color: "text.secondary",
+                  bgcolor: "rgba(var(--primary-color-rgb), 0.05)",
                 }}
-              />
-            )}
-          />
+              >
+                <InfoOutlinedIcon
+                  sx={{
+                    mt: "1px",
+                    flexShrink: 0,
+                    color: "var(--primary-color)",
+                    fontSize: "18px",
+                  }}
+                />
 
-          <Controller
-            name="chatId"
-            control={control}
-            rules={{
-              validate: (value) => {
-                const botToken = getValues("botToken");
+                <Typography
+                  sx={{
+                    fontSize: "12px",
+                    lineHeight: 1.5,
+                    color: "rgba(var(--primary-color-rgb),0.6)",
+                  }}
+                >
+                  {t(
+                    "text.notification-integration-optional"
+                    )}
+                </Typography>
+              </Box>
 
-                if (botToken.trim() && !value.trim()) {
-                  return t(
-                    "validation.telegram-chat-id-required"
-                  );
-                }
-
-                return true;
-              },
-            }}
-            render={({ field }) => (
-              <TextBox
-                {...field}
-                id="chat-id"
-                label={t("component.chat-id")}
-                placeholder={t("placeholder.chat-id")}
-                autoComplete="off"
-                error={Boolean(errors.chatId)}
-                helperText={errors.chatId?.message}
-                onChange={(event) => {
-                  field.onChange(event);
-                  void trigger("botToken");
-                }}
-              />
-            )}
-          />
-        </IntegrationSection>
-
-        <IntegrationSection
-          icon={<DiscordIcon fontSize="small" style={{ color: "var(--primary-color)" }} />}
-          title={t("text.discord")}
-          description={t(
-            "text.discord-description"
-          )}
-        >
-          <Controller
-            name="webHookUrl"
-            control={control}
-            rules={{
-              validate: validateWebhookUrl,
-            }}
-            render={({ field }) => (
-              <TextBox
-                {...field}
-                id="webhook-url"
-                label={t("component.webhook-url")}
-                placeholder={t("placeholder.webhook-url")}
-                type="url"
-                autoComplete="url"
-                error={Boolean(errors.webHookUrl)}
-                helperText={errors.webHookUrl?.message}
-              />
-            )}
-          />
-        </IntegrationSection>
-
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 1,
-            px: 1.5,
-            py: 1.25,
-            borderRadius: "8px",
-            color: "text.secondary",
-            bgcolor: "rgba(var(--primary-color-rgb), 0.05)",
-          }}
-        >
-          <InfoOutlinedIcon
-            sx={{
-              mt: "1px",
-              flexShrink: 0,
-              color: "var(--primary-color)",
-              fontSize: "18px",
-            }}
-          />
-
-          <Typography
-            sx={{
-              fontSize: "12px",
-              lineHeight: 1.5,
-              color: "rgba(var(--primary-color-rgb),0.6)",
-            }}
-          >
-            {t(
-              "text.notification-integration-optional"
-              )}
-          </Typography>
-        </Box>
-
-        <Divider />
+              <Divider />
+            </>
+          )
+        }
 
         <Box
           sx={{
