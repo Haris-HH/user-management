@@ -624,6 +624,7 @@ export interface CheckpointGroup {
   group_id: string;
   group_name: string;
   description: string | null;
+  project_id: string | null;
   members: string[];
   cameras: string[];
   visible: boolean;

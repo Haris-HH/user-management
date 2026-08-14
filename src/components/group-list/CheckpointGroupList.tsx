@@ -36,7 +36,7 @@ import {
   createCameraGroup,
   deleteCameraGroup,
   getAllCameraGroup,
-  getCamerasByFilter,
+  getCamerasByIds,
 } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -116,24 +116,34 @@ const GroupList = ({
     try {
       setIsDataLoading(true);
 
-      // Camera groups carry no project_id of their own, so the project is
-      // resolved from its cameras: fetch every camera whose project_id
-      // matches the selection, then keep only the groups that contain at
-      // least one of those cameras.
-      const [projectCameras, groupsResponse] = await Promise.all([
-        getCamerasByFilter(`project_id=${projectId}`),
-        getAllCameraGroup(),
-      ]);
+      const groupsResponse = await getAllCameraGroup({
+        filter: "deleted=false",
+      });
 
-      const projectCameraIds = new Set(
-        projectCameras.map((camera) => camera.camera_id)
+      const allGroups = groupsResponse.data ?? [];
+
+      /* A group can belong to another project directly yet still hold
+         cameras that were moved into this project, so membership is
+         resolved via each camera's own project_id rather than trusting
+         the group's project_id alone. */
+      const allCameraIds = [
+        ...new Set(allGroups.flatMap((group) => group.cameras ?? [])),
+      ];
+
+      const cameras =
+        allCameraIds.length > 0 ? await getCamerasByIds(allCameraIds) : [];
+
+      const cameraProjectMap = new Map(
+        cameras.map((camera) => [camera.camera_id, camera.project_id])
       );
 
-      const groups = (groupsResponse.data ?? [])
+      const groups = allGroups
         .filter(
           (group) =>
-            Array.isArray(group.cameras) &&
-            group.cameras.some((cameraId) => projectCameraIds.has(cameraId))
+            group.project_id === projectId ||
+            group.cameras?.some(
+              (cameraId) => cameraProjectMap.get(cameraId) === projectId
+            )
         )
         .sort((a, b) => a.group_name.localeCompare(b.group_name));
 
