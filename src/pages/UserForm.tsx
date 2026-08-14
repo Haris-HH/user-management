@@ -769,7 +769,14 @@ const UserForm = () => {
           user_id: editingUser.user_id,
         };
 
+        const date = new Date();
+        date.setDate(date.getDate() + Number(formData.end_date));
+
+        const accountExpire = date.toISOString().split("T")[0];
+
         addChangedField(updatePayload, "user_group_id", formData.permission, editingUser.user_group_id ?? "");
+        addChangedField(updatePayload, "user_lifetime", formData.life_date, editingUser.user_lifetime ?? "");
+        addChangedField(updatePayload, "account_expire", accountExpire, editingUser.account_expire ?? "");
         addChangedField(updatePayload, "image_url", imageUrl, editingUser.image_url ?? null);
         if (title_id !== 0) {
           addChangedField(updatePayload, "title_id", title_id, editingUser.title_id);
@@ -812,6 +819,11 @@ const UserForm = () => {
         await PopupMessage(t("popup.update-success"), "", "success");
       } 
       else {
+        const date = new Date();
+        date.setDate(date.getDate() + Number(formData.end_date));
+
+        const accountExpire = date.toISOString().split("T")[0];
+
         const createPayload: CreateUser = {
           user_group_id: formData.permission,
           ...(imageUrl && { image_url: imageUrl }),
@@ -830,6 +842,8 @@ const UserForm = () => {
           ou_code: formData.agency,
           ...(permissions && { permissions }),
           ...(formData.sub_unit && { sub_unit: formData.sub_unit }),
+          account_expire: accountExpire,
+          user_lifetime: Number(formData.life_date) ?? 0,
         };
 
         await createUserApi(createPayload);
@@ -1202,7 +1216,7 @@ const UserForm = () => {
                 </Box>
               </Box>
 
-              <Divider sx={{ borderColor: "#0c5d9f94", borderWidth: "1.5px", mt: 1 }} />
+              <Divider sx={{ borderColor: "rgba(var(--primary-color-rgb), 0.58)", borderWidth: "1.5px", mt: 1 }} />
 
               <Box className="flex flex-col gap-4 px-2">
                 <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--primary-color)" }}>
@@ -1399,7 +1413,7 @@ const UserForm = () => {
             <>
               <Divider
                 sx={{
-                  borderColor: "#0c5d9f94",
+                  borderColor: "rgba(var(--primary-color-rgb), 0.58)",
                   borderWidth: "1.5px",
                   mt: 5,
                 }}
@@ -1534,7 +1548,7 @@ const UserForm = () => {
             </>
           )}
 
-          <Divider sx={{ borderColor: "#0c5d9f94", borderWidth: "1.5px", mt: 5 }} />
+          <Divider sx={{ borderColor: "rgba(var(--primary-color-rgb), 0.58)", borderWidth: "1.5px", mt: 5 }} />
 
           <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--primary-color)" }}>
             {t("text.permission")}

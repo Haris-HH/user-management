@@ -233,6 +233,48 @@ const usePermissionUiList = () => {
         ],
       },
       {
+        key: "ops-management",
+        name: t("permission.ui.ops-management.name"),
+        group_list: [
+          {
+            key: "checkpoint",
+            name: t("permission.ui.ops-management.checkpoint"),
+            active: false,
+            edit: false,
+          },
+          {
+            key: "status",
+            name: t("permission.ui.ops-management.status"),
+            active: false,
+            edit: false,
+          },
+          {
+            key: "worksheet",
+            name: t("permission.ui.ops-management.worksheet"),
+            active: false,
+            edit: false,
+          },
+          {
+            key: "map",
+            name: t("permission.ui.ops-management.map"),
+            active: false,
+            edit: false,
+          },
+          {
+            key: "report",
+            name: t("permission.ui.ops-management.report"),
+            active: false,
+            edit: false,
+          },
+          {
+            key: "activity",
+            name: t("permission.ui.ops-management.activity"),
+            active: false,
+            edit: false,
+          },
+        ],
+      },
+      {
         key: LPR_CENTER_UI_KEY,
         name: t("permission.ui.lpr-center.name"),
         group_list: buildMenuGroupList(LPR_CENTER_PERMISSION_TREE, t, "leaf"),

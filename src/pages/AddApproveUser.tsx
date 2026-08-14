@@ -111,7 +111,7 @@ const AddApproveUser = () => {
   const [userSelected, setUserSelected] = useState<string[]>([]);
 
   // Pagination
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(100);
 
@@ -306,7 +306,7 @@ const AddApproveUser = () => {
         if (!isMountedRef.current || requestId !== fetchRequestIdRef.current) {
           return;
         }
-        setTotalPages(res?.pagination?.maxPage ?? 1);
+        setTotalUsers(res?.pagination?.countAll ?? 0);
         const updated = res.data.map((data) => {
           const titleData = data.title_id ? titleMap.get(data.title_id) : null;
           const titleName = titleData ?
@@ -346,7 +346,7 @@ const AddApproveUser = () => {
           return;
         }
         await PopupMessage(t("popup.fetch-error"), "", "error");
-        setTotalPages(1);
+        setTotalUsers(0);
       }
       finally {
         if (isMountedRef.current && requestId === fetchRequestIdRef.current) {
@@ -534,8 +534,11 @@ const AddApproveUser = () => {
   };
 
   /*
-    MUI passes null as the event when the page changes without a click
-    (e.g. after the rows-per-page control clamps the page), so the event is
+    MUI's TablePagination is zero-based, while `page` state is one-based (it
+    is sent straight to the backend's `page` filter and used for the row
+    numbering column), so the event's newPage is converted here. MUI also
+    passes null as the event when the page changes without a click (e.g.
+    after the rows-per-page control clamps the page), so the event is
     optional-chained rather than dereferenced.
   */
   const handleChangePage = async (
@@ -543,8 +546,9 @@ const AddApproveUser = () => {
     newPage: number
   ) => {
     event?.preventDefault();
-    setPage(newPage);
-    await fetchData(formData, newPage, rowsPerPage);
+    const nextPage = newPage + 1;
+    setPage(nextPage);
+    await fetchData(formData, nextPage, rowsPerPage);
   };
 
   const handleChangeRowsPerPage = async (
@@ -552,7 +556,7 @@ const AddApproveUser = () => {
   ) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     setRowsPerPage(newRowsPerPage);
-    setPage(0);
+    setPage(1);
     await fetchData(formData, 1, newRowsPerPage);
   };
 
@@ -597,6 +601,7 @@ const AddApproveUser = () => {
   const handleTabSelectChange = (tabIndex: number) => {
     setTabValue(tabIndex);
     setUserSelected([]);
+    setPage(1);
   };
 
   const handleDeleteClick = async () => {
@@ -1332,9 +1337,9 @@ const AddApproveUser = () => {
             <TablePagination
               rowsPerPageOptions={[100, 500, 1000]}
               component="div"
-              count={totalPages}
+              count={totalUsers}
               rowsPerPage={rowsPerPage}
-              page={page}
+              page={page - 1}
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               sx={{

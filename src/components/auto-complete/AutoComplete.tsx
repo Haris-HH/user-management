@@ -31,7 +31,7 @@ const buildFieldSx = (labelFontSize: string, errorBorderWidth: string) => ({
     },
 
     "&.Mui-error fieldset": {
-      borderColor: "#d32f2f",
+      borderColor: "var(--danger-color)",
       borderWidth: errorBorderWidth,
     },
 

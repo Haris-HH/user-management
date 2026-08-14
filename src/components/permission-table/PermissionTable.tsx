@@ -1088,7 +1088,7 @@ const PermissionTable = ({
                                         fontSize: "14px",
                                         backgroundColor:
                                           "rgba(var(--primary-color-rgb), 0.6)",
-                                        color: "var(--tertiary-color)",
+                                        color: "black",
                                         fontWeight: "bold",
                                       },
                                     }}
@@ -1130,7 +1130,7 @@ const PermissionTable = ({
                                               "rgba(var(--primary-color-rgb), 0.45)",
                                             "&.Mui-expanded": { margin: 0 },
                                             "& .MuiSvgIcon-root": {
-                                              color: "var(--tertiary-color)",
+                                              color: "black",
                                             },
                                           }}
                                         >
@@ -1148,7 +1148,7 @@ const PermissionTable = ({
                                               <Typography
                                                 component="span"
                                                 sx={{
-                                                  color: "var(--tertiary-color)",
+                                                  color: "black",
                                                   fontWeight: 700,
                                                 }}
                                               >
@@ -1158,7 +1158,7 @@ const PermissionTable = ({
                                               <Typography
                                                 component="span"
                                                 sx={{
-                                                  color: "var(--tertiary-color)",
+                                                  color: "black",
                                                   fontWeight: 700,
                                                   textAlign: "center",
                                                 }}
@@ -1181,10 +1181,10 @@ const PermissionTable = ({
                                                     )
                                                   }
                                                   sx={{
-                                                    color: "var(--tertiary-color)",
+                                                    color: "black",
                                                     p: 0,
                                                     "&.Mui-checked": {
-                                                      color: "var(--tertiary-color)",
+                                                      color: "black",
                                                     },
                                                   }}
                                                 />
@@ -1206,7 +1206,7 @@ const PermissionTable = ({
                                                         fontSize: "14px",
                                                         backgroundColor:
                                                           "rgba(var(--primary-color-rgb), 0.6)",
-                                                        color: "var(--tertiary-color)",
+                                                        color: "black",
                                                         fontWeight: "bold",
                                                       },
                                                     }}

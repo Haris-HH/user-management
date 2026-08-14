@@ -227,7 +227,7 @@ const ManageGroupsDialog = ({
                         title={t("button.delete")}
                         disabled={isSubmitting}
                         onClick={() => void handleDelete(group)}
-                        sx={{ color: "#d32f2f" }}
+                        sx={{ color: "var(--danger-color)" }}
                       >
                         <DeleteOutlineIcon fontSize="small" />
                       </IconButton>

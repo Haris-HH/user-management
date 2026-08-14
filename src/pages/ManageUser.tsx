@@ -115,7 +115,6 @@ const ManageUser = () => {
   const [org, setOrg] = useState<NsbOrg[]>([]);
 
   // Pagination
-  const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(100);
 
@@ -416,14 +415,12 @@ const ManageUser = () => {
         if (requestId !== latestRequestIdRef.current) return;
 
         setUserData(mapUserDataRows(res.data ?? []));
-        setTotalPages(res.pagination?.maxPage ?? 1);
         setTotalUsers(res.pagination?.countAll ?? 0);
       } catch (error) {
         if (requestId !== latestRequestIdRef.current) return;
 
         console.log(error);
         setUserData([]);
-        setTotalPages(1);
         setTotalUsers(0);
       } finally {
         if (requestId === latestRequestIdRef.current) {
@@ -504,8 +501,11 @@ const ManageUser = () => {
   };
 
   /*
-    MUI passes null as the event when the page changes without a click
-    (e.g. after the rows-per-page control clamps the page), so the event is
+    MUI's TablePagination is zero-based, while `page` state is one-based (it
+    is sent straight to the backend's `page` filter and used for the row
+    numbering column), so the event's newPage is converted here. MUI also
+    passes null as the event when the page changes without a click (e.g.
+    after the rows-per-page control clamps the page), so the event is
     optional-chained rather than dereferenced.
   */
   const handleChangePage = async (
@@ -513,8 +513,9 @@ const ManageUser = () => {
     newPage: number
   ) => {
     event?.preventDefault();
-    setPage(newPage);
-    await fetchData(formData, newPage, rowsPerPage);
+    const nextPage = newPage + 1;
+    setPage(nextPage);
+    await fetchData(formData, nextPage, rowsPerPage);
   };
 
   const handleChangeRowsPerPage = async (
@@ -522,7 +523,7 @@ const ManageUser = () => {
   ) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     setRowsPerPage(newRowsPerPage);
-    setPage(0);
+    setPage(1);
     await fetchData(formData, 1, newRowsPerPage);
   };
 
@@ -1258,9 +1259,9 @@ const ManageUser = () => {
           <TablePagination
             rowsPerPageOptions={[100, 500, 1000]}
             component="div"
-            count={totalPages}
+            count={totalUsers}
             rowsPerPage={rowsPerPage}
-            page={page}
+            page={page - 1}
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             sx={{

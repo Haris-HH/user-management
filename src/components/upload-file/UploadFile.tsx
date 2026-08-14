@@ -787,6 +787,11 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           const shouldSendToRejected =
             data.status === SAVE_BUT_NOT_APPROVE_STATE;
 
+          const date = new Date();
+          date.setDate(date.getDate() + Number(userGroupData?.approved_lifetime || 0));
+
+          const accountExpire = date.toISOString().split("T")[0];
+
           // Built up field-by-field so absent/invalid columns are simply
           // omitted rather than sent as empty strings. Rows can legitimately
           // reach here missing some of CreateUser's fields (e.g. an
@@ -808,7 +813,9 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             ...(data.email && { email: data.email }),
             ...(data.ou_id && { ou_code: data.ou_id }),
             ...(userGroupData && { permissions: userGroupData.permissions }),
-            password: "",
+            ...(userGroupData && { login_lifetime: userGroupData.login_lifetime || 0 }),
+            ...(accountExpire && { account_expire: accountExpire || "" }),
+            ...(data.phoneNumber && { password: data.phoneNumber }),
           } as CreateUser;
 
           const res = await createUserApi(createPayload);

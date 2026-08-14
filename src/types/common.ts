@@ -121,6 +121,8 @@ export interface CreateUser {
   bh_code?: string;
   bk_code?: string;
   org_code?: string;
+  account_expire?: string | null;
+  user_lifetime?: number | null;
   permissions: GroupPermissions;
 }
 
@@ -161,6 +163,8 @@ export interface UpdateUser {
   active_by?: string;
   permissions?: GroupPermissions;
   sub_unit?: string[];
+  user_lifetime?: string | null;
+  account_expire?: string | null;
 }
 
 export interface ServiceChannel {
