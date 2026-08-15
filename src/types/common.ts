@@ -435,6 +435,12 @@ export interface CameraInCheckpoint {
   group_id: string;
   group_name: string;
   description: string | null;
+  /*
+    The group's own project, as set at creation time. Null on rows created
+    before camera groups carried a project - those still resolve their project
+    from their cameras, see resolveCheckpointProjectId.
+  */
+  project_id: string | null;
   visible: boolean;
   active: boolean;
   camera_list: Camera[];

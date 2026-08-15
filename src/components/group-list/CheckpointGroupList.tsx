@@ -36,7 +36,6 @@ import {
   createCameraGroup,
   deleteCameraGroup,
   getAllCameraGroup,
-  getCamerasByIds,
 } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -122,29 +121,11 @@ const GroupList = ({
 
       const allGroups = groupsResponse.data ?? [];
 
-      /* A group can belong to another project directly yet still hold
-         cameras that were moved into this project, so membership is
-         resolved via each camera's own project_id rather than trusting
-         the group's project_id alone. */
-      const allCameraIds = [
-        ...new Set(allGroups.flatMap((group) => group.cameras ?? [])),
-      ];
-
-      const cameras =
-        allCameraIds.length > 0 ? await getCamerasByIds(allCameraIds) : [];
-
-      const cameraProjectMap = new Map(
-        cameras.map((camera) => [camera.camera_id, camera.project_id])
-      );
-
+      // A group belongs to whichever project it was created under - matched
+      // on its own project_id only, regardless of what project its cameras
+      // have since moved to.
       const groups = allGroups
-        .filter(
-          (group) =>
-            group.project_id === projectId ||
-            group.cameras?.some(
-              (cameraId) => cameraProjectMap.get(cameraId) === projectId
-            )
-        )
+        .filter((group) => group.project_id === projectId)
         .sort((a, b) => a.group_name.localeCompare(b.group_name));
 
       setGroupList(groups);

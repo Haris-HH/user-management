@@ -456,10 +456,9 @@ const UserList = ({
               </TableHead>
 
               <TableBody>
-                {isDataLoading && (
+                {isDataLoading ? (
                   <TableSkeleton headerColumn={columnCount} />
-                )}
-                {filterSelectedUsers.length > 0 ? (
+                ) : filterSelectedUsers.length > 0 ? (
                   filterSelectedUsers.map((user, index) => {
                     const fullName = capitalizeWords(
                       `${user.title ?? ""} ${user.firstname ?? ""} ${user.lastname ?? ""}`

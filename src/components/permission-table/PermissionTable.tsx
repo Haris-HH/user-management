@@ -34,7 +34,10 @@ import type {
 import { getProjects } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
-import { UNASSIGNED_PROJECT_KEY } from "../../utils/commonFunctions";
+import {
+  UNASSIGNED_PROJECT_KEY,
+  resolveCheckpointProjectId,
+} from "../../utils/commonFunctions";
 
 // A single ui[uiKey] entry of GroupPermissions, e.g. { enabled, groups, prints }.
 type UiPermissionEntry = NonNullable<GroupPermissions["ui"]>[string];
@@ -384,7 +387,7 @@ const PermissionTable = ({
     checkpointList.forEach((checkpoint) => {
       map.set(
         String(checkpoint.group_id),
-        checkpoint.camera_list?.[0]?.project_id || UNASSIGNED_PROJECT_KEY
+        resolveCheckpointProjectId(checkpoint)
       );
     });
 
@@ -430,13 +433,12 @@ const PermissionTable = ({
     [projects]
   );
 
-  // Groups a group's project from its first camera - see UNASSIGNED_PROJECT_KEY.
+  // See resolveCheckpointProjectId for how a group's project is resolved.
   const projectGroups = useMemo<ProjectBucket[]>(() => {
     const buckets = new Map<string, CameraInCheckpoint[]>();
 
     checkpointList.forEach((checkpoint) => {
-      const projectId =
-        checkpoint.camera_list?.[0]?.project_id || UNASSIGNED_PROJECT_KEY;
+      const projectId = resolveCheckpointProjectId(checkpoint);
 
       const bucket = buckets.get(projectId) ?? [];
       bucket.push(checkpoint);

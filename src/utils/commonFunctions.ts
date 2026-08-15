@@ -7,12 +7,27 @@ import type {
 } from "../types/common";
 
 /*
-  A camera group (checkpoint) carries no project_id of its own - every camera
-  inside it does, and groups are scoped to a single project at creation time,
-  so the first camera's project_id stands in for the group's. Groups with no
-  cameras yet have nothing to derive from and fall into this bucket.
+  A camera group (checkpoint) that belongs to no project at all - it neither
+  carries a project_id nor holds a camera to derive one from.
 */
 export const UNASSIGNED_PROJECT_KEY = "unassigned";
+
+/*
+  The project a checkpoint (camera-group) belongs to. A group carries its own
+  project_id since it is created inside one, but that field post-dates the
+  first camera groups, so a group without it falls back to its cameras - which
+  each carry a project of their own. Groups with neither (a brand new group has
+  no cameras yet) land in UNASSIGNED_PROJECT_KEY.
+
+  Same precedence CheckpointGroupList resolves membership with, so a group
+  shows up under the same project on both screens.
+*/
+export const resolveCheckpointProjectId = (
+  group: CameraInCheckpoint
+): string =>
+  group.project_id ||
+  group.camera_list?.[0]?.project_id ||
+  UNASSIGNED_PROJECT_KEY;
 
 /*
   Buckets checkpoint (camera-group) ids by their project, in the shape
@@ -25,8 +40,7 @@ export const groupCameraGroupIdsByProject = (
   const buckets = new Map<string, string[]>();
 
   groups.forEach((group) => {
-    const projectId =
-      group.camera_list?.[0]?.project_id || UNASSIGNED_PROJECT_KEY;
+    const projectId = resolveCheckpointProjectId(group);
 
     const ids = buckets.get(projectId) ?? [];
     ids.push(group.group_id);

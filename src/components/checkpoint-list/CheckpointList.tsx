@@ -265,18 +265,21 @@ const CheckpointList = ({
 
     // A camera added into a group under the selected project has to belong
     // to that project too - otherwise it stays scoped to whatever project it
-    // was created under, even though the operator just filed it here.
-    const updates: Promise<unknown>[] = [addCameraInGroup(body)];
-
+    // was created under, even though the operator just filed it here. This
+    // has to complete *before* addCameraInGroup: the two used to fire in
+    // parallel, and racing them let the group-add's own side effects on the
+    // camera's project win, silently leaving the camera on its old project.
     if (projectId) {
-      for (const camera of cameras) {
-        if (camera.project_id !== projectId) {
-          updates.push(updateCamera({ camera_id: camera.camera_id, project_id: projectId }));
-        }
-      }
+      const projectUpdates = cameras
+        .filter((camera) => camera.project_id !== projectId)
+        .map((camera) =>
+          updateCamera({ camera_id: camera.camera_id, project_id: projectId })
+        );
+
+      await Promise.all(projectUpdates);
     }
 
-    await Promise.all(updates);
+    await addCameraInGroup(body);
   };
 
   const handleDeleteCheckpoint = async (cameraId: string) => {
@@ -471,10 +474,9 @@ const CheckpointList = ({
                 </TableRow>
               </TableHead>
               <TableBody>
-                {isDataLoading && (
+                {isDataLoading ? (
                   <TableSkeleton headerColumn={columnCount} />
-                )}
-                {filterSelectedCheckpoints.length > 0 ? (
+                ) : filterSelectedCheckpoints.length > 0 ? (
                   filterSelectedCheckpoints.map((checkpoint, index) => {
                     return (
                       <TableRow
