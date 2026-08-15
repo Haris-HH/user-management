@@ -41,6 +41,31 @@ function hex2rgb(hex: string): string {
   ].join(", ");
 }
 
+// Every opacity a color is actually used at across pages/components, baked
+// into a named variable (e.g. --primary-color-a35) so call sites reference
+// `var(--primary-color-a35)` instead of writing `rgba(var(--primary-color-rgb), 0.35)`
+// themselves. Keeps the same rendered colors, just names them once here.
+const PRIMARY_ALPHA_STEPS = [
+  3, 5, 6, 8, 10, 12, 15, 16, 18, 20, 25, 30, 35, 40, 45, 50, 58, 60, 70, 80,
+  85, 88,
+];
+const SECONDARY_ALPHA_STEPS = [5, 10, 15, 18, 20, 25, 30, 35, 50];
+const TERTIARY_ALPHA_STEPS = [10, 15, 18, 25, 60, 70, 80, 85, 90, 92, 100];
+
+function alphaVars(
+  varPrefix: string,
+  hex: string,
+  steps: number[]
+): Record<string, string> {
+  const rgb = hex2rgb(hex);
+  const out: Record<string, string> = {};
+  for (const pct of steps) {
+    out[`--${varPrefix}-a${String(pct).padStart(2, "0")}`] =
+      `rgba(${rgb}, ${pct / 100})`;
+  }
+  return out;
+}
+
 function buildTheme(
   name: string,
   mainBgColor: string,
@@ -58,12 +83,15 @@ function buildTheme(
 
       "--primary-color": primaryColor,
       "--primary-color-rgb": hex2rgb(primaryColor),
+      ...alphaVars("primary-color", primaryColor, PRIMARY_ALPHA_STEPS),
 
       "--secondary-color": secondaryColor,
       "--secondary-color-rgb": hex2rgb(secondaryColor),
+      ...alphaVars("secondary-color", secondaryColor, SECONDARY_ALPHA_STEPS),
 
       "--tertiary-color": tertiaryColor,
       "--tertiary-color-rgb": hex2rgb(tertiaryColor),
+      ...alphaVars("tertiary-color", tertiaryColor, TERTIARY_ALPHA_STEPS),
 
       "--text-color": isDark ? "white" : "black",
 
@@ -284,17 +312,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     const root = document.documentElement;
     root.setAttribute('data-theme', themeName);
 
-    Object.entries({
-      '--main-bg-color': theme.colors['--main-bg-color'],
-      '--primary-color': theme.colors['--primary-color'],
-      '--primary-color-rgb': theme.colors['--primary-color-rgb'],
-      '--secondary-color': theme.colors['--secondary-color'],
-      '--secondary-color-rgb': theme.colors['--secondary-color-rgb'],
-      '--tertiary-color': theme.colors['--tertiary-color'],
-      '--tertiary-color-rgb': theme.colors['--tertiary-color-rgb'],
-      '--text-color': theme.colors['--text-color'],
-      '--danger-color': theme.colors['--danger-color'],
-    }).forEach(([key, value]) => root.style.setProperty(key, value));
+    Object.entries(theme.colors).forEach(([key, value]) =>
+      root.style.setProperty(key, value)
+    );
   }, [themeName, theme]);
 
   return (

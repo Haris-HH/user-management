@@ -254,7 +254,7 @@ const GroupList = ({
                 textTransform: "capitalize",
                 "&:hover": {
                   backgroundColor:
-                    "rgba(var(--primary-color-rgb), 0.8)",
+                    "var(--primary-color-a80)",
                 },
               }}
             >
@@ -336,15 +336,15 @@ const GroupList = ({
                         cursor: "pointer",
                         "&:hover td": {
                           backgroundColor:
-                            "rgba(var(--primary-color-rgb), 0.08)",
+                            "var(--primary-color-a08)",
                         },
                         "&.Mui-selected td": {
                           backgroundColor:
-                            "rgba(var(--primary-color-rgb), 0.2)",
+                            "var(--primary-color-a20)",
                         },
                         "&.Mui-selected:hover td": {
                           backgroundColor:
-                            "rgba(var(--primary-color-rgb), 0.25)",
+                            "var(--primary-color-a25)",
                         },
                         "& .MuiTableCell-root": {
                           color: "var(--secondary-color)",
@@ -397,7 +397,7 @@ const GroupList = ({
                       sx={{
                         color: "var(--secondary-color)",
                         borderBottom:
-                          "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                          "1px solid var(--primary-color-a50)",
                       }}
                     >
                       {t("text.no-data")}

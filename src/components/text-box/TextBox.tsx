@@ -192,7 +192,7 @@ const TextBox: React.FC<TextBoxProps> = ({
           },
 
           "& .MuiOutlinedInput-root.Mui-disabled": {
-            backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
+            backgroundColor: "var(--primary-color-a05) !important",
             cursor: "not-allowed",
 
             "& fieldset": {
@@ -263,7 +263,7 @@ const TextBox: React.FC<TextBoxProps> = ({
                         color: "var(--primary-color)", 
                         fontSize: "20px",
                         "&:hover": {
-                          backgroundColor: "rgba(var(--secondary-color-rgb), 0.2)",
+                          backgroundColor: "var(--secondary-color-a20)",
                           cursor: "pointer"
                         } 
                       }}
@@ -275,7 +275,7 @@ const TextBox: React.FC<TextBoxProps> = ({
                         color: "var(--primary-color)", 
                         fontSize: "20px",
                         "&:hover": {
-                          backgroundColor: "rgba(var(--secondary-color-rgb), 0.2)",
+                          backgroundColor: "var(--secondary-color-a20)",
                           cursor: "pointer"
                         } 
                       }}

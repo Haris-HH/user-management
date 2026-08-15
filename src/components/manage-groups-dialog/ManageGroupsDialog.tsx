@@ -185,8 +185,8 @@ const ManageGroupsDialog = ({
                     key={group.group_id}
                     className="flex items-center justify-between gap-2 rounded-md px-3 py-2"
                     sx={{
-                      border: "1px solid rgba(var(--primary-color-rgb), 0.2)",
-                      backgroundColor: "rgba(var(--primary-color-rgb), 0.03)",
+                      border: "1px solid var(--primary-color-a20)",
+                      backgroundColor: "var(--primary-color-a03)",
                     }}
                   >
                     <Box className="flex items-center gap-2 min-w-0">
@@ -217,7 +217,7 @@ const ManageGroupsDialog = ({
                           fontWeight: 700,
                           letterSpacing: "0.05em",
                           textTransform: "uppercase",
-                          backgroundColor: "rgba(var(--primary-color-rgb), 0.15)",
+                          backgroundColor: "var(--primary-color-a15)",
                           color: "var(--primary-color)",
                         }}
                       />
@@ -240,7 +240,7 @@ const ManageGroupsDialog = ({
         </Box>
 
         {/* Create new group */}
-        <Box className="flex flex-col gap-2 pt-3" sx={{ borderTop: "1px solid rgba(var(--primary-color-rgb), 0.2)" }}>
+        <Box className="flex flex-col gap-2 pt-3" sx={{ borderTop: "1px solid var(--primary-color-a20)" }}>
           <Typography
             sx={{
               fontSize: "12px",
@@ -270,7 +270,7 @@ const ManageGroupsDialog = ({
                 fontSize: "14px",
                 color: "var(--primary-color)",
                 borderRadius: "4px",
-                border: "1px solid rgba(var(--primary-color-rgb), 0.35)",
+                border: "1px solid var(--primary-color-a35)",
                 backgroundColor: "var(--tertiary-color)",
               }}
             />

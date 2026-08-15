@@ -1197,7 +1197,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                     backgroundColor: "var(--primary-color)",
                   },
                   "& .MuiPaginationItem-page.Mui-selected": {
-                    backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                    backgroundColor: "var(--primary-color-a80)",
                     color: "var(--tertiary-color)",
                   },
                 }}

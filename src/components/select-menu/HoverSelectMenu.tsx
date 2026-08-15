@@ -94,8 +94,8 @@ function HoverSelectMenu<T>({
                 borderRadius: "16px",
                 overflow: "visible",
                 backgroundColor: "var(--tertiary-color)",
-                boxShadow: "0 8px 24px rgba(var(--tertiary-color-rgb), 0.15)",
-                border: "1px solid rgba(var(--tertiary-color-rgb), 0.18)",
+                boxShadow: "0 8px 24px var(--tertiary-color-a15)",
+                border: "1px solid var(--tertiary-color-a18)",
                 p: 1,
               }}
             >
@@ -119,9 +119,9 @@ function HoverSelectMenu<T>({
                               ? `1px solid ${selectedColor}`
                               : "1px solid transparent",
                             backgroundColor: groupSelected
-                              ? "rgba(var(--primary-color-rgb), 0.1)"
+                              ? "var(--primary-color-a10)"
                               : groupOpen
-                                ? "rgba(var(--primary-color-rgb), 0.06)"
+                                ? "var(--primary-color-a06)"
                                 : "transparent",
                           }}
                         >
@@ -165,9 +165,9 @@ function HoverSelectMenu<T>({
                                 borderRadius: "16px",
                                 backgroundColor: "var(--tertiary-color)",
                                 boxShadow:
-                                  "0 8px 24px rgba(var(--tertiary-color-rgb), 0.15)",
+                                  "0 8px 24px var(--tertiary-color-a15)",
                                 border:
-                                  "1px solid rgba(var(--tertiary-color-rgb), 0.18)",
+                                  "1px solid var(--tertiary-color-a18)",
                                 p: 1,
                               }}
                             >
@@ -193,7 +193,7 @@ function HoverSelectMenu<T>({
                                           ? `1px solid ${selectedColor}`
                                           : "1px solid transparent",
                                         backgroundColor: isSelected
-                                          ? "rgba(var(--primary-color-rgb), 0.1)"
+                                          ? "var(--primary-color-a10)"
                                           : "transparent",
                                       }}
                                     >
@@ -241,7 +241,7 @@ function HoverSelectMenu<T>({
                               ? `1px solid ${selectedColor}`
                               : "1px solid transparent",
                             backgroundColor: isSelected
-                              ? "rgba(var(--primary-color-rgb), 0.1)"
+                              ? "var(--primary-color-a10)"
                               : "transparent",
                           }}
                         >

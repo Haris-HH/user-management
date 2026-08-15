@@ -42,15 +42,15 @@ const rowSx = (active: boolean) => ({
   color: "var(--primary-color)",
   opacity: active ? 1 : 0.75,
   backgroundColor: active
-    ? "rgba(var(--primary-color-rgb), 0.12)"
+    ? "var(--primary-color-a12)"
     : "transparent",
   border: active
-    ? "1px solid rgba(var(--primary-color-rgb), 0.35)"
+    ? "1px solid var(--primary-color-a35)"
     : "1px solid transparent",
   transition: "background-color 0.2s, opacity 0.2s",
   "&:hover": {
     opacity: 1,
-    backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+    backgroundColor: "var(--primary-color-a08)",
   },
 });
 
@@ -136,12 +136,12 @@ const NavSidebar = () => {
             height: "100%",
             backgroundImage: "none",
             background:
-              "linear-gradient(180deg, rgba(var(--tertiary-color-rgb),1), rgba(var(--tertiary-color-rgb),0.92))",
+              "linear-gradient(180deg, var(--tertiary-color-a100), var(--tertiary-color-a92))",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             border: "none",
             [anchor === "left" ? "borderRight" : "borderLeft"]:
-              "1px solid rgba(var(--primary-color-rgb), 0.18)",
+              "1px solid var(--primary-color-a18)",
             overflowX: "hidden",
           },
         },

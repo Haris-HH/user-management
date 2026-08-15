@@ -148,7 +148,7 @@ const ManageCheckpointGroup = () => {
                         backgroundColor: "var(--tertiary-color)",
 
                         "&:hover": {
-                          backgroundColor: "rgba(var(--primary-color-rgb), 0.15)",
+                          backgroundColor: "var(--primary-color-a15)",
                         },
 
                         "&.Mui-selected": {
@@ -158,7 +158,7 @@ const ManageCheckpointGroup = () => {
 
                         "&.Mui-selected:hover": {
                           backgroundColor:
-                            "rgba(var(--primary-color-rgb), 0.8) !important",
+                            "var(--primary-color-a80) !important",
                         },
                       },
                     },

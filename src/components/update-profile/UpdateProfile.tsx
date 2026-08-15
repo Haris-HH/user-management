@@ -132,7 +132,7 @@ const UpdateProfile = ({
               border: "1px solid var(--primary-color)",
               color: "var(--primary-color)",
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                backgroundColor: "var(--primary-color-a80)",
               },
               textTransform: "capitalize",
               boxShadow: "0px 3px 3px rgba(0, 0, 0, 0.2)",
@@ -148,7 +148,7 @@ const UpdateProfile = ({
               backgroundColor: "var(--primary-color)",
               color: "var(--tertiary-color)",
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                backgroundColor: "var(--primary-color-a80)",
               },
               textTransform: "capitalize",
               boxShadow: "0px 3px 3px rgba(0, 0, 0, 0.2)",

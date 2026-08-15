@@ -40,7 +40,7 @@ const DialogComponent = ({
             borderRadius: "5px",
             overflow: "visible",
             backgroundColor: "var(--tertiary-color)",
-            border: "1px solid rgba(var(--primary-color-rgb), 0.35)",
+            border: "1px solid var(--primary-color-a35)",
           },
         }
       }}
@@ -69,7 +69,7 @@ const DialogComponent = ({
               />
             </IconButton>
           </div>
-          <Divider orientation='horizontal' sx={{ width: "100%", borderColor: "rgba(var(--primary-color-rgb), 0.35)" }} />
+          <Divider orientation='horizontal' sx={{ width: "100%", borderColor: "var(--primary-color-a35)" }} />
         </div>
       </DialogTitle>
       <DialogContent

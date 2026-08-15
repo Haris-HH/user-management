@@ -130,7 +130,7 @@ const SubAgency = ({ value, onChange }: Props) => {
                 color: "var(--primary-color)",
 
                 "&.Mui-disabled": {
-                  color: "rgba(var(--primary-color-rgb), 0.3)",
+                  color: "var(--primary-color-a30)",
                 },
               }}
             >
@@ -147,7 +147,7 @@ const SubAgency = ({ value, onChange }: Props) => {
                 color: "var(--danger-color)",
 
                 "&.Mui-disabled": {
-                  color: "rgba(var(--primary-color-rgb), 0.3)",
+                  color: "var(--primary-color-a30)",
                 },
               }}
             >

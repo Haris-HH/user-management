@@ -103,7 +103,7 @@ const CinematicTitle = ({ skipIntro = false }: { skipIntro?: boolean }) => {
       <motion.div
         className="absolute w-96 h-96 rounded-full"
         style={{
-          background: "rgba(var(--primary-color-rgb),0.1)",
+          background: "var(--primary-color-a10)",
           filter: "blur(90px)",
         }}
         /* ลดการเคลื่อนไหว: แสงเรืองค้างที่ความสว่างกลาง ไม่หายใจเข้าออกไม่รู้จบ */

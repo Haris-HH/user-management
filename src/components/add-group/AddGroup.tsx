@@ -66,13 +66,13 @@ const IntegrationSection = ({
       <Box
         sx={{
           overflow: "hidden",
-          border: "1px solid rgba(var(--primary-color-rgb), 0.25)",
+          border: "1px solid var(--primary-color-a25)",
           borderRadius: "10px",
           bgcolor: "var(--tertiary-color)",
           transition: "border-color 0.2s ease, box-shadow 0.2s ease",
           "&:focus-within": {
             borderColor: "var(--primary-color)",
-            boxShadow: "0 0 0 3px rgba(var(--primary-color-rgb), 0.1)",
+            boxShadow: "0 0 0 3px var(--primary-color-a10)",
           },
         }}
       >
@@ -83,7 +83,7 @@ const IntegrationSection = ({
             gap: 1.25,
             px: 2,
             py: 1.5,
-            bgcolor: "rgba(var(--primary-color-rgb), 0.05)",
+            bgcolor: "var(--primary-color-a05)",
           }}
         >
           <Box
@@ -96,7 +96,7 @@ const IntegrationSection = ({
               height: 36,
               borderRadius: "9px",
               color: "var(--primary-color)",
-              bgcolor: "rgba(var(--primary-color-rgb), 0.1)",
+              bgcolor: "var(--primary-color-a10)",
               p: 1
             }}
           >
@@ -121,7 +121,7 @@ const IntegrationSection = ({
               <Typography
                 sx={{
                   mt: 0.25,
-                  color: "rgba(var(--primary-color-rgb),0.6)",
+                  color: "var(--primary-color-a60)",
                   fontSize: "13px",
                   lineHeight: 1.5,
                 }}
@@ -378,7 +378,7 @@ const AddGroup = ({
                   py: 1.25,
                   borderRadius: "8px",
                   color: "text.secondary",
-                  bgcolor: "rgba(var(--primary-color-rgb), 0.05)",
+                  bgcolor: "var(--primary-color-a05)",
                 }}
               >
                 <InfoOutlinedIcon
@@ -394,7 +394,7 @@ const AddGroup = ({
                   sx={{
                     fontSize: "12px",
                     lineHeight: 1.5,
-                    color: "rgba(var(--primary-color-rgb),0.6)",
+                    color: "var(--primary-color-a60)",
                   }}
                 >
                   {t(
@@ -431,7 +431,7 @@ const AddGroup = ({
               boxShadow: "none",
               "&:hover": {
                 borderColor: "var(--primary-color)",
-                bgcolor: "rgba(var(--primary-color-rgb), 0.06)",
+                bgcolor: "var(--primary-color-a06)",
               },
             }}
           >
@@ -450,11 +450,11 @@ const AddGroup = ({
               color: "var(--tertiary-color)",
               textTransform: "none",
               fontWeight: 600,
-              boxShadow: "0 4px 10px rgba(var(--primary-color-rgb), 0.2)",
+              boxShadow: "0 4px 10px var(--primary-color-a20)",
               "&:hover": {
-                bgcolor: "rgba(var(--primary-color-rgb), 0.88)",
+                bgcolor: "var(--primary-color-a88)",
                 boxShadow:
-                  "0 6px 14px rgba(var(--primary-color-rgb), 0.25)",
+                  "0 6px 14px var(--primary-color-a25)",
               },
             }}
           >

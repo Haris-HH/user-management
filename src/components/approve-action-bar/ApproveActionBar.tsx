@@ -262,7 +262,7 @@ const ApproveActionBar = ({
             color: "var(--primary-color)",
             border: "1px solid var(--primary-color)",
             "&:hover": {
-              backgroundColor: "rgba(var(--tertiary-color-rgb), 0.7)",
+              backgroundColor: "var(--tertiary-color-a70)",
             },
             textTransform: "capitalize",
             "&.Mui-disabled": {
@@ -290,7 +290,7 @@ const ApproveActionBar = ({
             color: "var(--primary-color)",
             border: "1px solid var(--primary-color)",
             "&:hover": {
-              backgroundColor: "rgba(var(--tertiary-color-rgb), 0.7)",
+              backgroundColor: "var(--tertiary-color-a70)",
             },
             textTransform: "capitalize",
             "&.Mui-disabled": {
@@ -321,10 +321,10 @@ const ApproveActionBar = ({
                   backgroundColor: "var(--approve-bg-color)",
                   color: "white",
                   "&:hover": {
-                    backgroundColor: "rgb(var(--approve-bg-color-rgb), 0.8)",
+                    backgroundColor: "var(--approve-bg-color-a80)",
                   },
                   "&.Mui-disabled": {
-                    backgroundColor: "rgba(var(--approve-bg-color-rgb), 0.5)",
+                    backgroundColor: "var(--approve-bg-color-a50)",
                     color: "var(--secondary-color)",
                     cursor: "not-allowed",
                   },
@@ -348,10 +348,10 @@ const ApproveActionBar = ({
                   backgroundColor: "var(--waiting-approve-bg-color)",
                   color: "white",
                   "&:hover": {
-                    backgroundColor: "rgb(var(--waiting-approve-bg-color-rgb), 0.8)",
+                    backgroundColor: "var(--waiting-approve-bg-color-a80)",
                   },
                   "&.Mui-disabled": {
-                    backgroundColor: "rgba(var(--waiting-approve-bg-color-rgb), 0.5)",
+                    backgroundColor: "var(--waiting-approve-bg-color-a50)",
                     color: "var(--secondary-color)",
                     cursor: "not-allowed",
                   },
@@ -372,10 +372,10 @@ const ApproveActionBar = ({
                   backgroundColor: "var(--not-approve-bg-color)",
                   color: "white",
                   "&:hover": {
-                    backgroundColor: "rgb(var(--not-approve-bg-color-rgb), 0.8)",
+                    backgroundColor: "var(--not-approve-bg-color-a80)",
                   },
                   "&.Mui-disabled": {
-                    backgroundColor: "rgba(var(--not-approve-bg-color-rgb), 0.5)",
+                    backgroundColor: "var(--not-approve-bg-color-a50)",
                     color: "var(--secondary-color)",
                     cursor: "not-allowed",
                   },
@@ -399,10 +399,10 @@ const ApproveActionBar = ({
                   backgroundColor: "var(--waiting-approve-bg-color)",
                   color: "white",
                   "&:hover": {
-                    backgroundColor: "rgb(var(--waiting-approve-bg-color-rgb), 0.8)",
+                    backgroundColor: "var(--waiting-approve-bg-color-a80)",
                   },
                   "&.Mui-disabled": {
-                    backgroundColor: "rgba(var(--waiting-approve-bg-color-rgb), 0.5)",
+                    backgroundColor: "var(--waiting-approve-bg-color-a50)",
                     color: "var(--secondary-color)",
                     cursor: "not-allowed",
                   },
@@ -425,10 +425,10 @@ const ApproveActionBar = ({
                   backgroundColor: "var(--approve-bg-color)",
                   color: "white",
                   "&:hover": {
-                    backgroundColor: "rgb(var(--approve-bg-color-rgb), 0.8)",
+                    backgroundColor: "var(--approve-bg-color-a80)",
                   },
                   "&.Mui-disabled": {
-                    backgroundColor: "rgba(var(--approve-bg-color-rgb), 0.5)",
+                    backgroundColor: "var(--approve-bg-color-a50)",
                     color: "var(--secondary-color)",
                     cursor: "not-allowed",
                   },

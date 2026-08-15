@@ -724,7 +724,7 @@ const UserGroupManagement = () => {
               <Box className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr style={{ backgroundColor: "rgba(var(--primary-color-rgb), 0.8)" }}>
+                    <tr style={{ backgroundColor: "var(--primary-color-a80)" }}>
                       <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color)">
                         {t("table.header.user-group")}
                       </th>
@@ -923,7 +923,7 @@ const UserGroupManagement = () => {
                   border: "1px solid var(--primary-color)",
                   color: "var(--primary-color)",
                   "&:hover": {
-                    backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                    backgroundColor: "var(--primary-color-a80)",
                   },
                   textTransform: "capitalize",
                   "&.Mui-disabled": {

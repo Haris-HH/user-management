@@ -104,10 +104,10 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           background:
-            "linear-gradient(135deg, rgba(var(--tertiary-color-rgb),1), rgba(var(--tertiary-color-rgb),0.8))",
-          border: "1px solid rgba(var(--tertiary-color-rgb),0.18)",
+            "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
+          border: "1px solid var(--tertiary-color-a18)",
           boxShadow:
-            "0 8px 32px rgba(var(--secondary-color-rgb),0.35), inset 0 1px 0 rgba(var(--tertiary-color-rgb),0.25)",
+            "0 8px 32px var(--secondary-color-a35), inset 0 1px 0 var(--tertiary-color-a25)",
           transform: open
             ? "translateY(0) scale(1)"
             : "translateY(120%) scale(0.9)",
@@ -154,10 +154,10 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
                 height: 56,
                 color: "white",
                 background:
-                  "linear-gradient(135deg, rgba(var(--tertiary-color-rgb),1), rgba(var(--tertiary-color-rgb),0.8))",
+                  "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
                 backdropFilter: "blur(10px)",
-                border: "1px solid rgba(var(--tertiary-color-rgb),0.15)",
-                boxShadow: "0 2px 12px rgba(var(--secondary-color-rgb),0.25)",
+                border: "1px solid var(--tertiary-color-a15)",
+                boxShadow: "0 2px 12px var(--secondary-color-a25)",
               }}
             >
               {item.icon}
@@ -204,8 +204,8 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
                 borderRadius: "16px",
                 backdropFilter: "blur(20px)",
                 background:
-                  "linear-gradient(135deg, rgba(var(--tertiary-color-rgb),1), rgba(var(--tertiary-color-rgb),0.8))",
-                border: "1px solid rgba(var(--tertiary-color-rgb),0.15)",
+                  "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
+                border: "1px solid var(--tertiary-color-a15)",
                 minWidth: 180,
                 overflow: "hidden",
                 pointerEvents: "auto",
@@ -227,7 +227,7 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
                         px: 2,
                         "&:hover": {
                           backgroundColor:
-                            "rgba(var(--primary-color-rgb),0.15)",
+                            "var(--primary-color-a15)",
                         },
                       }}
                     >
@@ -246,12 +246,12 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
         sx={{
           pointerEvents: "auto",
           background:
-            "linear-gradient(135deg, rgba(var(--tertiary-color-rgb),1), rgba(var(--tertiary-color-rgb),0.8))",
+            "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
           backdropFilter: "blur(20px)",
           borderRadius: "14px 14px 0 0",
           width: "160px",
           height: "15px",
-          border: "1px solid rgba(var(--primary-color-rgb),0.30)",
+          border: "1px solid var(--primary-color-a30)",
         }}
       >
         <KeyboardArrowUpIcon sx={{ color: "var(--primary-color)" }} />

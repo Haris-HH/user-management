@@ -11,12 +11,12 @@ const Search = styled('div')(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
   backgroundColor: "var(--tertiary-color)",
   '&:hover': {
-    backgroundColor: "rgba(var(--secondary-color-rgb), 0.05)",
+    backgroundColor: "var(--secondary-color-a05)",
     borderBottomColor: "var(--primary-color)",
   },
   marginLeft: 0,
   width: '100%',
-  borderBottom: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+  borderBottom: "1px solid var(--primary-color-a50)",
   borderBottomRightRadius: "0px",
   borderBottomLeftRadius: "0px",
   [theme.breakpoints.up('sm')]: {
@@ -77,7 +77,7 @@ const SearchInput = ({
         onKeyDown={onKeyDown}
       />
       <SearchIconWrapper>
-        <SearchIcon sx={{ fontSize: "20px", color: "rgba(var(--secondary-color-rgb), 0.5)" }} />
+        <SearchIcon sx={{ fontSize: "20px", color: "var(--secondary-color-a50)" }} />
       </SearchIconWrapper>
     </Search>
   )

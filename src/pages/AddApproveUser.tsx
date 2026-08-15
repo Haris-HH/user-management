@@ -887,7 +887,7 @@ const AddApproveUser = () => {
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
                 "&:hover": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                 },
                 textTransform: "capitalize"
               }}
@@ -915,7 +915,7 @@ const AddApproveUser = () => {
                   display: "flex",
                   "&:hover": {
                     backgroundColor:
-                      "rgba(var(--primary-color-rgb),0.15)",
+                      "var(--primary-color-a15)",
                   },
                 }}
                 onClick={() => handleMenuItemClick("example")}
@@ -924,7 +924,7 @@ const AddApproveUser = () => {
               </MenuItem>
               <Divider
                 sx={{
-                  borderColor: "rgba(var(--primary-color-rgb),0.5)",
+                  borderColor: "var(--primary-color-a50)",
                 }}
               />
               <MenuItem
@@ -936,7 +936,7 @@ const AddApproveUser = () => {
                   display: "flex",
                   "&:hover": {
                     backgroundColor:
-                      "rgba(var(--primary-color-rgb),0.15)",
+                      "var(--primary-color-a15)",
                   },
                 }}
                 onClick={() => handleMenuItemClick("import")}
@@ -952,7 +952,7 @@ const AddApproveUser = () => {
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
                 "&:hover": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                 },
                 textTransform: "capitalize"
               }}
@@ -973,8 +973,8 @@ const AddApproveUser = () => {
             borderRadius: "0 0 16px 16px",
             overflow: "hidden",
             background:
-              "linear-gradient(180deg, rgba(var(--primary-color-rgb), 0.08), var(--tertiary-color))",
-            border: "1px solid rgba(var(--primary-color-rgb), 0.25)",
+              "linear-gradient(180deg, var(--primary-color-a08), var(--tertiary-color))",
+            border: "1px solid var(--primary-color-a25)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
             "&:before": { display: "none" },
             "&.Mui-expanded": { margin: 0 },
@@ -1010,7 +1010,7 @@ const AddApproveUser = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.12)",
+                  backgroundColor: "var(--primary-color-a12)",
                 }}
               >
                 <FilterAltOutlinedIcon sx={{ color: "var(--primary-color)" }} />
@@ -1054,7 +1054,7 @@ const AddApproveUser = () => {
                     minWidth: 130,
                     height: 40,
                     borderRadius: "10px",
-                    borderColor: "rgba(var(--primary-color-rgb), 0.5)",
+                    borderColor: "var(--primary-color-a50)",
                     color: "var(--primary-color)",
                     textTransform: "capitalize",
                     fontWeight: 600,
@@ -1102,7 +1102,7 @@ const AddApproveUser = () => {
                 p: 2.5,
                 borderRadius: "14px",
                 backgroundColor: "var(--tertiary-color)",
-                border: "1px solid rgba(var(--primary-color-rgb), 0.16)",
+                border: "1px solid var(--primary-color-a16)",
               }}
             >
               <Box

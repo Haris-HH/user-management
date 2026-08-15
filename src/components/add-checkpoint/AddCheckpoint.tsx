@@ -742,7 +742,7 @@ const AddCheckpoint = ({
                         key={index}
                         sx={{
                           "&:hover td": {
-                            backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+                            backgroundColor: "var(--primary-color-a08)",
                           },
                           "& .MuiTableCell-root": {
                             backgroundColor: "var(--tertiary-color)",
@@ -856,7 +856,7 @@ const AddCheckpoint = ({
                   color: "var(--tertiary-color)",
                 },
                 "& .MuiPaginationItem-page.Mui-selected": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                   color: "var(--tertiary-color)",
                 },
               }}
@@ -877,7 +877,7 @@ const AddCheckpoint = ({
                 border: "1px solid var(--primary-color)",
                 color: "var(--primary-color)",
                 "&:hover": {
-                  backgroundColor:  "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor:  "var(--primary-color-a80)",
                 },
                 textTransform: "capitalize"
               }}
@@ -893,7 +893,7 @@ const AddCheckpoint = ({
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
                 "&:hover": {
-                  backgroundColor:  "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor:  "var(--primary-color-a80)",
                 },
                 textTransform: "capitalize"
               }}

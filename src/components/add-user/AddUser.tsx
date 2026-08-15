@@ -440,7 +440,7 @@ const AddUser = ({
               backgroundColor: "var(--primary-color)",
               color: "var(--tertiary-color)",
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                backgroundColor: "var(--primary-color-a80)",
               },
               textTransform: "capitalize",
             }}
@@ -547,11 +547,11 @@ const AddUser = ({
                       key={item.user_id}
                       sx={{
                         "&:hover td": {
-                          backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+                          backgroundColor: "var(--primary-color-a08)",
                         },
                         "& .MuiTableCell-root": {
                           backgroundColor: isAlreadySelected
-                            ? "rgba(var(--primary-color-rgb), 0.12)"
+                            ? "var(--primary-color-a12)"
                             : "var(--tertiary-color)",
                           color: "var(--secondary-color)",
                           borderBottom: "1px solid var(--primary-color)",
@@ -629,7 +629,7 @@ const AddUser = ({
                   color: "var(--tertiary-color)",
                 },
                 "& .MuiPaginationItem-page.Mui-selected": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                   color: "var(--tertiary-color)",
                 },
               }}
@@ -651,7 +651,7 @@ const AddUser = ({
                 border: "1px solid var(--primary-color)",
                 color: "var(--primary-color)",
                 "&:hover": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+                  backgroundColor: "var(--primary-color-a08)",
                 },
                 textTransform: "capitalize",
               }}
@@ -668,7 +668,7 @@ const AddUser = ({
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
                 "&:hover": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                 },
                 textTransform: "capitalize",
                 "&.Mui-disabled": {

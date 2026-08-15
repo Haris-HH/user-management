@@ -65,7 +65,7 @@ const Home = () => {
               "
               style={{
                 borderColor: "var(--primary-color)",
-                backgroundColor: "rgba(var(--tertiary-color-rgb), 0.8)",
+                backgroundColor: "var(--tertiary-color-a80)",
               }}
             >
               <AnimatePresence mode="wait">
@@ -106,7 +106,7 @@ const Home = () => {
                     }}
                     className="absolute inset-0 z-0"
                     style={{
-                      background: "rgba(var(--secondary-color-rgb), 0.1)",
+                      background: "var(--secondary-color-a10)",
                     }}
                   />
                 )}

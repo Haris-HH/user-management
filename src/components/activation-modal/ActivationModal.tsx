@@ -83,15 +83,15 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
       cursor: "pointer",
       border: isSelected
         ? "1px solid var(--primary-color)"
-        : "1px solid rgba(var(--primary-color-rgb), 0.25)",
+        : "1px solid var(--primary-color-a25)",
       backgroundColor: isSelected
-        ? "rgba(var(--primary-color-rgb), 0.12)"
+        ? "var(--primary-color-a12)"
         : "var(--tertiary-color)",
       /* `transition: "0.2s"` เดิมย่อมาจาก `all 0.2s` — ระบุ property ให้ชัดว่ามี
          แค่พื้นหลังกับเส้นขอบที่เปลี่ยนตอนเลือก/hover */
       transition: transitionOf(["background-color", "border-color"], "fast"),
       "&:hover": {
-        backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+        backgroundColor: "var(--primary-color-a08)",
       },
     };
   };
@@ -107,7 +107,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
           sx: {
             backgroundColor: "var(--tertiary-color)",
             borderRadius: "12px",
-            border: "1px solid rgba(var(--primary-color-rgb), 0.35)",
+            border: "1px solid var(--primary-color-a35)",
             overflow: "hidden",
           },
         },
@@ -304,7 +304,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
           px: 3,
           py: 2,
           gap: 1,
-          backgroundColor: "rgba(var(--primary-color-rgb), 0.06)",
+          backgroundColor: "var(--primary-color-a06)",
         }}
       >
         <Button
@@ -318,7 +318,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
             color: "var(--primary-color)",
             textTransform: "capitalize",
             "&:hover": {
-              backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+              backgroundColor: "var(--primary-color-a08)",
               border: "1px solid var(--primary-color)",
             },
           }}
@@ -337,7 +337,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
             textTransform: "capitalize",
             boxShadow: "none",
             "&:hover": {
-              backgroundColor: "rgba(var(--primary-color-rgb), 0.85)",
+              backgroundColor: "var(--primary-color-a85)",
               boxShadow: "none",
             },
           }}

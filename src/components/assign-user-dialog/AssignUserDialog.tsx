@@ -362,7 +362,7 @@ const AssignUserDialog = ({
                 "& .MuiTableCell-root": {
                   color: "var(--secondary-color)",
                   border: "none",
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.5)",
+                  backgroundColor: "var(--primary-color-a50)",
                 }
               }}
             >

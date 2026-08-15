@@ -339,7 +339,7 @@ const CheckpointList = ({
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
                 "&:hover": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                 },
                 textTransform: "capitalize",
                 "&.Mui-disabled": {
@@ -498,7 +498,7 @@ const CheckpointList = ({
                   <TableRow
                     sx={{
                       "& .MuiTableCell-root": {
-                        borderBottom: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                        borderBottom: "1px solid var(--primary-color-a50)",
                       }
                     }}
                   >
@@ -517,14 +517,14 @@ const CheckpointList = ({
                           <FindInPageOutlinedIcon
                             sx={{
                               fontSize: 44,
-                              color: "rgba(var(--primary-color-rgb), 0.4)",
+                              color: "var(--primary-color-a40)",
                             }}
                           />
                           <Typography sx={{ color: "var(--secondary-color)", fontWeight: 500 }}>
                             {t("text.no-data")}
                           </Typography>
                           <Typography
-                            sx={{ fontSize: 13, color: "rgba(var(--primary-color-rgb), 0.6)" }}
+                            sx={{ fontSize: 13, color: "var(--primary-color-a60)" }}
                           >
                             {t("text.select-project-hint-checkpoint")}
                           </Typography>

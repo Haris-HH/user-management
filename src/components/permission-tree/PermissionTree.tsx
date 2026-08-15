@@ -63,7 +63,7 @@ const PermissionTree = ({
           sx={{
             pl: `${depth * 24}px`,
             "&:hover": {
-              backgroundColor: "rgba(var(--primary-color-rgb), 0.06)",
+              backgroundColor: "var(--primary-color-a06)",
             },
           }}
         >

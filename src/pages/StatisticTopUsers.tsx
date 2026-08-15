@@ -307,7 +307,7 @@ const StatisticTopUsers = () => {
                   color: policeState === "internal" ? "var(--tertiary-color)" : "var(--primary-color)",
                   border: policeState === "internal" ? "none" : "1px solid var(--primary-color)",
                   "&:hover": {
-                    backgroundColor: policeState === "internal" ? "rgba(var(--primary-color-rgb), 0.8)" : "rgba(var(--secondary-color-rgb), 0.05)",
+                    backgroundColor: policeState === "internal" ? "var(--primary-color-a80)" : "var(--secondary-color-a05)",
                   },
                   fontWeight: 700,
                   textTransform: "capitalize",
@@ -325,7 +325,7 @@ const StatisticTopUsers = () => {
                   color: policeState === "external" ? "var(--tertiary-color)" : "var(--primary-color)",
                   border: policeState === "external" ? "none" : "1px solid var(--primary-color)",
                   "&:hover": {
-                    backgroundColor: policeState === "external" ? "rgba(var(--primary-color-rgb), 0.8)" : "rgba(var(--secondary-color-rgb), 0.05)",
+                    backgroundColor: policeState === "external" ? "var(--primary-color-a80)" : "var(--secondary-color-a05)",
                   },
                   fontWeight: 700,
                   textTransform: "capitalize",
@@ -358,7 +358,7 @@ const StatisticTopUsers = () => {
                       "& th": {
                         backgroundColor: "var(--primary-color)",
                         color: "var(--tertiary-color)",
-                        border: "1px solid rgba(var(--secondary-color-rgb), 0.5)",
+                        border: "1px solid var(--secondary-color-a50)",
                         padding: "6px 8px",
                         fontWeight: 700,
                         whiteSpace: "nowrap",
@@ -399,7 +399,7 @@ const StatisticTopUsers = () => {
                         key={item.user_id}
                         sx={{
                           "& td": {
-                            border: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                            border: "1px solid var(--primary-color-a50)",
                             padding: "6px 8px",
                             color: "var(--primary-color)",
                             whiteSpace: "nowrap",
@@ -436,8 +436,8 @@ const StatisticTopUsers = () => {
                               align="center"
                               sx={{
                                 backgroundColor: isCurrentMonth
-                                  ? "rgba(var(--primary-color-rgb), 0.5)"
-                                  : "rgba(var(--primary-color-rgb), 0.2)",
+                                  ? "var(--primary-color-a50)"
+                                  : "var(--primary-color-a20)",
                                 fontWeight: isCurrentMonth ? 700 : 400,
                                 color: isCurrentMonth
                                   ? "var(--secondary-color) !important"

@@ -156,8 +156,8 @@ const NavTopGroup = ({ item, pathname, onNavigate }: NavTopGroupProps) => {
               minWidth: 200,
               borderRadius: "16px",
               backgroundColor: "var(--tertiary-color)",
-              boxShadow: "0 8px 24px rgba(var(--secondary-color-rgb), 0.15)",
-              border: "1px solid rgba(var(--secondary-color-rgb), 0.18)",
+              boxShadow: "0 8px 24px var(--secondary-color-a15)",
+              border: "1px solid var(--secondary-color-a18)",
               color: "var(--primary-color)",
             },
           },
@@ -174,10 +174,10 @@ const NavTopGroup = ({ item, pathname, onNavigate }: NavTopGroupProps) => {
               py: 1.1,
               px: 2,
               "&.Mui-selected": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.12)",
+                backgroundColor: "var(--primary-color-a12)",
               },
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+                backgroundColor: "var(--primary-color-a08)",
               },
             }}
           >

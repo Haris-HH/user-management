@@ -66,7 +66,7 @@ const PaginationBelowTableComponent: React.FC<PaginationProps> = ({
                     backgroundColor: "var(--tertiary-color)",
 
                     "&:hover": {
-                      backgroundColor: "rgba(var(--primary-color-rgb), 0.15)",
+                      backgroundColor: "var(--primary-color-a15)",
                     },
 
                     "&.Mui-selected": {
@@ -76,7 +76,7 @@ const PaginationBelowTableComponent: React.FC<PaginationProps> = ({
 
                     "&.Mui-selected:hover": {
                       backgroundColor:
-                        "rgba(var(--primary-color-rgb), 0.8) !important",
+                        "var(--primary-color-a80) !important",
                     },
                   },
                 },
@@ -99,15 +99,15 @@ const PaginationBelowTableComponent: React.FC<PaginationProps> = ({
               justifyContent: 'end',
               "& .MuiPaginationItem-page": {
                 color: "var(--tertiary-color)",
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.4)",
+                backgroundColor: "var(--primary-color-a40)",
               },
               "& .MuiPaginationItem-page:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.7)",
+                backgroundColor: "var(--primary-color-a70)",
                 color: "var(--tertiary-color)",
               },
               "& .MuiPaginationItem-previousNext": {
                 color: "var(--tertiary-color)",
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.7)",
+                backgroundColor: "var(--primary-color-a70)",
                 border: "1px solid var(--primary-color)",
               },
               "& .MuiPaginationItem-ellipsis": {

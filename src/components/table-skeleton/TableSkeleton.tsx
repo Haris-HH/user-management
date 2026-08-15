@@ -27,7 +27,7 @@ const TableSkeleton = ({
             <Skeleton
               animation="wave"
               height={30}
-              sx={{ backgroundColor: "rgba(var(--secondary-color-rgb), 0.5)" }}
+              sx={{ backgroundColor: "var(--secondary-color-a50)" }}
             />
           </TableCell>
         ))}

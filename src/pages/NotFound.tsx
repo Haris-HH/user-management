@@ -62,7 +62,7 @@ const NotFound = () => {
             fontWeight: "bold",
             lineHeight: 1,
             color: "var(--primary-color)",
-            textShadow: "0 0 24px rgba(var(--primary-color-rgb), 0.35)",
+            textShadow: "0 0 24px var(--primary-color-a35)",
           }}
         >
           404
@@ -97,8 +97,8 @@ const NotFound = () => {
             py: 1,
             maxWidth: "100%",
             borderRadius: "12px",
-            border: "1px solid rgba(var(--primary-color-rgb), 0.25)",
-            backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+            border: "1px solid var(--primary-color-a25)",
+            backgroundColor: "var(--primary-color-a08)",
           }}
         >
           <Typography
@@ -124,7 +124,7 @@ const NotFound = () => {
               textTransform: "none",
               px: 3,
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.85)",
+                backgroundColor: "var(--primary-color-a85)",
               },
             }}
           >
@@ -141,7 +141,7 @@ const NotFound = () => {
               textTransform: "none",
               px: 3,
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+                backgroundColor: "var(--primary-color-a08)",
               },
             }}
           >

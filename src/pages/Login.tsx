@@ -175,7 +175,7 @@ const Login = () => {
       onClick={finishIntro}
       className="h-screen w-screen flex items-center justify-center relative overflow-hidden"
       style={{
-        backgroundColor: "rgba(var(--secondary-color-rgb), 0.1)"
+        backgroundColor: "var(--secondary-color-a10)"
       }}
     >
       {
@@ -221,10 +221,10 @@ const Login = () => {
                 textTransform: "capitalize",
                 border: "1px solid var(--primary-color)",
                 color: "var(--primary-color)",
-                backgroundColor: "rgba(var(--tertiary-color-rgb), 0.6)",
+                backgroundColor: "var(--tertiary-color-a60)",
                 "&:hover": {
                   border: "1px solid var(--primary-color)",
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.1)",
+                  backgroundColor: "var(--primary-color-a10)",
                 },
               }}
             >
@@ -251,7 +251,7 @@ const Login = () => {
           transition={{ duration: MOTION_DURATION.slow / 1000 }}
           className="w-122 px-4 py-2.5 rounded-lg text-center text-sm"
           style={{
-            backgroundColor: "rgba(var(--tertiary-color-rgb), 0.8)",
+            backgroundColor: "var(--tertiary-color-a80)",
             border: "1px solid var(--primary-color)",
             color: "var(--primary-color)",
           }}
@@ -269,7 +269,7 @@ const Login = () => {
         transition={{ duration: MOTION_DURATION.slow / 1000 }}
         className="flex flex-col w-122 h-90 rounded-lg z-30"
         style={{
-          backgroundColor: "rgba(var(--tertiary-color-rgb),0.8)",
+          backgroundColor: "var(--tertiary-color-a80)",
           border: "1px solid var(--primary-color)",
         }}
       >
@@ -370,7 +370,7 @@ const Login = () => {
         <div
           className="flex justify-center items-center w-full h-15"
           style={{
-            backgroundColor: "rgba(var(--primary-color-rgb), 0.1)",
+            backgroundColor: "var(--primary-color-a10)",
           }}
         >
           <Typography

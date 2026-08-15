@@ -21,10 +21,16 @@
   --border-chart-color: #DBDCDE;
   --waiting-approve-bg-color: #FEBE43;
   --waiting-approve-bg-color-rgb: 254, 190, 67;
+  --waiting-approve-bg-color-a50: rgba(254, 190, 67, 0.5);
+  --waiting-approve-bg-color-a80: rgba(254, 190, 67, 0.8);
   --not-approve-bg-color: #9f0c0c;
   --not-approve-bg-color-rgb: 159, 12, 12;
+  --not-approve-bg-color-a50: rgba(159, 12, 12, 0.5);
+  --not-approve-bg-color-a80: rgba(159, 12, 12, 0.8);
   --approve-bg-color: #2fa534;
   --approve-bg-color-rgb: 46, 165, 52;
+  --approve-bg-color-a50: rgba(46, 165, 52, 0.5);
+  --approve-bg-color-a80: rgba(46, 165, 52, 0.8);
   --trash-icon: #555555;
   --trash-active-icon: #9F0C0C;
 }

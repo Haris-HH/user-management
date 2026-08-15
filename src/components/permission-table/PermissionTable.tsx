@@ -688,7 +688,7 @@ const PermissionTable = ({
                             "& .MuiTableCell-root": {
                               fontSize: "14px",
                               backgroundColor:
-                                "rgba(var(--primary-color-rgb), 0.6)",
+                                "var(--primary-color-a60)",
                               color: "var(--tertiary-color)",
                               fontWeight: "bold",
                             },
@@ -797,8 +797,8 @@ const PermissionTable = ({
                                   // menu row that grants it, so the two are
                                   // told apart at a glance.
                                   backgroundColor: isHeading
-                                    ? "rgba(var(--primary-color-rgb), 0.45)"
-                                    : "rgba(var(--primary-color-rgb), 0.12)",
+                                    ? "var(--primary-color-a45)"
+                                    : "var(--primary-color-a12)",
                                   "& td": { border: "none" },
                                 }}
                               >
@@ -939,7 +939,7 @@ const PermissionTable = ({
                   sx={{
                     "& th": {
                       fontSize: "14px",
-                      backgroundColor: "rgba(var(--primary-color-rgb), 0.6)",
+                      backgroundColor: "var(--primary-color-a60)",
                       color: "var(--tertiary-color)",
                       border: "none",
                       fontWeight: "bold",
@@ -1089,7 +1089,7 @@ const PermissionTable = ({
                                       "& .MuiTableCell-root": {
                                         fontSize: "14px",
                                         backgroundColor:
-                                          "rgba(var(--primary-color-rgb), 0.6)",
+                                          "var(--primary-color-a60)",
                                         color: "black",
                                         fontWeight: "bold",
                                       },
@@ -1129,7 +1129,7 @@ const PermissionTable = ({
                                             width: "100%",
                                             borderRadius: "0 !important",
                                             backgroundColor:
-                                              "rgba(var(--primary-color-rgb), 0.45)",
+                                              "var(--primary-color-a45)",
                                             "&.Mui-expanded": { margin: 0 },
                                             "& .MuiSvgIcon-root": {
                                               color: "black",
@@ -1207,7 +1207,7 @@ const PermissionTable = ({
                                                       "& .MuiTableCell-root": {
                                                         fontSize: "14px",
                                                         backgroundColor:
-                                                          "rgba(var(--primary-color-rgb), 0.6)",
+                                                          "var(--primary-color-a60)",
                                                         color: "black",
                                                         fontWeight: "bold",
                                                       },

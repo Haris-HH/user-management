@@ -143,7 +143,7 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
               backgroundColor: "var(--primary-color) !important",
 
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.4) !important",
+                backgroundColor: "var(--primary-color-a40) !important",
               },
             },
           },
@@ -151,7 +151,7 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
           "& .MuiMonthCalendar-button": {
             color: "var(--primary-color)",
             "&:hover": {
-              backgroundColor: "rgba(var(--primary-color-rgb), 0.2)",
+              backgroundColor: "var(--primary-color-a20)",
               color: "var(--tertiary-color)",
             },
           },
@@ -171,11 +171,11 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
             color: "var(--primary-color)",
 
             "&.Mui-disabled": {
-              color: "rgba(var(--secondary-color-rgb), 0.2) !important",
+              color: "var(--secondary-color-a20) !important",
             },
 
             "&.Mui-disabled .MuiSvgIcon-root": {
-              color: "rgba(var(--secondary-color-rgb), 0.2) !important",
+              color: "var(--secondary-color-a20) !important",
             },
           },
 
@@ -193,13 +193,13 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
               color: "var(--primary-color) !important",
             },
             "&.Mui-disabled": {
-              color: "rgba(var(--secondary-color-rgb), 0.3) !important",
+              color: "var(--secondary-color-a30) !important",
             }
           },
 
           "& .MuiMonthCalendar-root .MuiMonthCalendar-button": {
             "&.Mui-disabled": {
-              color: "rgba(var(--secondary-color-rgb), 0.3) !important",
+              color: "var(--secondary-color-a30) !important",
             }
           },
 

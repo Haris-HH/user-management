@@ -128,7 +128,7 @@ const HeaderCell = ({
         color: "var(--primary-color)",
         opacity: disabled ? 0.5 : 1,
         ":hover": {
-          backgroundColor: "rgba(var(--primary-color-rgb), 0.1)",
+          backgroundColor: "var(--primary-color-a10)",
         }
       }}
     >

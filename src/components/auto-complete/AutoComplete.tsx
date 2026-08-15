@@ -65,18 +65,18 @@ const buildFieldSx = (labelFontSize: string, errorBorderWidth: string) => ({
   },
 
   "& .MuiOutlinedInput-root.Mui-disabled": {
-    backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
+    backgroundColor: "var(--primary-color-a05) !important",
     cursor: "not-allowed",
 
     "& fieldset": {
-      borderColor: "rgba(var(--primary-color-rgb), 0.7) !important",
+      borderColor: "var(--primary-color-a70) !important",
     },
   },
 
   "& .MuiInputBase-input.Mui-disabled": {
-    color: "rgba(var(--primary-color-rgb), 0.7) !important",
-    WebkitTextFillColor: "rgba(var(--primary-color-rgb), 0.7) !important",
-    backgroundColor: "rgba(var(--primary-color-rgb), 0.05) !important",
+    color: "var(--primary-color-a70) !important",
+    WebkitTextFillColor: "var(--primary-color-a70) !important",
+    backgroundColor: "var(--primary-color-a05) !important",
     cursor: "not-allowed",
   },
 
@@ -101,7 +101,7 @@ const BASE_PAPER_SX = {
   },
 
   "& .MuiAutocomplete-option:hover, & .Mui-focused": {
-    backgroundColor: "rgba(var(--primary-color-rgb), 0.2) !important",
+    backgroundColor: "var(--primary-color-a20) !important",
   },
 
   "& .MuiAutocomplete-option[aria-selected='true']": {

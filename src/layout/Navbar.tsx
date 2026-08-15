@@ -267,8 +267,8 @@ const Navbar = () => {
         zIndex: (muiTheme) => muiTheme.zIndex.modal + 1,
         backgroundColor: "var(--tertiary-color)",
         background:
-          "linear-gradient(0deg, rgba(var(--tertiary-color-rgb), 0.9) 0%, rgba(var(--tertiary-color-rgb), 1) 100%)",
-        boxShadow: "1px 1px 5px rgba(var(--secondary-color-rgb), 0.1)",
+          "linear-gradient(0deg, var(--tertiary-color-a90) 0%, var(--tertiary-color-a100) 100%)",
+        boxShadow: "1px 1px 5px var(--secondary-color-a10)",
         color: "var(--primary-color)",
         minHeight: "64px",
         /*
@@ -497,7 +497,7 @@ const Navbar = () => {
                   width: 34,
                   height: 34,
                   flexShrink: 0,
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                   color: "var(--tertiary-color)",
                 }}
               />
@@ -587,7 +587,7 @@ const Navbar = () => {
             sx={{
               width: 34,
               height: 34,
-              backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+              backgroundColor: "var(--primary-color-a80)",
               color: "var(--tertiary-color)",
             }}
           />
@@ -612,8 +612,8 @@ const Navbar = () => {
                   minWidth: 240,
                   borderRadius: "16px",
                   backgroundColor: "var(--tertiary-color)",
-                  boxShadow: "0 8px 24px rgba(var(--secondary-color-rgb), 0.15)",
-                  border: "1px solid rgba(var(--secondary-color-rgb), 0.18)",
+                  boxShadow: "0 8px 24px var(--secondary-color-a15)",
+                  border: "1px solid var(--secondary-color-a18)",
                   color: "var(--primary-color)",
                 },
               }
@@ -645,7 +645,7 @@ const Navbar = () => {
                   sx={{
                     width: 26,
                     height: 26,
-                    backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                    backgroundColor: "var(--primary-color-a80)",
                     color: "var(--tertiary-color)",
                   }}
                 />
@@ -731,7 +731,7 @@ const Navbar = () => {
                   "&.Mui-selected": {
                     border: "1px solid var(--primary-color)",
                     borderRadius: "12px",
-                    backgroundColor: "rgba(var(--primary-color-rgb), 0.06)",
+                    backgroundColor: "var(--primary-color-a06)",
                   },
                 }}
               >
@@ -791,7 +791,7 @@ const Navbar = () => {
                   "&.Mui-selected": {
                     border: "1px solid var(--primary-color)",
                     borderRadius: "12px",
-                    backgroundColor: "rgba(var(--primary-color-rgb), 0.06)",
+                    backgroundColor: "var(--primary-color-a06)",
                   },
                 }}
               >
@@ -845,7 +845,7 @@ const Navbar = () => {
                   "&.Mui-selected": {
                     border: "1px solid var(--primary-color)",
                     borderRadius: "12px",
-                    backgroundColor: "rgba(var(--primary-color-rgb), 0.06)",
+                    backgroundColor: "var(--primary-color-a06)",
                   },
                 }}
               >

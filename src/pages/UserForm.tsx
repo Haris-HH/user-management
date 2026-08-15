@@ -1129,7 +1129,7 @@ const UserForm = () => {
                       backgroundColor: "var(--primary-color)",
                       color: "var(--tertiary-color)",
                       mb: "1px",
-                      "&:hover": { backgroundColor: "rgba(var(--primary-color-rgb), 0.7)" },
+                      "&:hover": { backgroundColor: "var(--primary-color-a70)" },
                       textTransform: "capitalize",
                       "&.Mui-disabled": {
                         backgroundColor: "var(--primary-color)",
@@ -1204,7 +1204,7 @@ const UserForm = () => {
                         backgroundColor: "var(--primary-color)",
                         color: "var(--tertiary-color)",
                         mb: "1px",
-                        "&:hover": { backgroundColor: "rgba(var(--primary-color-rgb), 0.7)" },
+                        "&:hover": { backgroundColor: "var(--primary-color-a70)" },
                         textTransform: "capitalize",
                       }}
                       startIcon={<ClearIcon className="h-6 w-6" style={{ color: "var(--tertiary-color)" }} />}
@@ -1216,7 +1216,7 @@ const UserForm = () => {
                 </Box>
               </Box>
 
-              <Divider sx={{ borderColor: "rgba(var(--primary-color-rgb), 0.58)", borderWidth: "1.5px", mt: 1 }} />
+              <Divider sx={{ borderColor: "var(--primary-color-a58)", borderWidth: "1.5px", mt: 1 }} />
 
               <Box className="flex flex-col gap-4 px-2">
                 <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--primary-color)" }}>
@@ -1413,7 +1413,7 @@ const UserForm = () => {
             <>
               <Divider
                 sx={{
-                  borderColor: "rgba(var(--primary-color-rgb), 0.58)",
+                  borderColor: "var(--primary-color-a58)",
                   borderWidth: "1.5px",
                   mt: 5,
                 }}
@@ -1548,7 +1548,7 @@ const UserForm = () => {
             </>
           )}
 
-          <Divider sx={{ borderColor: "rgba(var(--primary-color-rgb), 0.58)", borderWidth: "1.5px", mt: 5 }} />
+          <Divider sx={{ borderColor: "var(--primary-color-a58)", borderWidth: "1.5px", mt: 5 }} />
 
           <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--primary-color)" }}>
             {t("text.permission")}
@@ -1640,7 +1640,7 @@ const UserForm = () => {
                 backgroundColor: "var(--tertiary-color)",
                 border: "1px solid var(--primary-color)",
                 color: "var(--primary-color)",
-                "&:hover": { backgroundColor: "rgba(var(--primary-color-rgb), 0.8)" },
+                "&:hover": { backgroundColor: "var(--primary-color-a80)" },
                 textTransform: "capitalize",
               }}
               onClick={handleCancelClick}
@@ -1656,7 +1656,7 @@ const UserForm = () => {
                 height: 35,
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
-                "&:hover": { backgroundColor: "rgba(var(--primary-color-rgb), 0.8)" },
+                "&:hover": { backgroundColor: "var(--primary-color-a80)" },
                 textTransform: "capitalize",
               }}
             >

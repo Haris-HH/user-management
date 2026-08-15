@@ -365,7 +365,7 @@ const UserList = ({
                 backgroundColor: "var(--primary-color)",
                 color: "var(--tertiary-color)",
                 "&:hover": {
-                  backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                  backgroundColor: "var(--primary-color-a80)",
                 },
                 textTransform: "capitalize",
                 "&.Mui-disabled": {
@@ -501,7 +501,7 @@ const UserList = ({
                   <TableRow
                     sx={{
                       "& .MuiTableCell-root": {
-                        borderBottom: "1px solid rgba(var(--primary-color-rgb), 0.5)",
+                        borderBottom: "1px solid var(--primary-color-a50)",
                       }
                     }}
                   >

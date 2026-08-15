@@ -31,7 +31,7 @@ const LoadingScreen = () => {
       aria-live="polite"
       className="fixed inset-0 z-99997 flex items-center justify-center overflow-hidden"
       style={{
-        backgroundColor: "rgba(var(--tertiary-color-rgb), 0.9)"
+        backgroundColor: "var(--tertiary-color-a90)"
       }}
     >
       <span className="sr-only">{t("button.loading")}</span>
@@ -52,7 +52,7 @@ const LoadingScreen = () => {
             : { duration: 4, repeat: Infinity, ease: "easeInOut" }
         }
         style={{
-          backgroundColor: "rgba(var(--primary-color-rgb), 0.5)"
+          backgroundColor: "var(--primary-color-a50)"
         }}
       />
 

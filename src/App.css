@@ -11,9 +11,9 @@ body .swal2-backdrop-show {
 }
 
 .custom-swal-popup {
-  border: 1px solid rgba(var(--primary-color-rgb), 0.35);
+  border: 1px solid var(--primary-color-a35);
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(var(--tertiary-color-rgb),0.25);
+  box-shadow: 0 4px 15px var(--tertiary-color-a25);
   background-color: var(--tertiary-color);
   color: var(--primary-color);
 }
@@ -23,7 +23,7 @@ body .swal2-backdrop-show {
 }
 
 .custom-swal-popup .swal2-close:hover {
-  color: rgba(var(--primary-color-rgb), 0.7) !important;
+  color: var(--primary-color-a70) !important;
 }
 
 .custom-swal-popup .swal2-close:focus {
@@ -42,9 +42,9 @@ body .swal2-backdrop-show {
 }
 
 .custom-confirm-button:hover {
-  background-color: rgba(var(--primary-color-rgb),0.8);
+  background-color: var(--primary-color-a80);
 }
 
 .custom-cancel-button:hover {
-  background-color: rgba(var(--tertiary-color-rgb),0.1);
+  background-color: var(--tertiary-color-a10);
 }

@@ -370,7 +370,7 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
               backgroundColor: "var(--primary-color)",
               color: "var(--tertiary-color)",
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.8)",
+                backgroundColor: "var(--primary-color-a80)",
               },
               textTransform: "capitalize",
               "& .MuiButton-startIcon svg": {
@@ -392,7 +392,7 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
               border: "1px solid var(--primary-color)",
               color: "var(--primary-color)",
               "&:hover": {
-                backgroundColor: "rgba(var(--primary-color-rgb), 0.08)",
+                backgroundColor: "var(--primary-color-a08)",
               },
               textTransform: "capitalize",
             }}
