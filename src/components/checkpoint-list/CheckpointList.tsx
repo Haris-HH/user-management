@@ -40,7 +40,6 @@ import {
   searchCameras,
   addCameraInGroup,
   removeCameraInGroup,
-  updateCamera,
 } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -262,22 +261,6 @@ const CheckpointList = ({
       group_id: group_id,
       camera_id_list: cameras.map((camera) => camera.camera_id),
     };
-
-    // A camera added into a group under the selected project has to belong
-    // to that project too - otherwise it stays scoped to whatever project it
-    // was created under, even though the operator just filed it here. This
-    // has to complete *before* addCameraInGroup: the two used to fire in
-    // parallel, and racing them let the group-add's own side effects on the
-    // camera's project win, silently leaving the camera on its old project.
-    if (projectId) {
-      const projectUpdates = cameras
-        .filter((camera) => camera.project_id !== projectId)
-        .map((camera) =>
-          updateCamera({ camera_id: camera.camera_id, project_id: projectId })
-        );
-
-      await Promise.all(projectUpdates);
-    }
 
     await addCameraInGroup(body);
   };
@@ -560,6 +543,7 @@ const CheckpointList = ({
           <AddCheckpoint
             open={isAddCheckpointOpen}
             selectedCheckpoints={selectedCheckpoints}
+            projectId={projectId}
             onSave={handleSaveCheckpoint}
             onClose={() => setIsAddCheckpointOpen(false)}
           />

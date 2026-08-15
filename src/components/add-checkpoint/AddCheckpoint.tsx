@@ -51,6 +51,9 @@ type Props = {
   // dialog has to hand every checked camera back on save, including ones the
   // user never scrolled to, and there is no way to rebuild a row from an id.
   selectedCheckpoints?: Camera[];
+  // Scopes every camera search to this project; null leaves the dialog
+  // showing nothing since the owning page never opens it without one.
+  projectId?: string | null;
   onSave?: (users: Camera[]) => void;
 }
 
@@ -95,6 +98,7 @@ const AddCheckpoint = ({
   open,
   onClose,
   selectedCheckpoints = [],
+  projectId = null,
   onSave,
 }: Props) => {
   // i18n
@@ -275,7 +279,9 @@ const AddCheckpoint = ({
   // Shared by every request that only needs the text search applied — the
   // checkpoint filter's own option list is built from this (see
   // checkpoint-options effect below) and must not be narrowed by the column
-  // filters it is about to offer as choices.
+  // filters it is about to offer as choices. Project scoping lives here too
+  // so every path (paged fetch, "select all", filter options) stays scoped
+  // to the project the group belongs to.
   const getSearchOnlyFilter = useCallback(
     (filterData: FormData, pageData: number, limit: number) => {
       const body: Record<string, string> = {
@@ -283,13 +289,23 @@ const AddCheckpoint = ({
         limit: limit.toString(),
       };
 
+      const filterParts: string[] = [];
+
       if (filterData.search) {
-        body.filter = `camera_name~*${filterData.search}*`;
+        filterParts.push(`camera_name~*${filterData.search}*`);
+      }
+
+      if (projectId) {
+        filterParts.push(`project_id=${projectId}`);
+      }
+
+      if (filterParts.length > 0) {
+        body.filter = filterParts.join(",");
       }
 
       return body;
     },
-    []
+    [projectId]
   );
 
   // The header-column filters used to be applied client-side to whatever
