@@ -234,7 +234,7 @@ const GroupList = ({
           <Typography
             component="span"
             sx={{
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
               fontWeight: 500,
             }}
           >
@@ -249,12 +249,12 @@ const GroupList = ({
               sx={{
                 width: t("button.add-group-size"),
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 textTransform: "capitalize",
                 "&:hover": {
                   backgroundColor:
-                    "var(--primary-color-a80)",
+                    "rgba(var(--theme-accent-rgb), 0.80)",
                 },
               }}
             >
@@ -263,9 +263,9 @@ const GroupList = ({
           )}
         </Box>
 
-        <Box className="flex flex-col gap-2 bg-(--main-bg-color) p-2">
+        <Box className="flex flex-col gap-2 bg-(--theme-bg-body) p-2">
           <Box className="flex items-center justify-between">
-            <p className="text-[14px] font-medium text-(--secondary-color)">
+            <p className="text-[14px] font-medium text-(--theme-accent-soft)">
               {`${totalGroup} ${t("text.list")}`}
             </p>
 
@@ -282,7 +282,7 @@ const GroupList = ({
             sx={{
               height: "70vh",
               borderRadius: 0,
-              backgroundColor: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-panel)",
             }}
           >
             <Table stickyHeader>
@@ -295,10 +295,10 @@ const GroupList = ({
                       fontSize: "15px",
                     },
                     "& .MuiTableCell-root": {
-                      backgroundColor: "var(--tertiary-color)",
-                      color: "var(--secondary-color)",
+                      backgroundColor: "var(--theme-panel)",
+                      color: "var(--theme-accent-soft)",
                       borderBottom:
-                        "1px solid var(--primary-color)",
+                        "1px solid var(--theme-accent)",
                     },
                   }}
                 >
@@ -336,20 +336,20 @@ const GroupList = ({
                         cursor: "pointer",
                         "&:hover td": {
                           backgroundColor:
-                            "var(--primary-color-a08)",
+                            "rgba(var(--theme-accent-rgb), 0.08)",
                         },
                         "&.Mui-selected td": {
                           backgroundColor:
-                            "var(--primary-color-a20)",
+                            "rgba(var(--theme-accent-rgb), 0.20)",
                         },
                         "&.Mui-selected:hover td": {
                           backgroundColor:
-                            "var(--primary-color-a25)",
+                            "rgba(var(--theme-accent-rgb), 0.25)",
                         },
                         "& .MuiTableCell-root": {
-                          color: "var(--secondary-color)",
+                          color: "var(--theme-accent-soft)",
                           borderBottom:
-                            "1px solid var(--primary-color)",
+                            "1px solid var(--theme-accent)",
                         },
                       }}
                     >
@@ -395,9 +395,9 @@ const GroupList = ({
                       colSpan={columnCount}
                       align="center"
                       sx={{
-                        color: "var(--secondary-color)",
+                        color: "var(--theme-accent-soft)",
                         borderBottom:
-                          "1px solid var(--primary-color-a50)",
+                          "1px solid rgba(var(--theme-accent-rgb), 0.50)",
                       }}
                     >
                       {t("text.no-data")}

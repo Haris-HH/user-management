@@ -99,7 +99,7 @@ function App() {
   /*
     Restore the persisted language. Theme restoration used to live here too,
     reading a legacy "theme" key that nothing writes any more; when a stale
-    value survived it overwrote the --primary-color variables that
+    value survived it overwrote the --theme-accent variables that
     ThemeProvider had just applied from "wd2-theme". ThemeProvider is now the
     single owner of the theme CSS variables.
   */

@@ -82,12 +82,12 @@ export const useDockItems = (): DockItem[] => {
     () => {
       const items: DockItem[] = [
         {
-          icon: <HomeIcon sx={{ color: "var(--primary-color)" }} />,
+          icon: <HomeIcon sx={{ color: "var(--theme-accent)" }} />,
           label: t("dock.home"),
           path: "/",
         },
         {
-          icon: <GppMaybeIcon sx={{ color: "var(--primary-color)" }} />,
+          icon: <GppMaybeIcon sx={{ color: "var(--theme-accent)" }} />,
           label: t("dock.manage-user"),
           subMenu: [
             { label: t("menu.add-approve-user"), path: "/add-approve-user", uiKey: USER_MANAGEMENT_UI_KEY, groupKey: "add-approve-user" },
@@ -96,7 +96,7 @@ export const useDockItems = (): DockItem[] => {
           ],
         },
         {
-          icon: <GroupsIcon sx={{ color: "var(--primary-color)" }} />,
+          icon: <GroupsIcon sx={{ color: "var(--theme-accent)" }} />,
           label: t("dock.manage-watch-list"),
           subMenu: [
             { label: t("menu.manage-watch-list-person"), path: "/manage-watch-list-person", uiKey: USER_MANAGEMENT_UI_KEY, groupKey: "manage-watch-list-person" },
@@ -105,14 +105,14 @@ export const useDockItems = (): DockItem[] => {
           ],
         },
         {
-          icon: <EditRoadIcon sx={{ color: "var(--primary-color)" }} />,
+          icon: <EditRoadIcon sx={{ color: "var(--theme-accent)" }} />,
           label: t("dock.manage-checkpoint-data"),
           subMenu: [
             { label: t("menu.manage-checkpoint-group"), path: "/manage-checkpoint-group", uiKey: USER_MANAGEMENT_UI_KEY, groupKey: "manage-checkpoint-group" },
           ],
         },
         {
-          icon: <AnalyticsIcon sx={{ color: "var(--primary-color)" }} />,
+          icon: <AnalyticsIcon sx={{ color: "var(--theme-accent)" }} />,
           label: t("dock.statistics"),
           subMenu: [
             { label: t("menu.statistics"), path: "/statistic-top-users", uiKey: USER_MANAGEMENT_UI_KEY, groupKey: "statistics" },

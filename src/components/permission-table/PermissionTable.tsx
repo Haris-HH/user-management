@@ -546,7 +546,7 @@ const PermissionTable = ({
         <div className="flex items-center justify-between gap-2">
           <Typography
             component="h6"
-            style={{ color: "var(--primary-color)", fontWeight: 500 }}
+            style={{ color: "var(--theme-accent)", fontWeight: 500 }}
           >
             {t("text.ui-permission")}
           </Typography>
@@ -562,7 +562,7 @@ const PermissionTable = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border border-(--primary-color) rounded-sm p-2 mt-2 flex-1">
+        <div className="flex flex-col gap-2 border border-(--theme-accent) rounded-sm p-2 mt-2 flex-1">
           {permissionUiList.map((ui, uiIndex) => {
             const uiKey = ui.key;
             const uiPermissionEntry = getUiPermission(uiKey);
@@ -588,10 +588,10 @@ const PermissionTable = ({
                 onChange={() => handleToggleAccordion(uiIndex)}
                 sx={{
                   borderRadius: "5px",
-                  backgroundColor: "var(--primary-color)",
+                  backgroundColor: "var(--theme-accent)",
                   opacity: disabled ? 0.65 : 1,
                   "&.Mui-expanded": { margin: 0 },
-                  "& .MuiSvgIcon-root": { color: "var(--tertiary-color)" },
+                  "& .MuiSvgIcon-root": { color: "var(--theme-panel)" },
                 }}
               >
                 <AccordionSummary
@@ -608,7 +608,7 @@ const PermissionTable = ({
                     <Typography
                       component="span"
                       style={{
-                        color: "var(--tertiary-color)",
+                        color: "var(--theme-panel)",
                         fontWeight: 700,
                       }}
                     >
@@ -621,7 +621,7 @@ const PermissionTable = ({
                           <>
                             {activePermissionCount > 0 && (
                               <div className="bg-(--approve-bg-color) px-2 py-1 rounded-sm">
-                                <p className="text-xs text-(--secondary-color)">
+                                <p className="text-xs text-(--theme-accent-soft)">
                                   {`${t(
                                     "table.header.can-visit"
                                   )} : ${activePermissionCount}`}
@@ -641,7 +641,7 @@ const PermissionTable = ({
 
                             {noPermissionCount > 0 && (
                               <div className="bg-(--not-approve-bg-color) px-2 py-1 rounded-sm">
-                                <p className="text-xs text-(--secondary-color)">
+                                <p className="text-xs text-(--theme-accent-soft)">
                                   {`${t(
                                     "text.no-permission"
                                   )} : ${noPermissionCount}`}
@@ -665,7 +665,7 @@ const PermissionTable = ({
                             : "bg-(--not-approve-bg-color)"
                         }`}
                       >
-                        <p className="text-sm text-(--secondary-color)">
+                        <p className="text-sm text-(--theme-accent-soft)">
                           {uiIsEnabled ? t("text.active") : t("text.inactive")}
                         </p>
                       </div>
@@ -688,8 +688,8 @@ const PermissionTable = ({
                             "& .MuiTableCell-root": {
                               fontSize: "14px",
                               backgroundColor:
-                                "var(--primary-color-a60)",
-                              color: "var(--tertiary-color)",
+                                "rgba(var(--theme-accent-rgb), 0.60)",
+                              color: "var(--theme-panel)",
                               fontWeight: "bold",
                             },
                           }}
@@ -712,10 +712,10 @@ const PermissionTable = ({
                                   )
                                 }
                                 sx={{
-                                  color: "var(--tertiary-color)",
+                                  color: "var(--theme-panel)",
                                   p: 0,
                                   "&.Mui-checked": {
-                                    color: "var(--tertiary-color)",
+                                    color: "var(--theme-panel)",
                                   },
                                 }}
                               />
@@ -737,10 +737,10 @@ const PermissionTable = ({
                                   )
                                 }
                                 sx={{
-                                  color: "var(--tertiary-color)",
+                                  color: "var(--theme-panel)",
                                   p: 0,
                                   "&.Mui-checked": {
-                                    color: "var(--tertiary-color)",
+                                    color: "var(--theme-panel)",
                                   },
                                 }}
                               />
@@ -758,10 +758,10 @@ const PermissionTable = ({
                                   handleSelectAllPrintPermission(ui, e.target.checked)
                                 }
                                 sx={{
-                                  color: "var(--tertiary-color)",
+                                  color: "var(--theme-panel)",
                                   p: 0,
                                   "&.Mui-checked": {
-                                    color: "var(--tertiary-color)",
+                                    color: "var(--theme-panel)",
                                   },
                                 }}
                               />
@@ -797,8 +797,8 @@ const PermissionTable = ({
                                   // menu row that grants it, so the two are
                                   // told apart at a glance.
                                   backgroundColor: isHeading
-                                    ? "var(--primary-color-a45)"
-                                    : "var(--primary-color-a12)",
+                                    ? "rgba(var(--theme-accent-rgb), 0.45)"
+                                    : "rgba(var(--theme-accent-rgb), 0.12)",
                                   "& td": { border: "none" },
                                 }}
                               >
@@ -844,12 +844,12 @@ const PermissionTable = ({
                                     )
                                   }
                                   sx={{
-                                    color: "var(--primary-color)",
+                                    color: "var(--theme-accent)",
                                     "& .MuiSvgIcon-root": {
-                                      color: "var(--primary-color)",
+                                      color: "var(--theme-accent)",
                                     },
                                     "&.Mui-checked .MuiSvgIcon-root": {
-                                      color: "var(--primary-color)",
+                                      color: "var(--theme-accent)",
                                     },
                                   }}
                                 />
@@ -867,12 +867,12 @@ const PermissionTable = ({
                                     )
                                   }
                                   sx={{
-                                    color: "var(--primary-color)",
+                                    color: "var(--theme-accent)",
                                     "& .MuiSvgIcon-root": {
-                                      color: "var(--primary-color)",
+                                      color: "var(--theme-accent)",
                                     },
                                     "&.Mui-checked .MuiSvgIcon-root": {
-                                      color: "var(--primary-color)",
+                                      color: "var(--theme-accent)",
                                     },
                                   }}
                                 />
@@ -884,12 +884,12 @@ const PermissionTable = ({
                                   checked={uiPermissionEntry.prints?.[groupKey] === true}
                                   onChange={() => handleTogglePrintPermission(uiKey, groupKey)}
                                   sx={{
-                                    color: "var(--primary-color)",
+                                    color: "var(--theme-accent)",
                                     "& .MuiSvgIcon-root": {
-                                      color: "var(--primary-color)",
+                                      color: "var(--theme-accent)",
                                     },
                                     "&.Mui-checked .MuiSvgIcon-root": {
-                                      color: "var(--primary-color)",
+                                      color: "var(--theme-accent)",
                                     },
                                   }}
                                 />
@@ -911,25 +911,25 @@ const PermissionTable = ({
         <div className="flex items-center justify-between gap-2">
           <Typography
             component="h6"
-            style={{ color: "var(--primary-color)", fontWeight: 500 }}
+            style={{ color: "var(--theme-accent)", fontWeight: 500 }}
           >
             {t("text.checkpoint-permission")}
           </Typography>
 
           <div className="flex items-center gap-3 text-sm font-medium">
-            <p className="text-(--text-color)">
+            <p className="text-(--theme-text-primary)">
               {`${t("text.select")}: ${selectedCheckpointIdSet.size}`}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 border border-(--primary-color) rounded-sm p-2 mt-2 flex-1">
+        <div className="flex flex-col gap-2 border border-(--theme-accent) rounded-sm p-2 mt-2 flex-1">
           <TableContainer
             component={Paper}
             sx={{
               height: "100%",
               borderRadius: 0,
-              backgroundColor: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-panel)",
               opacity: disabled ? 0.65 : 1,
             }}
           >
@@ -939,8 +939,8 @@ const PermissionTable = ({
                   sx={{
                     "& th": {
                       fontSize: "14px",
-                      backgroundColor: "var(--primary-color-a60)",
-                      color: "var(--tertiary-color)",
+                      backgroundColor: "rgba(var(--theme-accent-rgb), 0.60)",
+                      color: "var(--theme-panel)",
                       border: "none",
                       fontWeight: "bold",
                     },
@@ -970,13 +970,13 @@ const PermissionTable = ({
                           handleToggleAllCheckpoints(e.target.checked)
                         }
                         sx={{
-                          color: "var(--tertiary-color)",
+                          color: "var(--theme-panel)",
                           p: 0,
                           "&.Mui-checked": {
-                            color: "var(--tertiary-color)",
+                            color: "var(--theme-panel)",
                           },
                           "&.MuiCheckbox-indeterminate": {
-                            color: "var(--tertiary-color)",
+                            color: "var(--theme-panel)",
                           },
                         }}
                       />
@@ -1011,10 +1011,10 @@ const PermissionTable = ({
                           sx={{
                             width: "100%",
                             borderRadius: "0 !important",
-                            backgroundColor: "var(--primary-color)",
+                            backgroundColor: "var(--theme-accent)",
                             "&.Mui-expanded": { margin: 0 },
                             "& .MuiSvgIcon-root": {
-                              color: "var(--tertiary-color)",
+                              color: "var(--theme-panel)",
                             },
                           }}
                         >
@@ -1032,7 +1032,7 @@ const PermissionTable = ({
                               <Typography
                                 component="span"
                                 sx={{
-                                  color: "var(--tertiary-color)",
+                                  color: "var(--theme-panel)",
                                   fontWeight: 700,
                                 }}
                               >
@@ -1042,7 +1042,7 @@ const PermissionTable = ({
                               <Typography
                                 component="span"
                                 sx={{
-                                  color: "var(--tertiary-color)",
+                                  color: "var(--theme-panel)",
                                   fontWeight: 700,
                                   textAlign: "center",
                                 }}
@@ -1065,13 +1065,13 @@ const PermissionTable = ({
                                     )
                                   }
                                   sx={{
-                                    color: "var(--tertiary-color)",
+                                    color: "var(--theme-panel)",
                                     p: 0,
                                     "&.Mui-checked": {
-                                      color: "var(--tertiary-color)",
+                                      color: "var(--theme-panel)",
                                     },
                                     "&.MuiCheckbox-indeterminate": {
-                                      color: "var(--tertiary-color)",
+                                      color: "var(--theme-panel)",
                                     },
                                   }}
                                 />
@@ -1089,7 +1089,7 @@ const PermissionTable = ({
                                       "& .MuiTableCell-root": {
                                         fontSize: "14px",
                                         backgroundColor:
-                                          "var(--primary-color-a60)",
+                                          "rgba(var(--theme-accent-rgb), 0.60)",
                                         color: "black",
                                         fontWeight: "bold",
                                       },
@@ -1129,7 +1129,7 @@ const PermissionTable = ({
                                             width: "100%",
                                             borderRadius: "0 !important",
                                             backgroundColor:
-                                              "var(--primary-color-a45)",
+                                              "rgba(var(--theme-accent-rgb), 0.45)",
                                             "&.Mui-expanded": { margin: 0 },
                                             "& .MuiSvgIcon-root": {
                                               color: "black",
@@ -1207,7 +1207,7 @@ const PermissionTable = ({
                                                       "& .MuiTableCell-root": {
                                                         fontSize: "14px",
                                                         backgroundColor:
-                                                          "var(--primary-color-a60)",
+                                                          "rgba(var(--theme-accent-rgb), 0.60)",
                                                         color: "black",
                                                         fontWeight: "bold",
                                                       },

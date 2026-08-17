@@ -331,7 +331,7 @@ const AssignUserDialog = ({
         </Box>
 
         <Box className="flex items-center justify-between">
-          <Typography sx={{ fontSize: "14px", color: "var(--primary-color)" }}>
+          <Typography sx={{ fontSize: "14px", color: "var(--theme-accent)" }}>
             {t("text.selected-count", { count: selectedUsers.length })}
           </Typography>
 
@@ -340,8 +340,8 @@ const AssignUserDialog = ({
             onClick={handleSearch}
             disabled={isDataLoading}
             sx={{
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
             }}
           >
             {t("button.search")}
@@ -353,30 +353,30 @@ const AssignUserDialog = ({
           sx={{
             height: "45vh",
             borderRadius: "0px",
-            backgroundColor: "var(--tertiary-color)",
+            backgroundColor: "var(--theme-panel)",
           }}
         >
           <Table stickyHeader size="small">
             <TableHead
               sx={{
                 "& .MuiTableCell-root": {
-                  color: "var(--secondary-color)",
+                  color: "var(--theme-accent-soft)",
                   border: "none",
-                  backgroundColor: "var(--primary-color-a50)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.50)",
                 }
               }}
             >
               <TableRow>
                 <TableCell
                   padding="checkbox"
-                  sx={{ backgroundColor: "var(--tertiary-color)" }}
+                  sx={{ backgroundColor: "var(--theme-panel)" }}
                 >
                   <Checkbox
                     size="small"
                     checked={allOnPageSelected}
                     indeterminate={!allOnPageSelected && selectableUsers.some((user) => selectedIdSet.has(user.user_id))}
                     onChange={(event) => handleToggleAll(event.target.checked)}
-                    sx={{ color: "var(--primary-color)", "&.Mui-checked": { color: "var(--primary-color)" } }}
+                    sx={{ color: "var(--theme-accent)", "&.Mui-checked": { color: "var(--theme-accent)" } }}
                   />
                 </TableCell>
                 {[
@@ -389,8 +389,8 @@ const AssignUserDialog = ({
                   <TableCell
                     key={header}
                     sx={{
-                      backgroundColor: "var(--tertiary-color)",
-                      color: "var(--primary-color)",
+                      backgroundColor: "var(--theme-panel)",
+                      color: "var(--theme-accent)",
                       fontWeight: 600,
                     }}
                   >
@@ -403,8 +403,8 @@ const AssignUserDialog = ({
             <TableBody
               sx={{
                 "& .MuiTableCell-root": {
-                  color: "var(--secondary-color)",
-                  borderBottom: "1px dashed var(--primary-color)"
+                  color: "var(--theme-accent-soft)",
+                  borderBottom: "1px dashed var(--theme-accent)"
                 }
               }}
             >
@@ -415,7 +415,7 @@ const AssignUserDialog = ({
                   <TableCell
                     colSpan={6}
                     align="center"
-                    sx={{ color: "var(--primary-color)" }}
+                    sx={{ color: "var(--theme-accent)" }}
                   >
                     {t("text.data-not-found")}
                   </TableCell>
@@ -431,18 +431,18 @@ const AssignUserDialog = ({
                           size="small"
                           checked={checked}
                           onChange={(event) => handleToggleUser(user, event.target.checked)}
-                          sx={{ color: "var(--primary-color)", "&.Mui-checked": { color: "var(--primary-color)" } }}
+                          sx={{ color: "var(--theme-accent)", "&.Mui-checked": { color: "var(--theme-accent)" } }}
                         />
                       </TableCell>
-                      <TableCell sx={{ color: "var(--primary-color)" }}>{user.username}</TableCell>
-                      <TableCell sx={{ color: "var(--primary-color)" }}>
+                      <TableCell sx={{ color: "var(--theme-accent)" }}>{user.username}</TableCell>
+                      <TableCell sx={{ color: "var(--theme-accent)" }}>
                         {`${user.firstname ?? ""} ${user.lastname ?? ""}`.trim() || "-"}
                       </TableCell>
-                      <TableCell sx={{ color: "var(--primary-color)" }}>
+                      <TableCell sx={{ color: "var(--theme-accent)" }}>
                         {formatThaiID(user.idcard) || "-"}
                       </TableCell>
-                      <TableCell sx={{ color: "var(--primary-color)" }}>{user.ou_name ?? "-"}</TableCell>
-                      <TableCell sx={{ color: "var(--primary-color)" }}>{user.position ?? "-"}</TableCell>
+                      <TableCell sx={{ color: "var(--theme-accent)" }}>{user.ou_name ?? "-"}</TableCell>
+                      <TableCell sx={{ color: "var(--theme-accent)" }}>{user.position ?? "-"}</TableCell>
                     </TableRow>
                   );
                 })
@@ -460,9 +460,9 @@ const AssignUserDialog = ({
           onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[50, 100, 200]}
           sx={{ 
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
             "& .MuiSvgIcon-root": {
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
             }
           }}
         />
@@ -472,7 +472,7 @@ const AssignUserDialog = ({
             variant="outlined"
             onClick={onClose}
             disabled={isSubmitting}
-            sx={{ color: "var(--primary-color)", borderColor: "var(--primary-color)" }}
+            sx={{ color: "var(--theme-accent)", borderColor: "var(--theme-accent)" }}
           >
             {t("button.cancel")}
           </Button>
@@ -481,11 +481,11 @@ const AssignUserDialog = ({
             onClick={handleConfirm}
             disabled={isSubmitting || selectedUsers.length === 0}
             sx={{
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
               "&.Mui-disabled": {
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 opacity: 0.5,
               },
             }}

@@ -708,7 +708,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
   const getRowColor = (status: number): { color: string; bgColor: string } => {
     switch (status) {
       case WAITING_STATE:
-        return { color: "var(--secondary-color)", bgColor: "var(--tertiary-color-rgb)" };
+        return { color: "var(--theme-accent-soft)", bgColor: "var(--theme-panel-rgb)" };
       case SUCCESS_STATE:
         return { color: "#1A1A1A", bgColor: "#F1FBE4" };
       case SAVE_BUT_NOT_APPROVE_STATE:
@@ -902,7 +902,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             <Box className="w-full px-20 pt-5 flex flex-col gap-5">
               <Box
                 {...getRootProps()}
-                className="w-full h-60 flex flex-col justify-center items-center gap-6 px-6 rounded-lg shadow-md border-2 border-(--primary-color) border-dashed cursor-pointer hover:scale-[1.01] transition-transform duration-150"
+                className="w-full h-60 flex flex-col justify-center items-center gap-6 px-6 rounded-lg shadow-md border-2 border-(--theme-accent) border-dashed cursor-pointer hover:scale-[1.01] transition-transform duration-150"
               >
                 <input {...getInputProps()} />
 
@@ -916,7 +916,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   />
                 )}
 
-                <Typography variant="h6" sx={{ color: "var(--primary-color)" }}>
+                <Typography variant="h6" sx={{ color: "var(--theme-accent)" }}>
                   {isReadingFile
                     ? t("text.loading")
                     : isDragActive
@@ -934,13 +934,13 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
               <Box className="w-full flex justify-between">
                 <Typography
                   variant="subtitle2"
-                  sx={{ color: "var(--primary-color)" }}
+                  sx={{ color: "var(--theme-accent)" }}
                 >
                   {t("text.excel-support-file")}
                 </Typography>
                 <Typography
                   variant="subtitle2"
-                  sx={{ color: "var(--primary-color)" }}
+                  sx={{ color: "var(--theme-accent)" }}
                 >
                   {t("text.excel-support-row")}
                 </Typography>
@@ -950,10 +950,10 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
         ) : isReadingFile ? (
           <Box className="w-full h-80 flex flex-col justify-center items-center gap-4">
             <CircularProgress />
-            <Typography sx={{ color: "var(--primary-color)" }}>
+            <Typography sx={{ color: "var(--theme-accent)" }}>
               {t("text.file-reading")}
             </Typography>
-            <Typography variant="subtitle2" sx={{ color: "var(--secondary-color)" }}>
+            <Typography variant="subtitle2" sx={{ color: "var(--theme-accent-soft)" }}>
               {file.name}
             </Typography>
           </Box>
@@ -1039,14 +1039,14 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                 <Box className="flex justify-between w-full">
                   <Typography
                     variant="subtitle2"
-                    sx={{ color: "var(--primary-color)" }}
+                    sx={{ color: "var(--theme-accent)" }}
                   >
                     {`${t("text.count-all-list")} : ${summary.total}`}
                   </Typography>
 
                   <Typography
                     variant="subtitle2"
-                    sx={{ color: "var(--primary-color)" }}
+                    sx={{ color: "var(--theme-accent)" }}
                   >
                     {`${t("text.count-all-left-list")} : ${summary.waiting}`}
                   </Typography>
@@ -1055,7 +1055,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                     <Box className="w-5 h-5 bg-[#F1FBE4]" />
                     <Typography
                       variant="subtitle2"
-                      sx={{ color: "var(--primary-color)" }}
+                      sx={{ color: "var(--theme-accent)" }}
                     >
                       {`${t("text.count-all-checked-list")} : ${summary.success}`}
                     </Typography>
@@ -1065,7 +1065,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                     <Box className="w-5 h-5 bg-[#F9DFDF]" />
                     <Typography
                       variant="subtitle2"
-                      sx={{ color: "var(--primary-color)" }}
+                      sx={{ color: "var(--theme-accent)" }}
                     >
                       {`${t("text.count-all-uncheck-list")} : ${summary.saveButNotApprove}`}
                     </Typography>
@@ -1075,7 +1075,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                     <Box className="w-5 h-5 bg-[#BDBDBD]" />
                     <Typography
                       variant="subtitle2"
-                      sx={{ color: "var(--primary-color)" }}
+                      sx={{ color: "var(--theme-accent)" }}
                     >
                       {`${t("text.count-all-cannot-import")} : ${summary.error}`}
                     </Typography>
@@ -1085,7 +1085,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                     <Box className="w-5 h-5 bg-[#FEBE43]" />
                     <Typography
                       variant="subtitle2"
-                      sx={{ color: "var(--primary-color)" }}
+                      sx={{ color: "var(--theme-accent)" }}
                     >
                       {`${t("text.count-all-suspend-list")} : ${summary.suspend}`}
                     </Typography>
@@ -1116,8 +1116,8 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                           key={`${label}-${index}`}
                           align="center"
                           sx={{
-                            color: "var(--tertiary-color)",
-                            backgroundColor: "var(--primary-color)",
+                            color: "var(--theme-panel)",
+                            backgroundColor: "var(--theme-accent)",
                             ...(minWidth && { minWidth }),
                           }}
                         >
@@ -1139,7 +1139,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                             transition: "background-color 0.3s ease-in-out",
                             "& .MuiTableCell-root": {
                               color: rowColor.color,
-                              borderBottom: "1px solid var(--primary-color)",
+                              borderBottom: "1px solid var(--theme-accent)",
                             },
                           }}
                         >
@@ -1179,26 +1179,26 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                 sx={{
                   mt: 2,
                   "& .MuiPaginationItem-page": {
-                    color: "var(--secondary-color)",
-                    backgroundColor: "var(--tertiary-color)",
-                    border: "1px solid var(--primary-color)",
+                    color: "var(--theme-accent-soft)",
+                    backgroundColor: "var(--theme-panel)",
+                    border: "1px solid var(--theme-accent)",
                   },
                   "& .MuiPaginationItem-page:hover": {
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                   },
                   "& .MuiPaginationItem-previousNext": {
-                    color: "var(--secondary-color)",
-                    backgroundColor: "var(--tertiary-color)",
-                    border: "1px solid var(--primary-color)",
+                    color: "var(--theme-accent-soft)",
+                    backgroundColor: "var(--theme-panel)",
+                    border: "1px solid var(--theme-accent)",
                   },
                   "& .MuiPaginationItem-previousNext:hover": {
-                    color: "var(--tertiary-color)",
-                    backgroundColor: "var(--primary-color)",
+                    color: "var(--theme-panel)",
+                    backgroundColor: "var(--theme-accent)",
                   },
                   "& .MuiPaginationItem-page.Mui-selected": {
-                    backgroundColor: "var(--primary-color-a80)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+                    color: "var(--theme-panel)",
                   },
                 }}
               />
@@ -1211,21 +1211,21 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                 <FaRegCircleXmark color="red" size={18} />
                 <Typography
                   variant="subtitle1"
-                  sx={{ color: "var(--primary-color)" }}
+                  sx={{ color: "var(--theme-accent)" }}
                 >
                   {file.name}
                 </Typography>
               </Box>
 
               <FaX
-                color="var(--primary-color)"
+                color="var(--theme-accent)"
                 size={20}
                 className="cursor-pointer"
                 onClick={handleDeleteFile}
               />
             </Box>
 
-            <Typography variant="subtitle2" sx={{ color: "var(--primary-color)" }}>
+            <Typography variant="subtitle2" sx={{ color: "var(--theme-accent)" }}>
               {fileError || t("text.invalid-file")}
             </Typography>
           </Box>
@@ -1239,14 +1239,14 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             sx={{
               width: 80,
               height: 35,
-              backgroundColor: "var(--tertiary-color)",
-              border: "1px solid var(--primary-color)",
-              color: "var(--primary-color)",
+              backgroundColor: "var(--theme-panel)",
+              border: "1px solid var(--theme-accent)",
+              color: "var(--theme-accent)",
               textTransform: "capitalize",
               "&.Mui-disabled": {
-                backgroundColor: "var(--tertiary-color)",
-                color: "var(--primary-color)",
-                border: "1px solid var(--primary-color)",
+                backgroundColor: "var(--theme-panel)",
+                color: "var(--theme-accent)",
+                border: "1px solid var(--theme-accent)",
                 opacity: 0.5,
               },
             }}
@@ -1261,17 +1261,17 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
             sx={{
               width: 110,
               height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
               textTransform: "capitalize",
               "&.Mui-disabled": {
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 opacity: 0.5,
               },
             }}
             startIcon={
-              isReadingFile || isUploading ? <CircularProgress size={15} sx={{ color: "var(--tertiary-color)" }} /> : <FaUpload size={15} />
+              isReadingFile || isUploading ? <CircularProgress size={15} sx={{ color: "var(--theme-panel)" }} /> : <FaUpload size={15} />
             }
           >
             {t("button.upload")}

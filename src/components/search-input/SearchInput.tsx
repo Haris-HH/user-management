@@ -9,14 +9,14 @@ import { useTranslation } from 'react-i18next';
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: "var(--tertiary-color)",
+  backgroundColor: "var(--theme-panel)",
   '&:hover': {
-    backgroundColor: "var(--secondary-color-a05)",
-    borderBottomColor: "var(--primary-color)",
+    backgroundColor: "rgba(var(--theme-accent-soft-rgb), 0.05)",
+    borderBottomColor: "var(--theme-accent)",
   },
   marginLeft: 0,
   width: '100%',
-  borderBottom: "1px solid var(--primary-color-a50)",
+  borderBottom: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
   borderBottomRightRadius: "0px",
   borderBottomLeftRadius: "0px",
   [theme.breakpoints.up('sm')]: {
@@ -37,7 +37,7 @@ const SearchIconWrapper = styled('div')(() => ({
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'var(--secondary-color)',
+  color: 'var(--theme-accent-soft)',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 1),
     transition: theme.transitions.create('width'),
@@ -77,7 +77,7 @@ const SearchInput = ({
         onKeyDown={onKeyDown}
       />
       <SearchIconWrapper>
-        <SearchIcon sx={{ fontSize: "20px", color: "var(--secondary-color-a50)" }} />
+        <SearchIcon sx={{ fontSize: "20px", color: "rgba(var(--theme-accent-soft-rgb), 0.50)" }} />
       </SearchIconWrapper>
     </Search>
   )

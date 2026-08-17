@@ -27,91 +27,91 @@ const buildFieldSx = (labelFontSize: string, errorBorderWidth: string) => ({
     borderRadius: "5px",
 
     "& fieldset": {
-      borderColor: "var(--primary-color)",
+      borderColor: "var(--theme-accent)",
     },
 
     "&.Mui-error fieldset": {
-      borderColor: "var(--danger-color)",
+      borderColor: "var(--theme-red)",
       borderWidth: errorBorderWidth,
     },
 
     "&:hover fieldset": {
-      borderColor: "var(--primary-color)",
+      borderColor: "var(--theme-accent)",
     },
 
     "&.Mui-focused fieldset": {
-      borderColor: "var(--primary-color)",
+      borderColor: "var(--theme-accent)",
     },
   },
 
-  backgroundColor: "var(--tertiary-color)",
+  backgroundColor: "var(--theme-panel)",
 
   "& .MuiInputBase-root": {
     minHeight: "30px",
     padding: "2px 8px",
     fontSize: labelFontSize,
-    color: "var(--primary-color)",
+    color: "var(--theme-accent)",
   },
 
   "& .MuiInputBase-input": {
     height: "25px",
     padding: "0 !important",
-    backgroundColor: "var(--tertiary-color) !important",
-    color: "var(--primary-color)",
+    backgroundColor: "var(--theme-panel) !important",
+    color: "var(--theme-accent)",
   },
 
   "& .MuiSvgIcon-root": {
-    color: "var(--primary-color)",
+    color: "var(--theme-accent)",
   },
 
   "& .MuiOutlinedInput-root.Mui-disabled": {
-    backgroundColor: "var(--primary-color-a05) !important",
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.05) !important",
     cursor: "not-allowed",
 
     "& fieldset": {
-      borderColor: "var(--primary-color-a70) !important",
+      borderColor: "rgba(var(--theme-accent-rgb), 0.70) !important",
     },
   },
 
   "& .MuiInputBase-input.Mui-disabled": {
-    color: "var(--primary-color-a70) !important",
-    WebkitTextFillColor: "var(--primary-color-a70) !important",
-    backgroundColor: "var(--primary-color-a05) !important",
+    color: "rgba(var(--theme-accent-rgb), 0.70) !important",
+    WebkitTextFillColor: "rgba(var(--theme-accent-rgb), 0.70) !important",
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.05) !important",
     cursor: "not-allowed",
   },
 
   "& .MuiInputBase-root.Mui-disabled": {
-    color: "var(--primary-color) !important",
+    color: "var(--theme-accent) !important",
   },
 });
 
 const BASE_PAPER_SX = {
-  backgroundColor: "var(--tertiary-color) !important",
-  color: "var(--primary-color) !important",
-  border: "1px solid var(--primary-color)",
+  backgroundColor: "var(--theme-panel) !important",
+  color: "var(--theme-accent) !important",
+  border: "1px solid var(--theme-accent)",
 
   "& .MuiAutocomplete-listbox": {
-    backgroundColor: "var(--tertiary-color) !important",
+    backgroundColor: "var(--theme-panel) !important",
     padding: 0,
   },
 
   "& .MuiAutocomplete-option": {
-    color: "var(--primary-color) !important",
-    backgroundColor: "var(--tertiary-color) !important",
+    color: "var(--theme-accent) !important",
+    backgroundColor: "var(--theme-panel) !important",
   },
 
   "& .MuiAutocomplete-option:hover, & .Mui-focused": {
-    backgroundColor: "var(--primary-color-a20) !important",
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.20) !important",
   },
 
   "& .MuiAutocomplete-option[aria-selected='true']": {
-    backgroundColor: "var(--primary-color) !important",
-    color: "var(--tertiary-color) !important",
+    backgroundColor: "var(--theme-accent) !important",
+    color: "var(--theme-panel) !important",
   },
 
   "& .MuiAutocomplete-noOptions": {
-    color: "var(--primary-color) !important",
-    backgroundColor: "var(--tertiary-color) !important",
+    color: "var(--theme-accent) !important",
+    backgroundColor: "var(--theme-panel) !important",
   },
 };
 
@@ -120,7 +120,7 @@ const FREE_SOLO_PAPER_SX = {
   ...BASE_PAPER_SX,
 
   "& .MuiOutlinedInput-root": {
-    border: "1px solid var(--primary-color)",
+    border: "1px solid var(--theme-accent)",
     borderRadius: "5px",
   },
 
@@ -344,7 +344,7 @@ const AutoComplete: React.FC<AutoCompleteProps> = ({
       <Typography
         sx={{
           fontSize: labelFontSize,
-          color: "var(--primary-color)",
+          color: "var(--theme-accent)",
         }}
         variant="subtitle1"
       >

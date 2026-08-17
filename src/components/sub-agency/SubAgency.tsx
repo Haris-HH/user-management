@@ -127,10 +127,10 @@ const SubAgency = ({ value, onChange }: Props) => {
               disabled={isAddDisabled}
               sx={{
                 mb: "1px",
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
 
                 "&.Mui-disabled": {
-                  color: "var(--primary-color-a30)",
+                  color: "rgba(var(--theme-accent-rgb), 0.30)",
                 },
               }}
             >
@@ -144,10 +144,10 @@ const SubAgency = ({ value, onChange }: Props) => {
               disabled={subAgencies.length === 1}
               sx={{
                 mb: "1px",
-                color: "var(--danger-color)",
+                color: "var(--theme-red)",
 
                 "&.Mui-disabled": {
-                  color: "var(--primary-color-a30)",
+                  color: "rgba(var(--theme-accent-rgb), 0.30)",
                 },
               }}
             >

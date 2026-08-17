@@ -40,43 +40,43 @@ const PaginationBelowTableComponent: React.FC<PaginationProps> = ({
   return (
     <div className='flex items-center justify-between w-full'>
       <div className="flex items-center gap-4">
-        <p className="text-(--primary-color) text-[16px]">{t('text.show')}</p>
+        <p className="text-(--theme-accent) text-[16px]">{t('text.show')}</p>
         <Select
           id="row-per-page-select"
           value={rowsPerPage.toString()}
           onChange={handleRowsPerPageChange}
-          className="bg-(--tertiary-color) h-8 min-w-25 w-25"
+          className="bg-(--theme-panel) h-8 min-w-25 w-25"
           size="medium"
           sx={{
-            color: "var(--primary-color)",
-            border: "1px solid var(--primary-color)",
+            color: "var(--theme-accent)",
+            border: "1px solid var(--theme-accent)",
             "& .MuiSvgIcon-root": {
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
             }
           }}
           MenuProps={{
             slotProps: {
               paper: {
                 sx: {
-                  backgroundColor: "var(--tertiary-color)",
-                  border: "1px solid var(--primary-color)",
+                  backgroundColor: "var(--theme-panel)",
+                  border: "1px solid var(--theme-accent)",
 
                   "& .MuiMenuItem-root": {
-                    color: "var(--primary-color)",
-                    backgroundColor: "var(--tertiary-color)",
+                    color: "var(--theme-accent)",
+                    backgroundColor: "var(--theme-panel)",
 
                     "&:hover": {
-                      backgroundColor: "var(--primary-color-a15)",
+                      backgroundColor: "rgba(var(--theme-accent-rgb), 0.15)",
                     },
 
                     "&.Mui-selected": {
-                      color: "var(--tertiary-color)",
-                      backgroundColor: "var(--primary-color) !important",
+                      color: "var(--theme-panel)",
+                      backgroundColor: "var(--theme-accent) !important",
                     },
 
                     "&.Mui-selected:hover": {
                       backgroundColor:
-                        "var(--primary-color-a80) !important",
+                        "rgba(var(--theme-accent-rgb), 0.80) !important",
                     },
                   },
                 },
@@ -98,24 +98,24 @@ const PaginationBelowTableComponent: React.FC<PaginationProps> = ({
               display: 'flex',
               justifyContent: 'end',
               "& .MuiPaginationItem-page": {
-                color: "var(--tertiary-color)",
-                backgroundColor: "var(--primary-color-a40)",
+                color: "var(--theme-panel)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.40)",
               },
               "& .MuiPaginationItem-page:hover": {
-                backgroundColor: "var(--primary-color-a70)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.70)",
+                color: "var(--theme-panel)",
               },
               "& .MuiPaginationItem-previousNext": {
-                color: "var(--tertiary-color)",
-                backgroundColor: "var(--primary-color-a70)",
-                border: "1px solid var(--primary-color)",
+                color: "var(--theme-panel)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.70)",
+                border: "1px solid var(--theme-accent)",
               },
               "& .MuiPaginationItem-ellipsis": {
-                color: "var(--tertiary-color)",
+                color: "var(--theme-panel)",
               },
               "& .MuiPaginationItem-page.Mui-selected": {
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
               },
             }}
             count={totalPages}
@@ -126,7 +126,7 @@ const PaginationBelowTableComponent: React.FC<PaginationProps> = ({
           />
         </Stack>
         <div className="flex items-center gap-x-2 ml-3">
-          <p className="text-(--primary-color) text-[16px]">
+          <p className="text-(--theme-accent) text-[16px]">
             {t('text.page')}
           </p>
           <TextBox

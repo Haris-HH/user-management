@@ -17,9 +17,9 @@ const AnimatedText = ({
 }) => {
   return (
     <div 
-      className={`flex overflow-hidden text-(--primary-color) ${className}`}
+      className={`flex overflow-hidden text-(--theme-accent) ${className}`}
       style={{
-        textShadow: "1px 3px 2px var(--tertiary-color)"
+        textShadow: "1px 3px 2px var(--theme-panel)"
       }}
     >
       {text.split("").map((char, index) => (
@@ -85,7 +85,7 @@ const CinematicTitle = ({ skipIntro = false }: { skipIntro?: boolean }) => {
         transition={{
           delay: skipIntro ? 0.2 : 2,
         }}
-        className="text-(--primary-color)"
+        className="text-(--theme-accent)"
       >
         <AnimatedText
           text={t('project.title')}
@@ -103,7 +103,7 @@ const CinematicTitle = ({ skipIntro = false }: { skipIntro?: boolean }) => {
       <motion.div
         className="absolute w-96 h-96 rounded-full"
         style={{
-          background: "var(--primary-color-a10)",
+          background: "rgba(var(--theme-accent-rgb), 0.10)",
           filter: "blur(90px)",
         }}
         /* ลดการเคลื่อนไหว: แสงเรืองค้างที่ความสว่างกลาง ไม่หายใจเข้าออกไม่รู้จบ */

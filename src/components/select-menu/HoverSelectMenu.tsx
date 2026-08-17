@@ -34,7 +34,7 @@ function HoverSelectMenu<T>({
   getKey,
   onSelect,
   renderItemPrefix,
-  selectedColor = "var(--primary-color)",
+  selectedColor = "var(--theme-accent)",
   className = "",
 }: HoverSelectMenuProps<T>) {
   const [openMenu, setOpenMenu] = useState(false);
@@ -93,9 +93,9 @@ function HoverSelectMenu<T>({
                 minWidth: 170,
                 borderRadius: "16px",
                 overflow: "visible",
-                backgroundColor: "var(--tertiary-color)",
-                boxShadow: "0 8px 24px var(--tertiary-color-a15)",
-                border: "1px solid var(--tertiary-color-a18)",
+                backgroundColor: "var(--theme-panel)",
+                boxShadow: "0 8px 24px rgba(var(--theme-panel-rgb), 0.15)",
+                border: "1px solid rgba(var(--theme-panel-rgb), 0.18)",
                 p: 1,
               }}
             >
@@ -119,9 +119,9 @@ function HoverSelectMenu<T>({
                               ? `1px solid ${selectedColor}`
                               : "1px solid transparent",
                             backgroundColor: groupSelected
-                              ? "var(--primary-color-a10)"
+                              ? "rgba(var(--theme-accent-rgb), 0.10)"
                               : groupOpen
-                                ? "var(--primary-color-a06)"
+                                ? "rgba(var(--theme-accent-rgb), 0.06)"
                                 : "transparent",
                           }}
                         >
@@ -131,7 +131,7 @@ function HoverSelectMenu<T>({
                               sx={{
                                 color: groupSelected
                                   ? selectedColor
-                                  : "var(--secondary-color)",
+                                  : "var(--theme-accent-soft)",
                                 fontSize: "0.82rem",
                                 fontWeight: groupSelected ? 700 : 400,
                               }}
@@ -144,7 +144,7 @@ function HoverSelectMenu<T>({
                               sx={{
                                 color: groupSelected
                                   ? selectedColor
-                                  : "var(--text-color)",
+                                  : "var(--theme-text-primary)",
                                 fontSize: "0.82rem",
                                 fontWeight: groupSelected ? 700 : 400,
                               }}
@@ -163,11 +163,11 @@ function HoverSelectMenu<T>({
                                 ml: 1,
                                 minWidth: 170,
                                 borderRadius: "16px",
-                                backgroundColor: "var(--tertiary-color)",
+                                backgroundColor: "var(--theme-panel)",
                                 boxShadow:
-                                  "0 8px 24px var(--tertiary-color-a15)",
+                                  "0 8px 24px rgba(var(--theme-panel-rgb), 0.15)",
                                 border:
-                                  "1px solid var(--tertiary-color-a18)",
+                                  "1px solid rgba(var(--theme-panel-rgb), 0.18)",
                                 p: 1,
                               }}
                             >
@@ -193,7 +193,7 @@ function HoverSelectMenu<T>({
                                           ? `1px solid ${selectedColor}`
                                           : "1px solid transparent",
                                         backgroundColor: isSelected
-                                          ? "var(--primary-color-a10)"
+                                          ? "rgba(var(--theme-accent-rgb), 0.10)"
                                           : "transparent",
                                       }}
                                     >
@@ -205,7 +205,7 @@ function HoverSelectMenu<T>({
                                           sx={{
                                             color: isSelected
                                               ? selectedColor
-                                              : "var(--secondary-color)",
+                                              : "var(--theme-accent-soft)",
                                             fontSize: "0.82rem",
                                             fontWeight: isSelected ? 700 : 400,
                                           }}
@@ -241,7 +241,7 @@ function HoverSelectMenu<T>({
                               ? `1px solid ${selectedColor}`
                               : "1px solid transparent",
                             backgroundColor: isSelected
-                              ? "var(--primary-color-a10)"
+                              ? "rgba(var(--theme-accent-rgb), 0.10)"
                               : "transparent",
                           }}
                         >
@@ -253,7 +253,7 @@ function HoverSelectMenu<T>({
                               sx={{
                                 color: isSelected
                                   ? selectedColor
-                                  : "var(--secondary-color)",
+                                  : "var(--theme-accent-soft)",
                                 fontSize: "0.82rem",
                                 fontWeight: isSelected ? 700 : 400,
                               }}

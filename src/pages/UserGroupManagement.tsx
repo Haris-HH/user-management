@@ -557,7 +557,7 @@ const UserGroupManagement = () => {
         <MainTitle title={t("pages.user-group-management")} />
 
         <Box
-          className="flex flex-col flex-1 bg-(--tertiary-color)/80 rounded-lg overflow-y-auto"
+          className="flex flex-col flex-1 bg-(--theme-panel)/80 rounded-lg overflow-y-auto"
           sx={{
             boxShadow: "1px 1px 5px rgba(0, 0, 0, 0.1)",
           }}
@@ -575,7 +575,7 @@ const UserGroupManagement = () => {
                     value={searchText}
                     onChange={(event) => setSearchText(event.target.value)}
                     startAdornment={
-                      <SearchIcon sx={{ color: "var(--primary-color)" }} />
+                      <SearchIcon sx={{ color: "var(--theme-accent)" }} />
                     }
                   />
                 </Box>
@@ -616,7 +616,7 @@ const UserGroupManagement = () => {
                   />
 
                   {errors.group_name && (
-                    <Typography sx={{ color: "var(--danger-color)", fontSize: 12 }}>
+                    <Typography sx={{ color: "var(--theme-red)", fontSize: 12 }}>
                       {errors.group_name.message}
                     </Typography>
                   )}
@@ -690,8 +690,8 @@ const UserGroupManagement = () => {
                     height: "45px",
                     px: 3,
                     mt: "18px",
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                     textTransform: "none",
                   }}
                 >
@@ -704,9 +704,9 @@ const UserGroupManagement = () => {
           </Box>
 
           <Box className="px-6 pb-4 shrink-0">
-            <Box className="border border-(--primary-color) rounded-lg overflow-hidden bg-(--tertiary-color)">
-              <Box className="px-5 py-4 bg-(--tertiary-color) flex items-center justify-between border-b border-(--primary-color)">
-                <Typography sx={{ fontWeight: 600, color: "var(--primary-color)" }}>
+            <Box className="border border-(--theme-accent) rounded-lg overflow-hidden bg-(--theme-panel)">
+              <Box className="px-5 py-4 bg-(--theme-panel) flex items-center justify-between border-b border-(--theme-accent)">
+                <Typography sx={{ fontWeight: 600, color: "var(--theme-accent)" }}>
                   {t("component.permission-2")}
                 </Typography>
 
@@ -714,8 +714,8 @@ const UserGroupManagement = () => {
                   label={`${permissionRows.length} ${t("text.list")}`}
                   size="small"
                   sx={{
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                     fontWeight: 700,
                   }}
                 />
@@ -724,18 +724,18 @@ const UserGroupManagement = () => {
               <Box className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr style={{ backgroundColor: "var(--primary-color-a80)" }}>
-                      <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color)">
+                    <tr style={{ backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)" }}>
+                      <th className="px-5 py-3 text-xs font-bold uppercase text-(--theme-panel) border-b border-(--theme-accent)">
                         {t("table.header.user-group")}
                       </th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color)">
+                      <th className="px-5 py-3 text-xs font-bold uppercase text-(--theme-panel) border-b border-(--theme-accent)">
                         {t("table.header.end-date")}
                       </th>
-                      <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color)">
+                      <th className="px-5 py-3 text-xs font-bold uppercase text-(--theme-panel) border-b border-(--theme-accent)">
                         {t("table.header.life-date")}
                       </th>
                       {canEdit && (
-                        <th className="px-5 py-3 text-xs font-bold uppercase text-(--tertiary-color) border-b border-(--primary-color) text-right">
+                        <th className="px-5 py-3 text-xs font-bold uppercase text-(--theme-panel) border-b border-(--theme-accent) text-right">
                           {t("table.header.delete")}
                         </th>
                       )}
@@ -747,10 +747,10 @@ const UserGroupManagement = () => {
                       <tr
                         key={row.group_id}
                         onClick={() => setSelectedGroupId(row.group_id)}
-                        className={`transition-colors cursor-pointer border-b border-(--primary-color) ${
+                        className={`transition-colors cursor-pointer border-b border-(--theme-accent) ${
                           selectedGroupId === row.group_id
-                            ? "bg-(--primary-color) text-(--tertiary-color)"
-                            : "text-(--primary-color) hover:text-(--tertiary-color) hover:bg-(--secondary-color)"
+                            ? "bg-(--theme-accent) text-(--theme-panel)"
+                            : "text-(--theme-accent) hover:text-(--theme-panel) hover:bg-(--theme-accent-soft)"
                         }`}
                       >
                         <td className="px-5 py-4">
@@ -859,7 +859,7 @@ const UserGroupManagement = () => {
                                 handleRemovePermission(row.group_id);
                               }}
                               sx={{
-                                color: "var(--danger-color)",
+                                color: "var(--theme-red)",
                                 "&:hover": {
                                   backgroundColor: "rgba(219, 39, 64, 0.08)",
                                 },
@@ -888,13 +888,13 @@ const UserGroupManagement = () => {
             />
           </Box>
 
-          <Box className="sticky z-2 bottom-0 bg-(--tertiary-color) border-t border-(--primary-color) p-4 flex items-center justify-between">
+          <Box className="sticky z-2 bottom-0 bg-(--theme-panel) border-t border-(--theme-accent) p-4 flex items-center justify-between">
             <Box className="flex items-center gap-2">
               <InfoOutlinedIcon
                 sx={{
                   color: hasUnsavedChanges
                     ? "var(--waiting-approve-bg-color)"
-                    : "var(--primary-color)",
+                    : "var(--theme-accent)",
                 }}
               />
 
@@ -902,7 +902,7 @@ const UserGroupManagement = () => {
                 sx={{
                   color: hasUnsavedChanges
                     ? "var(--waiting-approve-bg-color)"
-                    : "var(--primary-color)",
+                    : "var(--theme-accent)",
                   fontWeight: hasUnsavedChanges ? 600 : 400,
                 }}
               >
@@ -919,17 +919,17 @@ const UserGroupManagement = () => {
                 sx={{
                   width: 130,
                   height: 35,
-                  backgroundColor: "var(--tertiary-color)",
-                  border: "1px solid var(--primary-color)",
-                  color: "var(--primary-color)",
+                  backgroundColor: "var(--theme-panel)",
+                  border: "1px solid var(--theme-accent)",
+                  color: "var(--theme-accent)",
                   "&:hover": {
-                    backgroundColor: "var(--primary-color-a80)",
+                    backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
                   },
                   textTransform: "capitalize",
                   "&.Mui-disabled": {
-                    backgroundColor: "var(--tertiary-color)",
-                    color: "var(--primary-color)",
-                    border: "1px solid var(--primary-color)",
+                    backgroundColor: "var(--theme-panel)",
+                    color: "var(--theme-accent)",
+                    border: "1px solid var(--theme-accent)",
                     opacity: 0.5,
                   },
                 }}
@@ -946,12 +946,12 @@ const UserGroupManagement = () => {
                 sx={{
                   width: 130,
                   height: 35,
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-accent)",
+                  color: "var(--theme-panel)",
                   textTransform: "none",
                   "&.Mui-disabled": {
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                     opacity: 0.5,
                   },
                 }}

@@ -23,7 +23,7 @@ const MainTitleWithBreadcrumbs = ({
       <Breadcrumbs
         sx={{
           "& .MuiBreadcrumbs-separator": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
             fontSize: "1.7rem",
           }
         }}
@@ -33,13 +33,13 @@ const MainTitleWithBreadcrumbs = ({
             to={header.to}
             className={`text-[1.7rem] font-bold`}
             style={{
-              color: breadcrumbPaths.length > 0 ? "var(--primary-color)" : "var(--secondary-color)"
+              color: breadcrumbPaths.length > 0 ? "var(--theme-accent)" : "var(--theme-accent-soft)"
             }}
           >
             {header.label}
           </Link>
         ) : (
-          <span className="text-[1.7rem] font-bold text-(--primary-color)">
+          <span className="text-[1.7rem] font-bold text-(--theme-accent)">
             {header.label}
           </span>
         )}
@@ -47,7 +47,7 @@ const MainTitleWithBreadcrumbs = ({
           breadcrumbPaths.length > 0 &&
           breadcrumbPaths.map((path, index) => {
             const crumbStyle = {
-              color: breadcrumbPaths.length > 0 ? "var(--secondary-color)" : "var(--primary-color)"
+              color: breadcrumbPaths.length > 0 ? "var(--theme-accent-soft)" : "var(--theme-accent)"
             };
 
             /*

@@ -1110,7 +1110,7 @@ const UserForm = () => {
         />
 
         <form
-          className="flex flex-col flex-1 bg-(--tertiary-color) border border-(--primary-color) rounded-sm shadow px-15 pt-15 pb-5 gap-2 overflow-y-auto"
+          className="flex flex-col flex-1 bg-(--theme-panel) border border-(--theme-accent) rounded-sm shadow px-15 pt-15 pb-5 gap-2 overflow-y-auto"
           onSubmit={handleSubmit(handleSaveClick)}
         >
           <Box className="grid grid-cols-[220px_1fr] gap-4">
@@ -1126,14 +1126,14 @@ const UserForm = () => {
                     variant="contained"
                     sx={{
                       height: 35,
-                      backgroundColor: "var(--primary-color)",
-                      color: "var(--tertiary-color)",
+                      backgroundColor: "var(--theme-accent)",
+                      color: "var(--theme-panel)",
                       mb: "1px",
-                      "&:hover": { backgroundColor: "var(--primary-color-a70)" },
+                      "&:hover": { backgroundColor: "rgba(var(--theme-accent-rgb), 0.70)" },
                       textTransform: "capitalize",
                       "&.Mui-disabled": {
-                        backgroundColor: "var(--primary-color)",
-                        color: "var(--tertiary-color)",
+                        backgroundColor: "var(--theme-accent)",
+                        color: "var(--theme-panel)",
                         opacity: 0.5,
                       },
                     }}
@@ -1148,7 +1148,7 @@ const UserForm = () => {
 
             <Box className="flex flex-col gap-4">
               <Box className="flex flex-col gap-4 px-2">
-                <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--primary-color)" }}>
+                <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--theme-accent)" }}>
                   {t("text.username")}
                 </Typography>
 
@@ -1201,13 +1201,13 @@ const UserForm = () => {
                       sx={{
                         width: t("button.reset-password-size"),
                         height: 35,
-                        backgroundColor: "var(--primary-color)",
-                        color: "var(--tertiary-color)",
+                        backgroundColor: "var(--theme-accent)",
+                        color: "var(--theme-panel)",
                         mb: "1px",
-                        "&:hover": { backgroundColor: "var(--primary-color-a70)" },
+                        "&:hover": { backgroundColor: "rgba(var(--theme-accent-rgb), 0.70)" },
                         textTransform: "capitalize",
                       }}
-                      startIcon={<ClearIcon className="h-6 w-6" style={{ color: "var(--tertiary-color)" }} />}
+                      startIcon={<ClearIcon className="h-6 w-6" style={{ color: "var(--theme-panel)" }} />}
                       onClick={handleResetPassword}
                     >
                       {t("button.reset-password")}
@@ -1216,10 +1216,10 @@ const UserForm = () => {
                 </Box>
               </Box>
 
-              <Divider sx={{ borderColor: "var(--primary-color-a58)", borderWidth: "1.5px", mt: 1 }} />
+              <Divider sx={{ borderColor: "rgba(var(--theme-accent-rgb), 0.58)", borderWidth: "1.5px", mt: 1 }} />
 
               <Box className="flex flex-col gap-4 px-2">
-                <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--primary-color)" }}>
+                <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--theme-accent)" }}>
                   {t("text.information")}
                 </Typography>
 
@@ -1413,7 +1413,7 @@ const UserForm = () => {
             <>
               <Divider
                 sx={{
-                  borderColor: "var(--primary-color-a58)",
+                  borderColor: "rgba(var(--theme-accent-rgb), 0.58)",
                   borderWidth: "1.5px",
                   mt: 5,
                 }}
@@ -1425,7 +1425,7 @@ const UserForm = () => {
                   sx={{
                     fontSize: "1.2rem",
                     fontWeight: "bold",
-                    color: "var(--primary-color)",
+                    color: "var(--theme-accent)",
                     mb: 2,
                   }}
                 >
@@ -1443,12 +1443,12 @@ const UserForm = () => {
                     }
                     sx={{
                       gap: 3,
-                      color: "var(--primary-color)",
+                      color: "var(--theme-accent)",
                       "& .MuiRadio-root": {
-                        color: "var(--primary-color)",
+                        color: "var(--theme-accent)",
                       },
                       "& .Mui-checked": {
-                        color: "var(--primary-color)",
+                        color: "var(--theme-accent)",
                       },
                     }}
                   >
@@ -1511,35 +1511,35 @@ const UserForm = () => {
                     })}
                     sx={{
                       "& .MuiOutlinedInput-root": {
-                        color: "var(--primary-color)",
+                        color: "var(--theme-accent)",
 
                         "& fieldset": {
-                          borderColor: "var(--primary-color)",
+                          borderColor: "var(--theme-accent)",
                         },
 
                         "&:hover fieldset": {
-                          borderColor: "var(--primary-color)",
+                          borderColor: "var(--theme-accent)",
                         },
 
                         "&.Mui-focused fieldset": {
-                          borderColor: "var(--primary-color)",
+                          borderColor: "var(--theme-accent)",
                         },
 
                         "&.Mui-disabled fieldset": {
-                          borderColor: "var(--primary-color)",
+                          borderColor: "var(--theme-accent)",
                         },
                       },
 
                       "& .MuiOutlinedInput-input.Mui-disabled": {
-                        WebkitTextFillColor: "var(--primary-color)",
+                        WebkitTextFillColor: "var(--theme-accent)",
                       },
 
                       "& textarea.Mui-disabled": {
-                        WebkitTextFillColor: "var(--primary-color)",
+                        WebkitTextFillColor: "var(--theme-accent)",
                       },
 
                       "& .MuiOutlinedInput-root.Mui-disabled fieldset": {
-                        borderColor: "var(--primary-color)",
+                        borderColor: "var(--theme-accent)",
                       },
                     }}
                   />
@@ -1548,9 +1548,9 @@ const UserForm = () => {
             </>
           )}
 
-          <Divider sx={{ borderColor: "var(--primary-color-a58)", borderWidth: "1.5px", mt: 5 }} />
+          <Divider sx={{ borderColor: "rgba(var(--theme-accent-rgb), 0.58)", borderWidth: "1.5px", mt: 5 }} />
 
-          <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--primary-color)" }}>
+          <Typography variant="h6" sx={{ fontSize: "1.2rem", fontWeight: "bold", color: "var(--theme-accent)" }}>
             {t("text.permission")}
           </Typography>
 
@@ -1610,7 +1610,7 @@ const UserForm = () => {
           </Box>
 
           <Box
-            className="rounded-sm bg-(--tertiary-color) border border-(--primary-color) p-4 mt-4"
+            className="rounded-sm bg-(--theme-panel) border border-(--theme-accent) p-4 mt-4"
             sx={{ 
               boxShadow: "1px 1px 5px rgba(0, 0, 0, 0.1)",
               display: "grid",
@@ -1637,10 +1637,10 @@ const UserForm = () => {
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--tertiary-color)",
-                border: "1px solid var(--primary-color)",
-                color: "var(--primary-color)",
-                "&:hover": { backgroundColor: "var(--primary-color-a80)" },
+                backgroundColor: "var(--theme-panel)",
+                border: "1px solid var(--theme-accent)",
+                color: "var(--theme-accent)",
+                "&:hover": { backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)" },
                 textTransform: "capitalize",
               }}
               onClick={handleCancelClick}
@@ -1654,9 +1654,9 @@ const UserForm = () => {
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
-                "&:hover": { backgroundColor: "var(--primary-color-a80)" },
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
+                "&:hover": { backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)" },
                 textTransform: "capitalize",
               }}
             >

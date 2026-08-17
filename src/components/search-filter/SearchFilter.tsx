@@ -367,14 +367,14 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
             sx={{
               width: 130,
               height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
               "&:hover": {
-                backgroundColor: "var(--primary-color-a80)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
               },
               textTransform: "capitalize",
               "& .MuiButton-startIcon svg": {
-                color: "var(--tertiary-color)",
+                color: "var(--theme-panel)",
               },
             }}
             startIcon={<SearchIcon />}
@@ -388,11 +388,11 @@ const SearchFilter = ({ open, value, onClose, onSearch }: Props) => {
             sx={{
               width: 130,
               height: 35,
-              backgroundColor: "var(--tertiary-color)",
-              border: "1px solid var(--primary-color)",
-              color: "var(--primary-color)",
+              backgroundColor: "var(--theme-panel)",
+              border: "1px solid var(--theme-accent)",
+              color: "var(--theme-accent)",
               "&:hover": {
-                backgroundColor: "var(--primary-color-a08)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
               },
               textTransform: "capitalize",
             }}

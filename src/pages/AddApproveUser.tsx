@@ -700,9 +700,9 @@ const AddApproveUser = () => {
             checked={userSelected.includes(data.user_id)}
             onChange={() => onCheckMemberClick(data.user_id)}
             sx={{
-              color: "var(--secondary-color)",
+              color: "var(--theme-accent-soft)",
               "&.Mui-checked": {
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
               },
             }}
           />
@@ -874,7 +874,7 @@ const AddApproveUser = () => {
       { isLoading && <LoadingScreen /> }
       {/* Main Title */}
       <MainTitle title={t("pages.add-approve-user")} />
-      <div className='flex flex-col p-4 bg-(--main-bg-color) flex-1 min-h-0 w-full rounded-lg border border-(--primary-color) overflow-y-auto gap-2'>
+      <div className='flex flex-col p-4 bg-(--theme-bg-body) flex-1 min-h-0 w-full rounded-lg border border-(--theme-accent) overflow-y-auto gap-2'>
         {/* Import and Add User both create records - "active" hides the row. */}
         {canEdit && (
         <Box className="flex justify-end items-center">
@@ -884,10 +884,10 @@ const AddApproveUser = () => {
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color-a80)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize"
               }}
@@ -902,20 +902,20 @@ const AddApproveUser = () => {
               onClose={handleMenuClose}
               sx={{
                 "& .MuiMenu-list": {
-                  backgroundColor: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-panel)",
                 },
               }}
             >
               <MenuItem
                 sx={{
-                  color: "var(--secondary-color)",
+                  color: "var(--theme-accent-soft)",
                   fontSize: "0.9rem",
                   py: 1.2,
                   px: 2,
                   display: "flex",
                   "&:hover": {
                     backgroundColor:
-                      "var(--primary-color-a15)",
+                      "rgba(var(--theme-accent-rgb), 0.15)",
                   },
                 }}
                 onClick={() => handleMenuItemClick("example")}
@@ -924,19 +924,19 @@ const AddApproveUser = () => {
               </MenuItem>
               <Divider
                 sx={{
-                  borderColor: "var(--primary-color-a50)",
+                  borderColor: "rgba(var(--theme-accent-rgb), 0.50)",
                 }}
               />
               <MenuItem
                 sx={{
-                  color: "var(--secondary-color)",
+                  color: "var(--theme-accent-soft)",
                   fontSize: "0.9rem",
                   py: 1.2,
                   px: 2,
                   display: "flex",
                   "&:hover": {
                     backgroundColor:
-                      "var(--primary-color-a15)",
+                      "rgba(var(--theme-accent-rgb), 0.15)",
                   },
                 }}
                 onClick={() => handleMenuItemClick("import")}
@@ -949,10 +949,10 @@ const AddApproveUser = () => {
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color-a80)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize"
               }}
@@ -973,8 +973,8 @@ const AddApproveUser = () => {
             borderRadius: "0 0 16px 16px",
             overflow: "hidden",
             background:
-              "linear-gradient(180deg, var(--primary-color-a08), var(--tertiary-color))",
-            border: "1px solid var(--primary-color-a25)",
+              "linear-gradient(180deg, rgba(var(--theme-accent-rgb), 0.08), var(--theme-panel))",
+            border: "1px solid rgba(var(--theme-accent-rgb), 0.25)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
             "&:before": { display: "none" },
             "&.Mui-expanded": { margin: 0 },
@@ -993,7 +993,7 @@ const AddApproveUser = () => {
                 gap: 2,
               },
               "& .MuiSvgIcon-root": {
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
               },
             }}
           >
@@ -1010,16 +1010,16 @@ const AddApproveUser = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: "var(--primary-color-a12)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.12)",
                 }}
               >
-                <FilterAltOutlinedIcon sx={{ color: "var(--primary-color)" }} />
+                <FilterAltOutlinedIcon sx={{ color: "var(--theme-accent)" }} />
               </Box>
 
               <Box>
                 <Typography
                   sx={{
-                    color: "var(--primary-color)",
+                    color: "var(--theme-accent)",
                     fontWeight: 700,
                     fontSize: "1rem",
                   }}
@@ -1054,8 +1054,8 @@ const AddApproveUser = () => {
                     minWidth: 130,
                     height: 40,
                     borderRadius: "10px",
-                    borderColor: "var(--primary-color-a50)",
-                    color: "var(--primary-color)",
+                    borderColor: "rgba(var(--theme-accent-rgb), 0.50)",
+                    color: "var(--theme-accent)",
                     textTransform: "capitalize",
                     fontWeight: 600,
                   }}
@@ -1069,13 +1069,13 @@ const AddApproveUser = () => {
 
                 <Button
                   variant="contained"
-                  startIcon={<SearchIcon style={{ color: "var(--tertiary-color)"}} />}
+                  startIcon={<SearchIcon style={{ color: "var(--theme-panel)"}} />}
                   sx={{
                     minWidth: 140,
                     height: 40,
                     borderRadius: "10px",
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                     textTransform: "capitalize",
                     fontWeight: 700,
                   }}
@@ -1101,8 +1101,8 @@ const AddApproveUser = () => {
               sx={{
                 p: 2.5,
                 borderRadius: "14px",
-                backgroundColor: "var(--tertiary-color)",
-                border: "1px solid var(--primary-color-a16)",
+                backgroundColor: "var(--theme-panel)",
+                border: "1px solid rgba(var(--theme-accent-rgb), 0.16)",
               }}
             >
               <Box
@@ -1226,7 +1226,7 @@ const AddApproveUser = () => {
             onReject={handleRejectClick}
             onWait={handleWaitClick}
           />
-          <Box className="p-4 bg-(--tertiary-color) border border-t-2 border-(--primary-color)">
+          <Box className="p-4 bg-(--theme-panel) border border-t-2 border-(--theme-accent)">
             <TableContainer
               component={Paper}
               sx={{
@@ -1235,7 +1235,7 @@ const AddApproveUser = () => {
                 width: "100%",
                 height: isAccordionOpen ? `calc(100vh - ${formData.agency_id ? "1000px" : "550px"})` : "58vh",
                 minHeight: "260px",
-                backgroundColor: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-panel)",
               }}
             >
               <Table
@@ -1259,8 +1259,8 @@ const AddApproveUser = () => {
                           align={column.align}
                           style={{
                             minWidth: column.minWidth,
-                            color: "var(--tertiary-color)",
-                            backgroundColor: "var(--primary-color)",
+                            color: "var(--theme-panel)",
+                            backgroundColor: "var(--theme-accent)",
                           }}
                         >
                           {column.id === "actions" ? (
@@ -1272,12 +1272,12 @@ const AddApproveUser = () => {
                               onChange={handleSelectAll}
                               disabled={userData.length === 0}
                               sx={{
-                                color: "var(--tertiary-color)",
+                                color: "var(--theme-panel)",
                                 "&.Mui-checked": {
-                                  color: "var(--tertiary-color)",
+                                  color: "var(--theme-panel)",
                                 },
                                 "&.MuiCheckbox-indeterminate": {
-                                  color: "var(--tertiary-color)",
+                                  color: "var(--theme-panel)",
                                 },
                               }}
                             />
@@ -1304,9 +1304,9 @@ const AddApproveUser = () => {
                             key={`${index}-${column.id ?? colIndex}`}
                             align={column.align || "center"}
                             sx={{
-                              backgroundColor: "var(--tertiary-color)",
-                              color: "var(--secondary-color)",
-                              borderBottom: "1px solid var(--primary-color)",
+                              backgroundColor: "var(--theme-panel)",
+                              color: "var(--theme-accent-soft)",
+                              borderBottom: "1px solid var(--theme-accent)",
                               textAlign: "center",
                               px: 1,
                               py: 0.5,
@@ -1324,7 +1324,7 @@ const AddApproveUser = () => {
                       <TableCell
                         colSpan={visibleColumns.length}
                         align="center"
-                        sx={{ py: 5, color: "var(--secondary-color)" }}
+                        sx={{ py: 5, color: "var(--theme-accent-soft)" }}
                       >
                         {t('text.no-data')}
                       </TableCell>
@@ -1343,9 +1343,9 @@ const AddApproveUser = () => {
               onPageChange={handleChangePage}
               onRowsPerPageChange={handleChangeRowsPerPage}
               sx={{
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 }
               }}
             />

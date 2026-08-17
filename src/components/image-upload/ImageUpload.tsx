@@ -77,13 +77,13 @@ const ImageUpload = ({ initialImage, onImageChange, onImageDelete }: Props) => {
           position: "relative",
           width: "200px",
           height: "230px",
-          border: "2px solid var(--primary-color)",
+          border: "2px solid var(--theme-accent)",
           borderRadius: "5px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           overflow: "hidden",
-          backgroundColor: "var(--tertiary-color)",
+          backgroundColor: "var(--theme-panel)",
         }}
       >
         {
@@ -96,7 +96,7 @@ const ImageUpload = ({ initialImage, onImageChange, onImageDelete }: Props) => {
                   width: "100%", 
                   height: "100%",
                   objectFit: "cover",
-                  color: "var(--primary-color)"
+                  color: "var(--theme-accent)"
                 }}
               />
               <button
@@ -130,7 +130,7 @@ const ImageUpload = ({ initialImage, onImageChange, onImageDelete }: Props) => {
                 justifyContent: "center",
                 alignItems: "center",
                 cursor: "pointer",
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
                 fontSize: "14px",
               }}
             >
@@ -149,7 +149,7 @@ const ImageUpload = ({ initialImage, onImageChange, onImageDelete }: Props) => {
         }
       </Box>
       {
-        isFileOverSize && (<label className="text-(--danger-color) text-xs mt-2">{`*${t('text.upload-image-not-over-2-mb')}`}</label>)
+        isFileOverSize && (<label className="text-(--theme-red) text-xs mt-2">{`*${t('text.upload-image-not-over-2-mb')}`}</label>)
       }
     </Box>
   )

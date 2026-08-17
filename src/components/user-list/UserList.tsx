@@ -351,7 +351,7 @@ const UserList = ({
         <Box className="flex justify-between items-center">
           <Typography
             component="span"
-            style={{ color: "var(--primary-color)", fontWeight: 500 }}
+            style={{ color: "var(--theme-accent)", fontWeight: 500 }}
           >
             {t("text.user-list")}
           </Typography>
@@ -362,15 +362,15 @@ const UserList = ({
               sx={{
                 width: 140,
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color-a80)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize",
                 "&.Mui-disabled": {
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-accent)",
+                  color: "var(--theme-panel)",
                   opacity: 0.5,
                   cursor: "not-allowed"
                 },
@@ -384,9 +384,9 @@ const UserList = ({
           )}
         </Box>
 
-        <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
+        <Box className="flex flex-col bg-(--theme-bg-body) p-2 gap-2">
           <Box className="flex justify-between items-center">
-            <p className="text-[14px] text-(--secondary-color) font-medium">
+            <p className="text-[14px] text-(--theme-accent-soft) font-medium">
               {`${totalUser} ${t("text.list")}`}
             </p>
             <SearchInput 
@@ -402,7 +402,7 @@ const UserList = ({
             sx={{
               height: "70vh",
               borderRadius: 0,
-              backgroundColor: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-panel)",
             }}
           >
             <Table stickyHeader>
@@ -413,12 +413,12 @@ const UserList = ({
                       padding: "0px",
                       height: "56.5px",
                       fontSize: "15px",
-                      borderBottom: "1px solid var(--primary-color)",
+                      borderBottom: "1px solid var(--theme-accent)",
                     },
                     "& .MuiTableCell-root": {
-                      backgroundColor: "var(--tertiary-color)",
-                      color: "var(--secondary-color)",
-                      borderBottom: "1px solid var(--primary-color)",
+                      backgroundColor: "var(--theme-panel)",
+                      color: "var(--theme-accent-soft)",
+                      borderBottom: "1px solid var(--theme-accent)",
                     },
                   }}
                 >
@@ -469,8 +469,8 @@ const UserList = ({
                         key={user.user_id}
                         sx={{
                           "& .MuiTableCell-root": {
-                            color: "var(--secondary-color)",
-                            borderBottom: "1px solid var(--primary-color)",
+                            color: "var(--theme-accent-soft)",
+                            borderBottom: "1px solid var(--theme-accent)",
                           },
                         }}
                       >
@@ -501,11 +501,11 @@ const UserList = ({
                   <TableRow
                     sx={{
                       "& .MuiTableCell-root": {
-                        borderBottom: "1px solid var(--primary-color-a50)",
+                        borderBottom: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
                       }
                     }}
                   >
-                    <TableCell colSpan={columnCount} align="center" sx={{ color: "var(--secondary-color)" }}>
+                    <TableCell colSpan={columnCount} align="center" sx={{ color: "var(--theme-accent-soft)" }}>
                       {t("text.no-data")}
                     </TableCell>
                   </TableRow>

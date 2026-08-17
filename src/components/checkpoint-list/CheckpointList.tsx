@@ -327,7 +327,7 @@ const CheckpointList = ({
       { isLoading && <LoadingScreen /> }
       <Box className="flex flex-col gap-2">
         <Box className="flex justify-between items-center">
-          <Typography component="span" style={{ color: "var(--primary-color)", fontWeight: 500 }}>
+          <Typography component="span" style={{ color: "var(--theme-accent)", fontWeight: 500 }}>
             {t('text.checkpoint-list')}
           </Typography>
           {canEdit && (
@@ -336,15 +336,15 @@ const CheckpointList = ({
               sx={{
                 width: 140,
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color-a80)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize",
                 "&.Mui-disabled": {
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-accent)",
+                  color: "var(--theme-panel)",
                   opacity: 0.5,
                   cursor: "not-allowed"
                 },
@@ -357,9 +357,9 @@ const CheckpointList = ({
             </Button>
           )}
         </Box>
-        <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
+        <Box className="flex flex-col bg-(--theme-bg-body) p-2 gap-2">
           <Box className="flex justify-between items-center">
-            <p className='text-[14px] text-(--secondary-color) font-medium'>{`${totalCheckpoint} ${t('text.list')}`}</p>
+            <p className='text-[14px] text-(--theme-accent-soft) font-medium'>{`${totalCheckpoint} ${t('text.list')}`}</p>
             <SearchInput 
               value={formData.search}
               onChange={(event) =>
@@ -372,7 +372,7 @@ const CheckpointList = ({
             sx={{
               height: "70vh",
               borderRadius: "0px",
-              backgroundColor: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-panel)",
             }}
           >
             <Table
@@ -385,12 +385,12 @@ const CheckpointList = ({
                       padding: '0px',
                       height: "56.5px",
                       fontSize: "15px",
-                      borderBottom: "1px solid var(--primary-color)"
+                      borderBottom: "1px solid var(--theme-accent)"
                     },
                     "& .MuiTableCell-root": {
-                      backgroundColor: "var(--tertiary-color)",
-                      color: "var(--secondary-color)",
-                      borderBottom: "1px solid var(--primary-color)",
+                      backgroundColor: "var(--theme-panel)",
+                      color: "var(--theme-accent-soft)",
+                      borderBottom: "1px solid var(--theme-accent)",
                     },
                   }}
                 >
@@ -466,8 +466,8 @@ const CheckpointList = ({
                         key={checkpoint.camera_id}
                         sx={{
                           "& .MuiTableCell-root": {
-                            color: "var(--secondary-color)",
-                            borderBottom: "1px solid var(--primary-color)",
+                            color: "var(--theme-accent-soft)",
+                            borderBottom: "1px solid var(--theme-accent)",
                           },
                         }}
                       >
@@ -498,7 +498,7 @@ const CheckpointList = ({
                   <TableRow
                     sx={{
                       "& .MuiTableCell-root": {
-                        borderBottom: "1px solid var(--primary-color-a50)",
+                        borderBottom: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
                       }
                     }}
                   >
@@ -506,7 +506,7 @@ const CheckpointList = ({
                       colSpan={columnCount}
                       align="center"
                       sx={{
-                        color: "var(--secondary-color)",
+                        color: "var(--theme-accent-soft)",
                         height: projectId ? undefined : "55vh",
                       }}
                     >
@@ -517,14 +517,14 @@ const CheckpointList = ({
                           <FindInPageOutlinedIcon
                             sx={{
                               fontSize: 44,
-                              color: "var(--primary-color-a40)",
+                              color: "rgba(var(--theme-accent-rgb), 0.40)",
                             }}
                           />
-                          <Typography sx={{ color: "var(--secondary-color)", fontWeight: 500 }}>
+                          <Typography sx={{ color: "var(--theme-accent-soft)", fontWeight: 500 }}>
                             {t("text.no-data")}
                           </Typography>
                           <Typography
-                            sx={{ fontSize: 13, color: "var(--primary-color-a60)" }}
+                            sx={{ fontSize: 13, color: "rgba(var(--theme-accent-rgb), 0.60)" }}
                           >
                             {t("text.select-project-hint-checkpoint")}
                           </Typography>

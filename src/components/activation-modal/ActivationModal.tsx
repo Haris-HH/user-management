@@ -82,16 +82,16 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
       borderRadius: 2,
       cursor: "pointer",
       border: isSelected
-        ? "1px solid var(--primary-color)"
-        : "1px solid var(--primary-color-a25)",
+        ? "1px solid var(--theme-accent)"
+        : "1px solid rgba(var(--theme-accent-rgb), 0.25)",
       backgroundColor: isSelected
-        ? "var(--primary-color-a12)"
-        : "var(--tertiary-color)",
+        ? "rgba(var(--theme-accent-rgb), 0.12)"
+        : "var(--theme-panel)",
       /* `transition: "0.2s"` เดิมย่อมาจาก `all 0.2s` — ระบุ property ให้ชัดว่ามี
          แค่พื้นหลังกับเส้นขอบที่เปลี่ยนตอนเลือก/hover */
       transition: transitionOf(["background-color", "border-color"], "fast"),
       "&:hover": {
-        backgroundColor: "var(--primary-color-a08)",
+        backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
       },
     };
   };
@@ -105,9 +105,9 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
       slotProps={{
         paper: {
           sx: {
-            backgroundColor: "var(--tertiary-color)",
+            backgroundColor: "var(--theme-panel)",
             borderRadius: "12px",
-            border: "1px solid var(--primary-color-a35)",
+            border: "1px solid rgba(var(--theme-accent-rgb), 0.35)",
             overflow: "hidden",
           },
         },
@@ -118,7 +118,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
           sx={{
             fontSize: 22,
             fontWeight: 600,
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
           }}
         >
           {t('text.confirm-activation')}
@@ -129,7 +129,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
             mt: 1,
             fontSize: 14,
             fontWeight: 500,
-            color: "var(--secondary-color)",
+            color: "var(--theme-accent-soft)",
           }}
         >
           {t('text.confirm-activation-detail')}
@@ -158,7 +158,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
                     sx={{
                       fontSize: 16,
                       fontWeight: 600,
-                      color: "var(--primary-color)",
+                      color: "var(--theme-accent)",
                     }}
                   >
                     {t('text.active-now')}
@@ -167,7 +167,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
                   <Typography
                     sx={{
                       fontSize: 13,
-                      color: "var(--secondary-color)",
+                      color: "var(--theme-accent-soft)",
                     }}
                   >
                     {t('text.active-now-detail')}
@@ -178,10 +178,10 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
                 m: 0,
                 width: "100%",
                 "& .MuiRadio-root": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 },
                 "& .Mui-checked": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 },
               }}
             />
@@ -201,7 +201,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
                     sx={{
                       fontSize: 16,
                       fontWeight: 600,
-                      color: "var(--primary-color)",
+                      color: "var(--theme-accent)",
                     }}
                   >
                     {t('text.schedule-for-later')}
@@ -210,7 +210,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
                   <Typography
                     sx={{
                       fontSize: 13,
-                      color: "var(--secondary-color)",
+                      color: "var(--theme-accent-soft)",
                     }}
                   >
                     {t('text.schedule-for-later-detail')}
@@ -221,10 +221,10 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
                 m: 0,
                 width: "100%",
                 "& .MuiRadio-root": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 },
                 "& .Mui-checked": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 },
               }}
             />
@@ -244,7 +244,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
               <EventIcon
                 sx={{
                   fontSize: 18,
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 }}
               />
 
@@ -252,7 +252,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
                 sx={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                   textTransform: "uppercase",
                   letterSpacing: 0.8,
                 }}
@@ -274,24 +274,24 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
               sx={{
                 width: "100%",
                 borderRadius: "5px",
-                backgroundColor: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-panel)",
                 "& .MuiOutlinedInput-root": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                   "& fieldset": {
-                    borderColor: "var(--primary-color)",
+                    borderColor: "var(--theme-accent)",
                   },
                   "&:hover fieldset": {
-                    borderColor: "var(--primary-color)",
+                    borderColor: "var(--theme-accent)",
                   },
                   "&.Mui-focused fieldset": {
-                    borderColor: "var(--primary-color)",
+                    borderColor: "var(--theme-accent)",
                   },
                 },
                 "& .MuiOutlinedInput-input": {
                   fontSize: 16,
                 },
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 },
               }}
             />
@@ -304,7 +304,7 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
           px: 3,
           py: 2,
           gap: 1,
-          backgroundColor: "var(--primary-color-a06)",
+          backgroundColor: "rgba(var(--theme-accent-rgb), 0.06)",
         }}
       >
         <Button
@@ -313,13 +313,13 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
           sx={{
             width: 130,
             height: 35,
-            backgroundColor: "var(--tertiary-color)",
-            border: "1px solid var(--primary-color)",
-            color: "var(--primary-color)",
+            backgroundColor: "var(--theme-panel)",
+            border: "1px solid var(--theme-accent)",
+            color: "var(--theme-accent)",
             textTransform: "capitalize",
             "&:hover": {
-              backgroundColor: "var(--primary-color-a08)",
-              border: "1px solid var(--primary-color)",
+              backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
+              border: "1px solid var(--theme-accent)",
             },
           }}
         >
@@ -332,12 +332,12 @@ const ActivationModal = ({ open, onClose, onConfirm }: Props) => {
           sx={{
             width: 130,
             height: 35,
-            backgroundColor: "var(--primary-color)",
-            color: "var(--tertiary-color)",
+            backgroundColor: "var(--theme-accent)",
+            color: "var(--theme-panel)",
             textTransform: "capitalize",
             boxShadow: "none",
             "&:hover": {
-              backgroundColor: "var(--primary-color-a85)",
+              backgroundColor: "rgba(var(--theme-accent-rgb), 0.85)",
               boxShadow: "none",
             },
           }}

@@ -88,13 +88,13 @@ const TextBox: React.FC<TextBoxProps> = ({
 
   return (
     <div className="flex flex-col w-full">
-      <Typography sx={{ fontSize: labelFontSize || undefined, color:'var(--primary-color)' }} variant='subtitle1'>
+      <Typography sx={{ fontSize: labelFontSize || undefined, color:'var(--theme-accent)' }} variant='subtitle1'>
         {`${label}`}
         {
           required && <span className="text-red-500"> *</span>
         }
         {
-          warningText && <span className="text-(--danger-color) ml-4">{warningText}</span>
+          warningText && <span className="text-(--theme-red) ml-4">{warningText}</span>
         }
       </Typography>
       <TextField
@@ -117,19 +117,19 @@ const TextBox: React.FC<TextBoxProps> = ({
           backgroundColor: "transparent",
 
           "& .MuiOutlinedInput-root": {
-            backgroundColor: "var(--tertiary-color)",
+            backgroundColor: "var(--theme-panel)",
             borderRadius: "5px",
 
             "& fieldset": {
-              borderColor: "var(--primary-color)",
+              borderColor: "var(--theme-accent)",
             },
 
             "&:hover fieldset": {
-              borderColor: "var(--primary-color)",
+              borderColor: "var(--theme-accent)",
             },
 
             "&.Mui-focused fieldset": {
-              borderColor: "var(--primary-color)",
+              borderColor: "var(--theme-accent)",
             },
           },
 
@@ -138,7 +138,7 @@ const TextBox: React.FC<TextBoxProps> = ({
             minHeight: minHeight,
             padding: "0 8px",
             fontSize: labelFontSize,
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
             display: "flex",
             alignItems: "center",
           },
@@ -147,7 +147,7 @@ const TextBox: React.FC<TextBoxProps> = ({
             height: "100%",
             boxSizing: "border-box",
             padding: "0 !important",
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
             backgroundColor: "transparent !important",
 
             fontSize: "16px",
@@ -157,10 +157,10 @@ const TextBox: React.FC<TextBoxProps> = ({
 
             "&:-webkit-autofill": {
               WebkitBoxShadow:
-                "0 0 0 1000px var(--tertiary-color) inset !important",
+                "0 0 0 1000px var(--theme-panel) inset !important",
               WebkitTextFillColor:
-                "var(--primary-color) !important",
-              caretColor: "var(--primary-color)",
+                "var(--theme-accent) !important",
+              caretColor: "var(--theme-accent)",
 
               fontSize: "16px",
               fontFamily: "inherit",
@@ -172,9 +172,9 @@ const TextBox: React.FC<TextBoxProps> = ({
 
             "&:-webkit-autofill:hover": {
               WebkitBoxShadow:
-                "0 0 0 1000px var(--tertiary-color) inset !important",
+                "0 0 0 1000px var(--theme-panel) inset !important",
               WebkitTextFillColor:
-                "var(--primary-color) !important",
+                "var(--theme-accent) !important",
 
               fontSize: "16px",
               fontFamily: "inherit",
@@ -182,9 +182,9 @@ const TextBox: React.FC<TextBoxProps> = ({
 
             "&:-webkit-autofill:focus": {
               WebkitBoxShadow:
-                "0 0 0 1000px var(--tertiary-color) inset !important",
+                "0 0 0 1000px var(--theme-panel) inset !important",
               WebkitTextFillColor:
-                "var(--primary-color) !important",
+                "var(--theme-accent) !important",
 
               fontSize: "16px",
               fontFamily: "inherit",
@@ -192,22 +192,22 @@ const TextBox: React.FC<TextBoxProps> = ({
           },
 
           "& .MuiOutlinedInput-root.Mui-disabled": {
-            backgroundColor: "var(--primary-color-a05) !important",
+            backgroundColor: "rgba(var(--theme-accent-rgb), 0.05) !important",
             cursor: "not-allowed",
 
             "& fieldset": {
-              borderColor: "var(--primary-color) !important",
+              borderColor: "var(--theme-accent) !important",
             },
           },
 
           "& .MuiInputBase-input.Mui-disabled": {
-            color: "var(--primary-color) !important",
-            WebkitTextFillColor: "var(--primary-color) !important",
+            color: "var(--theme-accent) !important",
+            WebkitTextFillColor: "var(--theme-accent) !important",
             cursor: "not-allowed",
           },
 
           "& .MuiInputBase-root.Mui-disabled": {
-            color: "var(--primary-color) !important",
+            color: "var(--theme-accent) !important",
           },
 
           "& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button":
@@ -245,11 +245,11 @@ const TextBox: React.FC<TextBoxProps> = ({
                 >
                   {showPassword ? (
                     <VisibilityOff
-                      sx={{ color: "var(--primary-color)", fontSize: "20px" }}
+                      sx={{ color: "var(--theme-accent)", fontSize: "20px" }}
                     />
                   ) : (
                     <Visibility
-                      sx={{ color: "var(--primary-color)", fontSize: "20px" }}
+                      sx={{ color: "var(--theme-accent)", fontSize: "20px" }}
                     />
                   )}
                 </IconButton>
@@ -260,10 +260,10 @@ const TextBox: React.FC<TextBoxProps> = ({
                   <IconButton sx={{ p: 0, mt: "0px" }} tabIndex={-1}>
                     <KeyboardArrowUpIcon
                       sx={{ 
-                        color: "var(--primary-color)", 
+                        color: "var(--theme-accent)", 
                         fontSize: "20px",
                         "&:hover": {
-                          backgroundColor: "var(--secondary-color-a20)",
+                          backgroundColor: "rgba(var(--theme-accent-soft-rgb), 0.20)",
                           cursor: "pointer"
                         } 
                       }}
@@ -272,10 +272,10 @@ const TextBox: React.FC<TextBoxProps> = ({
                   <IconButton sx={{ p: 0, mt: "-5px" }} tabIndex={-1}>
                     <KeyboardArrowDownIcon
                       sx={{ 
-                        color: "var(--primary-color)", 
+                        color: "var(--theme-accent)", 
                         fontSize: "20px",
                         "&:hover": {
-                          backgroundColor: "var(--secondary-color-a20)",
+                          backgroundColor: "rgba(var(--theme-accent-soft-rgb), 0.20)",
                           cursor: "pointer"
                         } 
                       }}

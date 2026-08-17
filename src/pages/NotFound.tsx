@@ -52,7 +52,7 @@ const NotFound = () => {
       >
         <SearchOffIcon
           aria-hidden="true"
-          sx={{ fontSize: 72, color: "var(--primary-color)", opacity: 0.85 }}
+          sx={{ fontSize: 72, color: "var(--theme-accent)", opacity: 0.85 }}
         />
 
         <Typography
@@ -61,8 +61,8 @@ const NotFound = () => {
             fontSize: "5rem",
             fontWeight: "bold",
             lineHeight: 1,
-            color: "var(--primary-color)",
-            textShadow: "0 0 24px var(--primary-color-a35)",
+            color: "var(--theme-accent)",
+            textShadow: "0 0 24px rgba(var(--theme-accent-rgb), 0.35)",
           }}
         >
           404
@@ -73,7 +73,7 @@ const NotFound = () => {
           sx={{
             fontSize: "1.6rem",
             fontWeight: "bold",
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
           }}
         >
           {t("not-found.title")}
@@ -82,7 +82,7 @@ const NotFound = () => {
         <Typography
           sx={{
             fontSize: "1rem",
-            color: "var(--secondary-color)",
+            color: "var(--theme-accent-soft)",
             opacity: 0.85,
           }}
         >
@@ -97,8 +97,8 @@ const NotFound = () => {
             py: 1,
             maxWidth: "100%",
             borderRadius: "12px",
-            border: "1px solid var(--primary-color-a25)",
-            backgroundColor: "var(--primary-color-a08)",
+            border: "1px solid rgba(var(--theme-accent-rgb), 0.25)",
+            backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
           }}
         >
           <Typography
@@ -106,7 +106,7 @@ const NotFound = () => {
             className="break-all"
             sx={{
               fontSize: "0.9rem",
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
             }}
           >
             {location.pathname}
@@ -119,12 +119,12 @@ const NotFound = () => {
             startIcon={<HomeIcon />}
             onClick={() => navigate("/", { replace: true })}
             sx={{
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
               textTransform: "none",
               px: 3,
               "&:hover": {
-                backgroundColor: "var(--primary-color-a85)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.85)",
               },
             }}
           >
@@ -136,12 +136,12 @@ const NotFound = () => {
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate(-1)}
             sx={{
-              border: "1px solid var(--primary-color)",
-              color: "var(--primary-color)",
+              border: "1px solid var(--theme-accent)",
+              color: "var(--theme-accent)",
               textTransform: "none",
               px: 3,
               "&:hover": {
-                backgroundColor: "var(--primary-color-a08)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
               },
             }}
           >

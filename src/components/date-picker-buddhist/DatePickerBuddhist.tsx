@@ -89,14 +89,14 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
       '& .MuiPickersInputBase-root': {
         height: '30px',
         fontSize: labelFontSize,
-        backgroundColor: 'var(--tertiary-color)',
-        color: 'var(--primary-color)',
-        border: "1px solid var(--primary-color)",
+        backgroundColor: 'var(--theme-panel)',
+        color: 'var(--theme-accent)',
+        border: "1px solid var(--theme-accent)",
       },
       '& .MuiOutlinedInput-root': {
         height: '30px',
         borderRadius: '5px',
-        backgroundColor: 'var(--tertiary-color)',
+        backgroundColor: 'var(--theme-panel)',
         '& input': {
           padding: '0 14px',
           height: '30px',
@@ -115,7 +115,7 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
         },
       },
       '& .MuiSvgIcon-root': {
-        color: 'var(--primary-color)',
+        color: 'var(--theme-accent)',
       },
       ...sx,
     }
@@ -133,85 +133,85 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
       },
       desktopPaper: {
         sx: {
-          border: "1px solid var(--primary-color)",
+          border: "1px solid var(--theme-accent)",
           borderRadius: "2px",
 
           "& .MuiPickersLayout-root": {
-            backgroundColor: "var(--tertiary-color)",
+            backgroundColor: "var(--theme-panel)",
             "& .Mui-selected": {
-              color: "var(--tertiary-color) !important",
-              backgroundColor: "var(--primary-color) !important",
+              color: "var(--theme-panel) !important",
+              backgroundColor: "var(--theme-accent) !important",
 
               "&:hover": {
-                backgroundColor: "var(--primary-color-a40) !important",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.40) !important",
               },
             },
           },
 
           "& .MuiMonthCalendar-button": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
             "&:hover": {
-              backgroundColor: "var(--primary-color-a20)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "rgba(var(--theme-accent-rgb), 0.20)",
+              color: "var(--theme-panel)",
             },
           },
 
           "& .MuiPickersCalendarHeader-root": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
             "& .MuiSvgIcon-root": {
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
             },
           },
 
           "& .MuiPickersCalendarHeader-label": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
           },
 
           "& .MuiPickersArrowSwitcher-button": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
 
             "&.Mui-disabled": {
-              color: "var(--secondary-color-a20) !important",
+              color: "rgba(var(--theme-accent-soft-rgb), 0.20) !important",
             },
 
             "&.Mui-disabled .MuiSvgIcon-root": {
-              color: "var(--secondary-color-a20) !important",
+              color: "rgba(var(--theme-accent-soft-rgb), 0.20) !important",
             },
           },
 
           "& .MuiDayCalendar-weekDayLabel": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
           },
 
           "& .MuiDayCalendar-weekContainer .MuiButtonBase-root:not(.Mui-disabled):not(.MuiPickersDay-dayOutsideMonth)": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
           },
 
           "& .MuiDayCalendar-weekContainer .MuiButtonBase-root": {
             "&.MuiPickerDay-root.MuiPickerDay-today": {
-              border: "1px solid var(--primary-color) !important",
-              color: "var(--primary-color) !important",
+              border: "1px solid var(--theme-accent) !important",
+              color: "var(--theme-accent) !important",
             },
             "&.Mui-disabled": {
-              color: "var(--secondary-color-a30) !important",
+              color: "rgba(var(--theme-accent-soft-rgb), 0.30) !important",
             }
           },
 
           "& .MuiMonthCalendar-root .MuiMonthCalendar-button": {
             "&.Mui-disabled": {
-              color: "var(--secondary-color-a30) !important",
+              color: "rgba(var(--theme-accent-soft-rgb), 0.30) !important",
             }
           },
 
           "& .MuiDialogActions-root .MuiButton-root": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
           },
           "& .MuiClock-root, & .MuiClockNumber-root": {
-            color: "var(--primary-color)",
+            color: "var(--theme-accent)",
           },
 
           "& .MuiClock-pin, & .MuiClockPointer-root": {
-            backgroundColor: "var(--primary-color)",
+            backgroundColor: "var(--theme-accent)",
           },
         },
       },
@@ -225,7 +225,7 @@ const DatePickerBuddhist: React.FC<CustomDatePickerProps> = ({
       {label && (
         <Typography
           variant="subtitle1"
-          sx={{ fontSize: labelFontSize, color: "var(--primary-color)" }}
+          sx={{ fontSize: labelFontSize, color: "var(--theme-accent)" }}
         >
           {label}
         </Typography>

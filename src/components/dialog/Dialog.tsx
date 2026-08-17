@@ -39,8 +39,8 @@ const DialogComponent = ({
             width: width,
             borderRadius: "5px",
             overflow: "visible",
-            backgroundColor: "var(--tertiary-color)",
-            border: "1px solid var(--primary-color-a35)",
+            backgroundColor: "var(--theme-panel)",
+            border: "1px solid rgba(var(--theme-accent-rgb), 0.35)",
           },
         }
       }}
@@ -49,7 +49,7 @@ const DialogComponent = ({
         sx={{
           py: 1,
           px: 2,
-          color: "var(--primary-color)",
+          color: "var(--theme-accent)",
         }}
       >
         <div className='flex flex-col'>
@@ -58,7 +58,7 @@ const DialogComponent = ({
             <IconButton disabled={disabled}>
               <HighlightOffIcon onClick={handleClose} 
                 sx={{ 
-                  color: "var(--primary-color)", 
+                  color: "var(--theme-accent)", 
                   mr: "-10px", 
                   fontSize: "20px",
                   cursor: disabled ? "not-allowed" : "pointer",
@@ -69,12 +69,12 @@ const DialogComponent = ({
               />
             </IconButton>
           </div>
-          <Divider orientation='horizontal' sx={{ width: "100%", borderColor: "var(--primary-color-a35)" }} />
+          <Divider orientation='horizontal' sx={{ width: "100%", borderColor: "rgba(var(--theme-accent-rgb), 0.35)" }} />
         </div>
       </DialogTitle>
       <DialogContent
         sx={{
-          backgroundColor: "var(--tertiary-color)",
+          backgroundColor: "var(--theme-panel)",
           overflow: "visible",
         }}
       >

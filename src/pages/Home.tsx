@@ -64,8 +64,8 @@ const Home = () => {
                 rounded-2xl border p-6 min-h-70
               "
               style={{
-                borderColor: "var(--primary-color)",
-                backgroundColor: "var(--tertiary-color-a80)",
+                borderColor: "var(--theme-accent)",
+                backgroundColor: "rgba(var(--theme-panel-rgb), 0.80)",
               }}
             >
               <AnimatePresence mode="wait">
@@ -106,7 +106,7 @@ const Home = () => {
                     }}
                     className="absolute inset-0 z-0"
                     style={{
-                      background: "var(--secondary-color-a10)",
+                      background: "rgba(var(--theme-accent-soft-rgb), 0.10)",
                     }}
                   />
                 )}
@@ -126,7 +126,7 @@ const Home = () => {
                 <motion.h3
                   className="
                     menu-title relative
-                    font-bold text-(--primary-color)
+                    font-bold text-(--theme-accent)
                     text-2xl md:text-4xl
                     pb-2
                   "
@@ -168,12 +168,12 @@ const Home = () => {
                         /* transition-colors ไม่ใช่ transition-all: มีแค่สีพื้นหลัง
                            กับสีตัวอักษรที่เปลี่ยนตอน hover */
                         className="
-                          rounded-xl border border-(--primary-color)
+                          rounded-xl border border-(--theme-accent)
                           bg-(--tertiary-bg-color)/10 px-4 py-3
                           backdrop-blur-sm
-                          text-(--secondary-color)
-                          hover:bg-(--primary-color)
-                          hover:text-(--tertiary-color)
+                          text-(--theme-accent-soft)
+                          hover:bg-(--theme-accent)
+                          hover:text-(--theme-panel)
                           transition-colors duration-150
                         "
                         onClick={() => navigate(sub.path)}

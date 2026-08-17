@@ -643,7 +643,7 @@ const ManageUser = () => {
             checked={memberChecked.includes(data.user_id)}
             onClick={(event) => event.stopPropagation()}
             onChange={() => onCheckMemberClick(data.user_id)}
-            sx={{ color: "var(--secondary-color)" }}
+            sx={{ color: "var(--theme-accent-soft)" }}
           />
         );
 
@@ -838,7 +838,7 @@ const ManageUser = () => {
     <section id="manage-user" className="flex flex-col h-full w-full p-2">
       {/* Main Title */}
       <MainTitle title={t('pages.manage-user')} />
-      <Box className='flex flex-col p-4 bg-(--main-bg-color) flex-1 min-h-0 w-full rounded-lg border border-(--primary-color) overflow-y-auto gap-2'>
+      <Box className='flex flex-col p-4 bg-(--theme-bg-body) flex-1 min-h-0 w-full rounded-lg border border-(--theme-accent) overflow-y-auto gap-2'>
         <Accordion
           expanded={isAccordionOpen}
           onChange={() => setIsAccordionOpen((prev) => !prev)}
@@ -848,8 +848,8 @@ const ManageUser = () => {
             borderRadius: "16px",
             overflow: "hidden",
             background:
-              "linear-gradient(180deg, var(--primary-color-a08), var(--tertiary-color))",
-            border: "1px solid var(--primary-color-a25)",
+              "linear-gradient(180deg, rgba(var(--theme-accent-rgb), 0.08), var(--theme-panel))",
+            border: "1px solid rgba(var(--theme-accent-rgb), 0.25)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.06)",
             "&:before": { display: "none" },
             "&.Mui-expanded": { margin: 0 },
@@ -867,7 +867,7 @@ const ManageUser = () => {
                 gap: 2,
               },
               "& .MuiSvgIcon-root": {
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
               },
             }}
           >
@@ -880,15 +880,15 @@ const ManageUser = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: "var(--primary-color-a12)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.12)",
                 }}
               >
-                <FilterAltOutlinedIcon sx={{ color: "var(--primary-color)" }} />
+                <FilterAltOutlinedIcon sx={{ color: "var(--theme-accent)" }} />
               </Box>
 
               <Typography
                 sx={{
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                   fontWeight: 700,
                   fontSize: "1rem",
                 }}
@@ -922,8 +922,8 @@ const ManageUser = () => {
                     minWidth: 130,
                     height: 40,
                     borderRadius: "10px",
-                    borderColor: "var(--primary-color-a50)",
-                    color: "var(--primary-color)",
+                    borderColor: "rgba(var(--theme-accent-rgb), 0.50)",
+                    color: "var(--theme-accent)",
                     textTransform: "capitalize",
                     fontWeight: 600,
                   }}
@@ -935,14 +935,14 @@ const ManageUser = () => {
                 <Button
                   variant="contained"
                   startIcon={
-                    <SearchIcon style={{ color: "var(--tertiary-color)" }} />
+                    <SearchIcon style={{ color: "var(--theme-panel)" }} />
                   }
                   sx={{
                     minWidth: 140,
                     height: 40,
                     borderRadius: "10px",
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                     textTransform: "capitalize",
                     fontWeight: 700,
                   }}
@@ -959,8 +959,8 @@ const ManageUser = () => {
               sx={{
                 p: 2.5,
                 borderRadius: "14px",
-                backgroundColor: "var(--tertiary-color)",
-                border: "1px solid var(--primary-color-a16)",
+                backgroundColor: "var(--theme-panel)",
+                border: "1px solid rgba(var(--theme-accent-rgb), 0.16)",
               }}
             >
               <Box
@@ -1099,7 +1099,7 @@ const ManageUser = () => {
 
         <Box className="flex flex-col gap-3">
           <Box className="flex justify-between items-center">
-            <Typography variant="body1" sx={{ fontSize: "1rem", color: "var(--primary-color)" }}>
+            <Typography variant="body1" sx={{ fontSize: "1rem", color: "var(--theme-accent)" }}>
               {`${t('text.all')} ${totalUsers} ${t('text.name-list')}`}
             </Typography>
             <Box className="flex gap-2">
@@ -1109,10 +1109,10 @@ const ManageUser = () => {
                   sx={{
                     width: 140,
                     height: 35,
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                     "&:hover": {
-                      backgroundColor:  "var(--primary-color-a80)",
+                      backgroundColor:  "rgba(var(--theme-accent-rgb), 0.80)",
                     },
                     textTransform: "capitalize"
                   }}
@@ -1127,11 +1127,11 @@ const ManageUser = () => {
                   sx={{
                     width: 130,
                     height: 35,
-                    backgroundColor: "var(--tertiary-color)",
-                    color: "var(--primary-color)",
-                    border: "1px solid var(--primary-color)",
+                    backgroundColor: "var(--theme-panel)",
+                    color: "var(--theme-accent)",
+                    border: "1px solid var(--theme-accent)",
                     "&:hover": {
-                      backgroundColor:  "var(--tertiary-color-a80)",
+                      backgroundColor:  "rgba(var(--theme-panel-rgb), 0.80)",
                     },
                     textTransform: "capitalize"
                   }}
@@ -1153,7 +1153,7 @@ const ManageUser = () => {
               direction: "ltr",
               height: isAccordionOpen ? `calc(100vh - ${formData.sub_unit.length > 3 ? "800px" : "600px"})` : "65vh",
               minHeight: formData.sub_unit.length <= 3 ? "42vh" : "34vh",
-              backgroundColor: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-panel)",
             }}
           >
             <Table
@@ -1177,8 +1177,8 @@ const ManageUser = () => {
                         align={column.align}
                         style={{
                           minWidth: column.minWidth,
-                          color: "var(--tertiary-color)",
-                          backgroundColor: "var(--primary-color)",
+                          color: "var(--theme-panel)",
+                          backgroundColor: "var(--theme-accent)",
                         }}
                       >
                         {column.id === "actions" ? (
@@ -1212,9 +1212,9 @@ const ManageUser = () => {
                       key={data.user_id}
                       sx={{
                         "& .MuiTableCell-root": {
-                          backgroundColor: "var(--tertiary-color)",
-                          color: "var(--secondary-color)",
-                          borderBottom: "1px solid var(--primary-color)",
+                          backgroundColor: "var(--theme-panel)",
+                          color: "var(--theme-accent-soft)",
+                          borderBottom: "1px solid var(--theme-accent)",
                         },
                       }}
                     >
@@ -1247,7 +1247,7 @@ const ManageUser = () => {
                     <TableCell
                       colSpan={visibleColumns.length}
                       align="center"
-                      sx={{ py: 5, color: "var(--secondary-color)" }}
+                      sx={{ py: 5, color: "var(--theme-accent-soft)" }}
                     >
                       {t('text.no-data')}
                     </TableCell>
@@ -1265,9 +1265,9 @@ const ManageUser = () => {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
             sx={{
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
               "& .MuiSvgIcon-root": {
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
               }
             }}
           />
@@ -1291,11 +1291,11 @@ const ManageUser = () => {
         <Alert
           onClose={() => setIsAlertOpen(false)}
           sx={{
-            color: "var(--primary-color)",
-            border: "1px solid var(--primary-color)",
-            backgroundColor: "var(--tertiary-color)",
+            color: "var(--theme-accent)",
+            border: "1px solid var(--theme-accent)",
+            backgroundColor: "var(--theme-panel)",
             "& .MuiSvgIcon-root": {
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
             }
           }}
         >

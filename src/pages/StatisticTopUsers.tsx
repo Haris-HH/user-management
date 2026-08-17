@@ -247,10 +247,10 @@ const StatisticTopUsers = () => {
       {isLoading && <LoadingScreen />}
       {/* Main Title */}
       <MainTitle title={t('pages.statistics')} />
-      <Box className='p-4 flex flex-col gap-2 bg-(--main-bg-color) min-h-0 h-full w-full rounded-lg border border-(--primary-color) overflow-y-auto'>
+      <Box className='p-4 flex flex-col gap-2 bg-(--theme-bg-body) min-h-0 h-full w-full rounded-lg border border-(--theme-accent) overflow-y-auto'>
         {/* Chart */}
         <Box 
-          className="w-full bg-(--tertiary-color) p-4 flex flex-col gap-4"
+          className="w-full bg-(--theme-panel) p-4 flex flex-col gap-4"
           sx={{
             boxShadow: "-2px 3px 2px rgba(0,0,0,0.1)"
           }}
@@ -287,7 +287,7 @@ const StatisticTopUsers = () => {
               </Box>
               <Box className='flex items-end'>
                 <Box 
-                  className='flex justify-center items-center text-(--tertiary-color) text-[14px] bg-(--primary-color) h-10.5 w-20 rounded-[5px]'
+                  className='flex justify-center items-center text-(--theme-panel) text-[14px] bg-(--theme-accent) h-10.5 w-20 rounded-[5px]'
                   style={{
                     fontFamily: "Noto Sans Thai",
                     fontWeight: 700,
@@ -303,11 +303,11 @@ const StatisticTopUsers = () => {
                 sx={{
                   width: 180,
                   height: 40,
-                  backgroundColor: policeState === "internal" ? "var(--primary-color)" : "var(--tertiary-color)",
-                  color: policeState === "internal" ? "var(--tertiary-color)" : "var(--primary-color)",
-                  border: policeState === "internal" ? "none" : "1px solid var(--primary-color)",
+                  backgroundColor: policeState === "internal" ? "var(--theme-accent)" : "var(--theme-panel)",
+                  color: policeState === "internal" ? "var(--theme-panel)" : "var(--theme-accent)",
+                  border: policeState === "internal" ? "none" : "1px solid var(--theme-accent)",
                   "&:hover": {
-                    backgroundColor: policeState === "internal" ? "var(--primary-color-a80)" : "var(--secondary-color-a05)",
+                    backgroundColor: policeState === "internal" ? "rgba(var(--theme-accent-rgb), 0.80)" : "rgba(var(--theme-accent-soft-rgb), 0.05)",
                   },
                   fontWeight: 700,
                   textTransform: "capitalize",
@@ -321,11 +321,11 @@ const StatisticTopUsers = () => {
                 sx={{
                   width: 180,
                   height: 40,
-                  backgroundColor: policeState === "external" ? "var(--primary-color)" : "var(--tertiary-color)",
-                  color: policeState === "external" ? "var(--tertiary-color)" : "var(--primary-color)",
-                  border: policeState === "external" ? "none" : "1px solid var(--primary-color)",
+                  backgroundColor: policeState === "external" ? "var(--theme-accent)" : "var(--theme-panel)",
+                  color: policeState === "external" ? "var(--theme-panel)" : "var(--theme-accent)",
+                  border: policeState === "external" ? "none" : "1px solid var(--theme-accent)",
                   "&:hover": {
-                    backgroundColor: policeState === "external" ? "var(--primary-color-a80)" : "var(--secondary-color-a05)",
+                    backgroundColor: policeState === "external" ? "rgba(var(--theme-accent-rgb), 0.80)" : "rgba(var(--theme-accent-soft-rgb), 0.05)",
                   },
                   fontWeight: 700,
                   textTransform: "capitalize",
@@ -347,7 +347,7 @@ const StatisticTopUsers = () => {
             >
               <Table
                 size="small"
-                sx={{ minWidth: 650, backgroundColor: "var(--tertiary-color)" }}
+                sx={{ minWidth: 650, backgroundColor: "var(--theme-panel)" }}
                 stickyHeader
               >
                 {/* ================= HEADER ================= */}
@@ -356,9 +356,9 @@ const StatisticTopUsers = () => {
                     sx={{
                       height: 40,
                       "& th": {
-                        backgroundColor: "var(--primary-color)",
-                        color: "var(--tertiary-color)",
-                        border: "1px solid var(--secondary-color-a50)",
+                        backgroundColor: "var(--theme-accent)",
+                        color: "var(--theme-panel)",
+                        border: "1px solid rgba(var(--theme-accent-soft-rgb), 0.50)",
                         padding: "6px 8px",
                         fontWeight: 700,
                         whiteSpace: "nowrap",
@@ -399,9 +399,9 @@ const StatisticTopUsers = () => {
                         key={item.user_id}
                         sx={{
                           "& td": {
-                            border: "1px solid var(--primary-color-a50)",
+                            border: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
                             padding: "6px 8px",
-                            color: "var(--primary-color)",
+                            color: "var(--theme-accent)",
                             whiteSpace: "nowrap",
                           },
                         }}
@@ -436,12 +436,12 @@ const StatisticTopUsers = () => {
                               align="center"
                               sx={{
                                 backgroundColor: isCurrentMonth
-                                  ? "var(--primary-color-a50)"
-                                  : "var(--primary-color-a20)",
+                                  ? "rgba(var(--theme-accent-rgb), 0.50)"
+                                  : "rgba(var(--theme-accent-rgb), 0.20)",
                                 fontWeight: isCurrentMonth ? 700 : 400,
                                 color: isCurrentMonth
-                                  ? "var(--secondary-color) !important"
-                                  : "var(--primary-color) !important",
+                                  ? "var(--theme-accent-soft) !important"
+                                  : "var(--theme-accent) !important",
                               }}
                             >
                               {count.toLocaleString()}
@@ -455,7 +455,7 @@ const StatisticTopUsers = () => {
                       <TableCell 
                         align="center" 
                         colSpan={5 + monthKeys.length}
-                        sx={{ color: "var(--secondary-color)" }}
+                        sx={{ color: "var(--theme-accent-soft)" }}
                       >
                         {t("text.no-data")}
                       </TableCell>

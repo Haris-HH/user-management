@@ -117,7 +117,7 @@ const ManageCheckpointGroup = () => {
                 return (
                   <Box className="flex items-center gap-2">
                     <FolderOutlinedIcon
-                      sx={{ fontSize: 20, color: "var(--primary-color)" }}
+                      sx={{ fontSize: 20, color: "var(--theme-accent)" }}
                     />
                     <span>
                       {selected
@@ -128,37 +128,37 @@ const ManageCheckpointGroup = () => {
                 );
               }}
               sx={{
-                color: "var(--primary-color)",
-                border: "1px solid var(--primary-color)",
+                color: "var(--theme-accent)",
+                border: "1px solid var(--theme-accent)",
                 borderRadius: "8px",
-                backgroundColor: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-panel)",
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color)",
+                  color: "var(--theme-accent)",
                 },
               }}
               MenuProps={{
                 slotProps: {
                   paper: {
                     sx: {
-                      backgroundColor: "var(--tertiary-color)",
-                      border: "1px solid var(--primary-color)",
+                      backgroundColor: "var(--theme-panel)",
+                      border: "1px solid var(--theme-accent)",
 
                       "& .MuiMenuItem-root": {
-                        color: "var(--primary-color)",
-                        backgroundColor: "var(--tertiary-color)",
+                        color: "var(--theme-accent)",
+                        backgroundColor: "var(--theme-panel)",
 
                         "&:hover": {
-                          backgroundColor: "var(--primary-color-a15)",
+                          backgroundColor: "rgba(var(--theme-accent-rgb), 0.15)",
                         },
 
                         "&.Mui-selected": {
-                          color: "var(--tertiary-color)",
-                          backgroundColor: "var(--primary-color) !important",
+                          color: "var(--theme-panel)",
+                          backgroundColor: "var(--theme-accent) !important",
                         },
 
                         "&.Mui-selected:hover": {
                           backgroundColor:
-                            "var(--primary-color-a80) !important",
+                            "rgba(var(--theme-accent-rgb), 0.80) !important",
                         },
                       },
                     },

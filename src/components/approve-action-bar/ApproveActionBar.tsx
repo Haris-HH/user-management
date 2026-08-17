@@ -76,16 +76,16 @@ const ApproveActionBar = ({
     return {
       id: `tab-${index}`,
       sx:{
-        backgroundColor: "var(--tertiary-color)",
-        color: "var(--primary-color)",
+        backgroundColor: "var(--theme-panel)",
+        color: "var(--theme-accent)",
         fontWeight: 700,
         fontSize: "16px",
         padding: "5px 50px",
-        border: "1px solid var(--primary-color)",
+        border: "1px solid var(--theme-accent)",
         textTransform: "capitalize",
         "&.Mui-selected": {
-          backgroundColor: "var(--primary-color)",
-          color: "var(--tertiary-color)",
+          backgroundColor: "var(--theme-accent)",
+          color: "var(--theme-panel)",
         },
       }
     };
@@ -234,11 +234,11 @@ const ApproveActionBar = ({
             borderRight: "none",
           },
           "& .MuiTab-root:first-of-type": {
-            borderRight: "1px solid var(--primary-color)",
+            borderRight: "1px solid var(--theme-accent)",
             borderTopLeftRadius: "12px",
           },
           "& .MuiTab-root:last-of-type": {
-            borderRight: "1px solid var(--primary-color)",
+            borderRight: "1px solid var(--theme-accent)",
             borderTopRightRadius: "12px",
           },
           "& .MuiTabs-indicator": {
@@ -258,16 +258,16 @@ const ApproveActionBar = ({
           sx={{
             width: 130,
             height: 40,
-            backgroundColor: "var(--tertiary-color)",
-            color: "var(--primary-color)",
-            border: "1px solid var(--primary-color)",
+            backgroundColor: "var(--theme-panel)",
+            color: "var(--theme-accent)",
+            border: "1px solid var(--theme-accent)",
             "&:hover": {
-              backgroundColor: "var(--tertiary-color-a70)",
+              backgroundColor: "rgba(var(--theme-panel-rgb), 0.70)",
             },
             textTransform: "capitalize",
             "&.Mui-disabled": {
-              backgroundColor: "var(--tertiary-color)",
-              color: "var(--primary-color)",
+              backgroundColor: "var(--theme-panel)",
+              color: "var(--theme-accent)",
               opacity: 0.5,
             },
           }}
@@ -286,16 +286,16 @@ const ApproveActionBar = ({
           sx={{
             width: 130,
             height: 40,
-            backgroundColor: "var(--tertiary-color)",
-            color: "var(--primary-color)",
-            border: "1px solid var(--primary-color)",
+            backgroundColor: "var(--theme-panel)",
+            color: "var(--theme-accent)",
+            border: "1px solid var(--theme-accent)",
             "&:hover": {
-              backgroundColor: "var(--tertiary-color-a70)",
+              backgroundColor: "rgba(var(--theme-panel-rgb), 0.70)",
             },
             textTransform: "capitalize",
             "&.Mui-disabled": {
-              backgroundColor: "var(--tertiary-color)",
-              color: "var(--primary-color)",
+              backgroundColor: "var(--theme-panel)",
+              color: "var(--theme-accent)",
               opacity: 0.5,
             },
           }}
@@ -325,7 +325,7 @@ const ApproveActionBar = ({
                   },
                   "&.Mui-disabled": {
                     backgroundColor: "var(--approve-bg-color-a50)",
-                    color: "var(--secondary-color)",
+                    color: "var(--theme-accent-soft)",
                     cursor: "not-allowed",
                   },
                   textTransform: "capitalize"
@@ -352,7 +352,7 @@ const ApproveActionBar = ({
                   },
                   "&.Mui-disabled": {
                     backgroundColor: "var(--waiting-approve-bg-color-a50)",
-                    color: "var(--secondary-color)",
+                    color: "var(--theme-accent-soft)",
                     cursor: "not-allowed",
                   },
                   textTransform: "capitalize"
@@ -376,7 +376,7 @@ const ApproveActionBar = ({
                   },
                   "&.Mui-disabled": {
                     backgroundColor: "var(--not-approve-bg-color-a50)",
-                    color: "var(--secondary-color)",
+                    color: "var(--theme-accent-soft)",
                     cursor: "not-allowed",
                   },
                   textTransform: "capitalize"
@@ -403,7 +403,7 @@ const ApproveActionBar = ({
                   },
                   "&.Mui-disabled": {
                     backgroundColor: "var(--waiting-approve-bg-color-a50)",
-                    color: "var(--secondary-color)",
+                    color: "var(--theme-accent-soft)",
                     cursor: "not-allowed",
                   },
                   textTransform: "capitalize"
@@ -429,7 +429,7 @@ const ApproveActionBar = ({
                   },
                   "&.Mui-disabled": {
                     backgroundColor: "var(--approve-bg-color-a50)",
-                    color: "var(--secondary-color)",
+                    color: "var(--theme-accent-soft)",
                     cursor: "not-allowed",
                   },
                   textTransform: "capitalize"

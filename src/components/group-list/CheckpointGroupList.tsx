@@ -220,7 +220,7 @@ const GroupList = ({
       { isLoading && <LoadingScreen /> }
       <Box className="flex flex-col gap-2">
         <Box className="flex justify-between items-center">
-          <Typography component="span" style={{ color: "var(--primary-color)", fontWeight: 500 }}>
+          <Typography component="span" style={{ color: "var(--theme-accent)", fontWeight: 500 }}>
             {t('text.checkpoint-list')}
           </Typography>
           {canEdit && (
@@ -230,15 +230,15 @@ const GroupList = ({
               sx={{
                 width: t('button.add-group'),
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 "&:hover": {
-                  backgroundColor:  "var(--primary-color-a80)",
+                  backgroundColor:  "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize",
                 "&.Mui-disabled": {
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-accent)",
+                  color: "var(--theme-panel)",
                   opacity: 0.5,
                   cursor: "not-allowed",
                 },
@@ -250,9 +250,9 @@ const GroupList = ({
             </Button>
           )}
         </Box>
-        <Box className="flex flex-col bg-(--main-bg-color) p-2 gap-2">
+        <Box className="flex flex-col bg-(--theme-bg-body) p-2 gap-2">
           <Box className="flex justify-between items-center">
-            <p className='text-[14px] text-(--secondary-color) font-medium'>{`${totalGroup} ${t('text.list')}`}</p>
+            <p className='text-[14px] text-(--theme-accent-soft) font-medium'>{`${totalGroup} ${t('text.list')}`}</p>
             <SearchInput
               value={formData.search}
               onChange={(event) =>
@@ -265,7 +265,7 @@ const GroupList = ({
             sx={{
               height: "70vh",
               borderRadius: "0px",
-              backgroundColor: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-panel)",
             }}
           >
             <Table
@@ -278,12 +278,12 @@ const GroupList = ({
                       padding: '0px',
                       height: "56.5px",
                       fontSize: "15px",
-                      borderBottom: "1px solid var(--primary-color)"
+                      borderBottom: "1px solid var(--theme-accent)"
                     },
                     "& .MuiTableCell-root": {
-                      backgroundColor: "var(--tertiary-color)",
-                      color: "var(--secondary-color)",
-                      borderBottom: "1px solid var(--primary-color)",
+                      backgroundColor: "var(--theme-panel)",
+                      color: "var(--theme-accent-soft)",
+                      borderBottom: "1px solid var(--theme-accent)",
                     },
                   }}
                 >
@@ -334,18 +334,18 @@ const GroupList = ({
                       sx={{
                         height: "55vh",
                         borderBottom: "none",
-                        backgroundColor: "var(--tertiary-color)",
+                        backgroundColor: "var(--theme-panel)",
                       }}
                     >
                       <Box className="flex flex-col items-center gap-2">
                         <InfoOutlinedIcon
                           sx={{
                             fontSize: 44,
-                            color: "var(--primary-color-a40)",
+                            color: "rgba(var(--theme-accent-rgb), 0.40)",
                           }}
                         />
                         <Typography
-                          sx={{ color: "var(--secondary-color)", fontWeight: 500 }}
+                          sx={{ color: "var(--theme-accent-soft)", fontWeight: 500 }}
                         >
                           {t("text.select-project-first")}
                         </Typography>
@@ -363,20 +363,20 @@ const GroupList = ({
                         cursor: "pointer",
                         "&:hover td": {
                           backgroundColor:
-                            "var(--primary-color-a08)",
+                            "rgba(var(--theme-accent-rgb), 0.08)",
                         },
                         "&.Mui-selected td": {
                           backgroundColor:
-                            "var(--primary-color-a20)",
+                            "rgba(var(--theme-accent-rgb), 0.20)",
                         },
                         "&.Mui-selected:hover td": {
                           backgroundColor:
-                            "var(--primary-color-a25)",
+                            "rgba(var(--theme-accent-rgb), 0.25)",
                         },
                         "& .MuiTableCell-root": {
-                          color: "var(--secondary-color)",
+                          color: "var(--theme-accent-soft)",
                           borderBottom:
-                            "1px solid var(--primary-color)",
+                            "1px solid var(--theme-accent)",
                         },
                       }}
                     >
@@ -420,9 +420,9 @@ const GroupList = ({
                   <TableRow
                     sx={{
                       "& .MuiTableCell-root": {
-                        backgroundColor: "var(--tertiary-color)",
-                        color: "var(--secondary-color)",
-                        borderBottom: "1px solid var(--primary-color-a50)",
+                        backgroundColor: "var(--theme-panel)",
+                        color: "var(--theme-accent-soft)",
+                        borderBottom: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
                       },
                     }}
                   >

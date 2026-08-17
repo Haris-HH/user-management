@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --main-bg-color: #FFFFFF;
-  --primary-color: #388087;
-  --primary-color-rgb: 56, 128, 135;
-  --secondary-color: #000000;
-  --secondary-color-rgb: 0, 0, 0;
-  --tertiary-color: #FFFFFF;
-  --tertiary-color-rgb: 255, 255, 255;
-  --danger-color: #DB2740;
+  --theme-bg-body: #FFFFFF;
+  --theme-accent: #388087;
+  --theme-accent-rgb: 56, 128, 135;
+  --theme-accent-soft: #000000;
+  --theme-accent-soft-rgb: 0, 0, 0;
+  --theme-panel: #FFFFFF;
+  --theme-panel-rgb: 255, 255, 255;
+  --theme-red: #DB2740;
   --danger-color-hover: #AF1F33;
-  --text-color: #1A2E35;
+  --theme-text-primary: #1A2E35;
   --current-date-highlight-bg-color: #E9E9E9;
   --hyper-text-color: #9799CD;
   --has-filter-color: #FFF7ED;
@@ -36,7 +36,7 @@
 }
 
 * {
-  scrollbar-color: var(--primary-color) transparent;
+  scrollbar-color: var(--theme-accent) transparent;
   font-family: "Noto Sans Thai", sans-serif !important;
 }
 

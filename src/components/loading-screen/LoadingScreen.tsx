@@ -31,7 +31,7 @@ const LoadingScreen = () => {
       aria-live="polite"
       className="fixed inset-0 z-99997 flex items-center justify-center overflow-hidden"
       style={{
-        backgroundColor: "var(--tertiary-color-a90)"
+        backgroundColor: "rgba(var(--theme-panel-rgb), 0.90)"
       }}
     >
       <span className="sr-only">{t("button.loading")}</span>
@@ -52,7 +52,7 @@ const LoadingScreen = () => {
             : { duration: 4, repeat: Infinity, ease: "easeInOut" }
         }
         style={{
-          backgroundColor: "var(--primary-color-a50)"
+          backgroundColor: "rgba(var(--theme-accent-rgb), 0.50)"
         }}
       />
 
@@ -70,7 +70,7 @@ const LoadingScreen = () => {
           {prefersReducedMotion ? (
             <path
               d={PATH_D}
-              stroke="var(--primary-color)"
+              stroke="var(--theme-accent)"
               strokeWidth="8"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -98,7 +98,7 @@ const LoadingScreen = () => {
 
               <motion.path
                 d={PATH_D}
-                stroke="var(--primary-color)"
+                stroke="var(--theme-accent)"
                 strokeWidth="8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -137,7 +137,7 @@ const LoadingScreen = () => {
           <div
             aria-hidden="true"
             className="absolute bottom-[12%] text-2xl font-bold"
-            style={{ color: "var(--primary-color)" }}
+            style={{ color: "var(--theme-accent)" }}
           >
             {t("button.loading")}
           </div>

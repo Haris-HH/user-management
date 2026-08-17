@@ -150,7 +150,7 @@ const ManageGroupsDialog = ({
       disabled={isSubmitting}
     >
       <Box className="flex flex-col gap-4 p-1">
-        <Typography sx={{ fontSize: "13px", color: "var(--primary-color)", opacity: 0.75 }}>
+        <Typography sx={{ fontSize: "13px", color: "var(--theme-accent)", opacity: 0.75 }}>
           {t("lpr-center-page.manage-groups-hint")}
         </Typography>
 
@@ -162,7 +162,7 @@ const ManageGroupsDialog = ({
               fontWeight: 600,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
               opacity: 0.7,
             }}
           >
@@ -172,7 +172,7 @@ const ManageGroupsDialog = ({
           <Box className="flex flex-col gap-2 max-h-80 overflow-y-auto pr-1">
             {groups.length === 0 ? (
               <Typography
-                sx={{ fontSize: "14px", color: "var(--primary-color)", opacity: 0.7, py: 2, textAlign: "center" }}
+                sx={{ fontSize: "14px", color: "var(--theme-accent)", opacity: 0.7, py: 2, textAlign: "center" }}
               >
                 {t("lpr-center-page.no-groups")}
               </Typography>
@@ -185,19 +185,19 @@ const ManageGroupsDialog = ({
                     key={group.group_id}
                     className="flex items-center justify-between gap-2 rounded-md px-3 py-2"
                     sx={{
-                      border: "1px solid var(--primary-color-a20)",
-                      backgroundColor: "var(--primary-color-a03)",
+                      border: "1px solid rgba(var(--theme-accent-rgb), 0.20)",
+                      backgroundColor: "rgba(var(--theme-accent-rgb), 0.03)",
                     }}
                   >
                     <Box className="flex items-center gap-2 min-w-0">
                       {locked ? (
-                        <ShieldOutlinedIcon sx={{ fontSize: 20, color: "var(--primary-color)" }} />
+                        <ShieldOutlinedIcon sx={{ fontSize: 20, color: "var(--theme-accent)" }} />
                       ) : (
-                        <GroupsIcon sx={{ fontSize: 20, color: "var(--primary-color)" }} />
+                        <GroupsIcon sx={{ fontSize: 20, color: "var(--theme-accent)" }} />
                       )}
                       <Typography
                         noWrap
-                        sx={{ fontSize: "14px", fontWeight: 600, color: "var(--primary-color)" }}
+                        sx={{ fontSize: "14px", fontWeight: 600, color: "var(--theme-accent)" }}
                       >
                         {capitalizeWords(group.group_name)}
                       </Typography>
@@ -217,8 +217,8 @@ const ManageGroupsDialog = ({
                           fontWeight: 700,
                           letterSpacing: "0.05em",
                           textTransform: "uppercase",
-                          backgroundColor: "var(--primary-color-a15)",
-                          color: "var(--primary-color)",
+                          backgroundColor: "rgba(var(--theme-accent-rgb), 0.15)",
+                          color: "var(--theme-accent)",
                         }}
                       />
                     ) : (
@@ -227,7 +227,7 @@ const ManageGroupsDialog = ({
                         title={t("button.delete")}
                         disabled={isSubmitting}
                         onClick={() => void handleDelete(group)}
-                        sx={{ color: "var(--danger-color)" }}
+                        sx={{ color: "var(--theme-red)" }}
                       >
                         <DeleteOutlineIcon fontSize="small" />
                       </IconButton>
@@ -240,14 +240,14 @@ const ManageGroupsDialog = ({
         </Box>
 
         {/* Create new group */}
-        <Box className="flex flex-col gap-2 pt-3" sx={{ borderTop: "1px solid var(--primary-color-a20)" }}>
+        <Box className="flex flex-col gap-2 pt-3" sx={{ borderTop: "1px solid rgba(var(--theme-accent-rgb), 0.20)" }}>
           <Typography
             sx={{
               fontSize: "12px",
               fontWeight: 600,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
               opacity: 0.7,
             }}
           >
@@ -268,10 +268,10 @@ const ManageGroupsDialog = ({
                 px: 1.5,
                 py: 0.5,
                 fontSize: "14px",
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
                 borderRadius: "4px",
-                border: "1px solid var(--primary-color-a35)",
-                backgroundColor: "var(--tertiary-color)",
+                border: "1px solid rgba(var(--theme-accent-rgb), 0.35)",
+                backgroundColor: "var(--theme-panel)",
               }}
             />
             <Button
@@ -280,8 +280,8 @@ const ManageGroupsDialog = ({
               disabled={isSubmitting}
               onClick={() => void handleAdd()}
               sx={{
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 whiteSpace: "nowrap",
               }}
             >
@@ -296,7 +296,7 @@ const ManageGroupsDialog = ({
             variant="outlined"
             disabled={isSubmitting}
             onClick={onClose}
-            sx={{ color: "var(--primary-color)", borderColor: "var(--primary-color)" }}
+            sx={{ color: "var(--theme-accent)", borderColor: "var(--theme-accent)" }}
           >
             {t("button.close")}
           </Button>

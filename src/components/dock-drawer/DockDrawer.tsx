@@ -104,10 +104,10 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
           background:
-            "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
-          border: "1px solid var(--tertiary-color-a18)",
+            "linear-gradient(135deg, var(--theme-panel), rgba(var(--theme-panel-rgb), 0.80))",
+          border: "1px solid rgba(var(--theme-panel-rgb), 0.18)",
           boxShadow:
-            "0 8px 32px var(--secondary-color-a35), inset 0 1px 0 var(--tertiary-color-a25)",
+            "0 8px 32px rgba(var(--theme-accent-soft-rgb), 0.35), inset 0 1px 0 rgba(var(--theme-panel-rgb), 0.25)",
           transform: open
             ? "translateY(0) scale(1)"
             : "translateY(120%) scale(0.9)",
@@ -154,10 +154,10 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
                 height: 56,
                 color: "white",
                 background:
-                  "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
+                  "linear-gradient(135deg, var(--theme-panel), rgba(var(--theme-panel-rgb), 0.80))",
                 backdropFilter: "blur(10px)",
-                border: "1px solid var(--tertiary-color-a15)",
-                boxShadow: "0 2px 12px var(--secondary-color-a25)",
+                border: "1px solid rgba(var(--theme-panel-rgb), 0.15)",
+                boxShadow: "0 2px 12px rgba(var(--theme-accent-soft-rgb), 0.25)",
               }}
             >
               {item.icon}
@@ -166,7 +166,7 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
             <Typography
               variant="caption"
               sx={{
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
                 mt: 0.8,
                 fontSize: "0.8rem",
                 textAlign: "center",
@@ -204,8 +204,8 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
                 borderRadius: "16px",
                 backdropFilter: "blur(20px)",
                 background:
-                  "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
-                border: "1px solid var(--tertiary-color-a15)",
+                  "linear-gradient(135deg, var(--theme-panel), rgba(var(--theme-panel-rgb), 0.80))",
+                border: "1px solid rgba(var(--theme-panel-rgb), 0.15)",
                 minWidth: 180,
                 overflow: "hidden",
                 pointerEvents: "auto",
@@ -221,13 +221,13 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
                         handleCloseDock();
                       }}
                       sx={{
-                        color: "var(--primary-color)",
+                        color: "var(--theme-accent)",
                         fontSize: "0.8rem",
                         py: 1.2,
                         px: 2,
                         "&:hover": {
                           backgroundColor:
-                            "var(--primary-color-a15)",
+                            "rgba(var(--theme-accent-rgb), 0.15)",
                         },
                       }}
                     >
@@ -246,15 +246,15 @@ const DockDrawer = ({ open, setOpen }: DockDrawerProps) => {
         sx={{
           pointerEvents: "auto",
           background:
-            "linear-gradient(135deg, var(--tertiary-color-a100), var(--tertiary-color-a80))",
+            "linear-gradient(135deg, var(--theme-panel), rgba(var(--theme-panel-rgb), 0.80))",
           backdropFilter: "blur(20px)",
           borderRadius: "14px 14px 0 0",
           width: "160px",
           height: "15px",
-          border: "1px solid var(--primary-color-a30)",
+          border: "1px solid rgba(var(--theme-accent-rgb), 0.30)",
         }}
       >
-        <KeyboardArrowUpIcon sx={{ color: "var(--primary-color)" }} />
+        <KeyboardArrowUpIcon sx={{ color: "var(--theme-accent)" }} />
       </IconButton>
     </Box>
   );

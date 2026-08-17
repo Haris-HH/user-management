@@ -11,19 +11,19 @@ body .swal2-backdrop-show {
 }
 
 .custom-swal-popup {
-  border: 1px solid var(--primary-color-a35);
+  border: 1px solid rgba(var(--theme-accent-rgb), 0.35);
   border-radius: 12px;
-  box-shadow: 0 4px 15px var(--tertiary-color-a25);
-  background-color: var(--tertiary-color);
-  color: var(--primary-color);
+  box-shadow: 0 4px 15px rgba(var(--theme-panel-rgb), 0.25);
+  background-color: var(--theme-panel);
+  color: var(--theme-accent);
 }
 
 .custom-swal-popup .swal2-close {
-  color: var(--primary-color) !important;
+  color: var(--theme-accent) !important;
 }
 
 .custom-swal-popup .swal2-close:hover {
-  color: var(--primary-color-a70) !important;
+  color: rgba(var(--theme-accent-rgb), 0.70) !important;
 }
 
 .custom-swal-popup .swal2-close:focus {
@@ -31,20 +31,20 @@ body .swal2-backdrop-show {
 }
 
 .custom-confirm-button {
-  color: var(--tertiary-color);
-  background-color: var(--primary-color); 
+  color: var(--theme-panel);
+  background-color: var(--theme-accent);
 }
 
 .custom-cancel-button {
-  border: 1px solid var(--primary-color);
-  color: var(--primary-color); 
-  background-color: var(--tertiary-color);
+  border: 1px solid var(--theme-accent);
+  color: var(--theme-accent);
+  background-color: var(--theme-panel);
 }
 
 .custom-confirm-button:hover {
-  background-color: var(--primary-color-a80);
+  background-color: rgba(var(--theme-accent-rgb), 0.80);
 }
 
 .custom-cancel-button:hover {
-  background-color: var(--tertiary-color-a10);
+  background-color: rgba(var(--theme-panel-rgb), 0.10);
 }

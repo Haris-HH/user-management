@@ -625,7 +625,7 @@ const AddCheckpoint = ({
     >
       <Box className="flex flex-col gap-4 pt-3 h-[75dvh]">
         <div className='flex justify-between items-end'>
-          <p className='text-[14px] text-(--secondary-color) font-medium'>
+          <p className='text-[14px] text-(--theme-accent-soft) font-medium'>
             {`${totalItems} ${t('text.list')}`}
             {checkpointChecked.size > 0 &&
               ` | ${t('text.select')} ${checkpointChecked.size} ${t('text.list')}`}
@@ -648,7 +648,7 @@ const AddCheckpoint = ({
             backgroundImage: "none",
             overflowX: "visible",
             overflowY: "auto",
-            backgroundColor: "var(--tertiary-color)",
+            backgroundColor: "var(--theme-panel)",
 
             "&.MuiPaper-root": {
               border: "none",
@@ -668,8 +668,8 @@ const AddCheckpoint = ({
                   "& th": {
                     height: "56.5px",
                     fontSize: "16px",
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                   },
                 }}
               >
@@ -721,9 +721,9 @@ const AddCheckpoint = ({
                     disabled={isSelectingAll}
                     onChange={(event) => void handleSelectAll(event.target.checked)}
                     sx={{
-                      color: "var(--tertiary-color)",
+                      color: "var(--theme-panel)",
                       "&.Mui-checked": {
-                        color: "var(--tertiary-color)",
+                        color: "var(--theme-panel)",
                       },
                     }}
                   />
@@ -742,12 +742,12 @@ const AddCheckpoint = ({
                         key={index}
                         sx={{
                           "&:hover td": {
-                            backgroundColor: "var(--primary-color-a08)",
+                            backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
                           },
                           "& .MuiTableCell-root": {
-                            backgroundColor: "var(--tertiary-color)",
-                            color: "var(--secondary-color)",
-                            borderBottom: "1px solid var(--primary-color)",
+                            backgroundColor: "var(--theme-panel)",
+                            color: "var(--theme-accent-soft)",
+                            borderBottom: "1px solid var(--theme-accent)",
                             p: "8px 1px",
                           }
                         }}
@@ -800,12 +800,12 @@ const AddCheckpoint = ({
                             }
                             sx={{
                               color: isAlreadySelected
-                                ? "var(--secondary-color)"
-                                : "var(--primary-color)",
+                                ? "var(--theme-accent-soft)"
+                                : "var(--theme-accent)",
                               "&.Mui-checked": {
                                 color: isAlreadySelected
-                                  ? "var(--secondary-color)"
-                                  : "var(--primary-color)",
+                                  ? "var(--theme-accent-soft)"
+                                  : "var(--theme-accent)",
                               },
                             }}
                           />
@@ -818,7 +818,7 @@ const AddCheckpoint = ({
                     <TableCell
                       colSpan={6}
                       align="center"
-                      sx={{ py: 5, color: "var(--secondary-color)" }}
+                      sx={{ py: 5, color: "var(--theme-accent-soft)" }}
                     >
                       {t('text.no-data')}
                     </TableCell>
@@ -835,29 +835,29 @@ const AddCheckpoint = ({
                 display: 'flex',
                 justifyContent: 'end',
                 "& .MuiPaginationItem-page": {
-                  color: "var(--secondary-color)",
-                  backgroundColor: "var(--tertiary-color)",
-                  border: "1px solid var(--primary-color)",
+                  color: "var(--theme-accent-soft)",
+                  backgroundColor: "var(--theme-panel)",
+                  border: "1px solid var(--theme-accent)",
                 },
                 "& .MuiPaginationItem-page:hover": {
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-accent)",
+                  color: "var(--theme-panel)",
                 },
                 "& .MuiPaginationItem-previousNext": {
-                  color: "var(--secondary-color)",
-                  backgroundColor: "var(--tertiary-color)",
-                  border: "1px solid var(--primary-color)",
+                  color: "var(--theme-accent-soft)",
+                  backgroundColor: "var(--theme-panel)",
+                  border: "1px solid var(--theme-accent)",
                 },
                 "& .MuiPaginationItem-previousNext:hover": {
-                  color: "var(--tertiary-color)",
-                  backgroundColor: "var(--primary-color)",
+                  color: "var(--theme-panel)",
+                  backgroundColor: "var(--theme-accent)",
                 },
                 "& .MuiPaginationItem-ellipsis": {
-                  color: "var(--tertiary-color)",
+                  color: "var(--theme-panel)",
                 },
                 "& .MuiPaginationItem-page.Mui-selected": {
-                  backgroundColor: "var(--primary-color-a80)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+                  color: "var(--theme-panel)",
                 },
               }}
               count={totalPages}
@@ -873,11 +873,11 @@ const AddCheckpoint = ({
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--tertiary-color)",
-                border: "1px solid var(--primary-color)",
-                color: "var(--primary-color)",
+                backgroundColor: "var(--theme-panel)",
+                border: "1px solid var(--theme-accent)",
+                color: "var(--theme-accent)",
                 "&:hover": {
-                  backgroundColor:  "var(--primary-color-a80)",
+                  backgroundColor:  "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize"
               }}
@@ -890,10 +890,10 @@ const AddCheckpoint = ({
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 "&:hover": {
-                  backgroundColor:  "var(--primary-color-a80)",
+                  backgroundColor:  "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize"
               }}

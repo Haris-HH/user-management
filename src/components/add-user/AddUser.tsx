@@ -426,7 +426,7 @@ const AddUser = ({
     >
       <Box className="flex flex-col gap-4 pt-3 h-[75dvh]">
         <div className="flex justify-between items-end">
-          <p className="text-[14px] text-(--secondary-color) font-medium">
+          <p className="text-[14px] text-(--theme-accent-soft) font-medium">
             {`${totalUsers} ${t("text.list")}`}
             {memberChecked.size > 0 &&
               ` | ${t("text.select")} ${memberChecked.size} ${t("text.list")}`}
@@ -437,10 +437,10 @@ const AddUser = ({
             sx={{
               width: t("button.search-condition-size"),
               height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
               "&:hover": {
-                backgroundColor: "var(--primary-color-a80)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
               },
               textTransform: "capitalize",
             }}
@@ -458,7 +458,7 @@ const AddUser = ({
             border: "none",
             boxShadow: "none",
             backgroundImage: "none",
-            backgroundColor: "var(--tertiary-color)",
+            backgroundColor: "var(--theme-panel)",
 
             "&.MuiPaper-root": {
               border: "none",
@@ -478,8 +478,8 @@ const AddUser = ({
                   "& th": {
                     height: "56.5px",
                     fontSize: "16px",
-                    backgroundColor: "var(--primary-color)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-panel)",
                   },
                 }}
               >
@@ -517,9 +517,9 @@ const AddUser = ({
                     disabled={isSelectingAll}
                     onChange={(event) => void handleSelectAll(event.target.checked)}
                     sx={{
-                      color: "var(--tertiary-color)",
+                      color: "var(--theme-panel)",
                       "&.Mui-checked": {
-                        color: "var(--tertiary-color)",
+                        color: "var(--theme-panel)",
                       },
                     }}
                   />
@@ -547,14 +547,14 @@ const AddUser = ({
                       key={item.user_id}
                       sx={{
                         "&:hover td": {
-                          backgroundColor: "var(--primary-color-a08)",
+                          backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
                         },
                         "& .MuiTableCell-root": {
                           backgroundColor: isAlreadySelected
-                            ? "var(--primary-color-a12)"
-                            : "var(--tertiary-color)",
-                          color: "var(--secondary-color)",
-                          borderBottom: "1px solid var(--primary-color)",
+                            ? "rgba(var(--theme-accent-rgb), 0.12)"
+                            : "var(--theme-panel)",
+                          color: "var(--theme-accent-soft)",
+                          borderBottom: "1px solid var(--theme-accent)",
                         },
                       }}
                     >
@@ -577,12 +577,12 @@ const AddUser = ({
                           }
                           sx={{
                             color: isAlreadySelected
-                              ? "var(--secondary-color)"
-                              : "var(--primary-color)",
+                              ? "var(--theme-accent-soft)"
+                              : "var(--theme-accent)",
                             "&.Mui-checked": {
                               color: isAlreadySelected
-                                ? "var(--secondary-color)"
-                                : "var(--primary-color)",
+                                ? "var(--theme-accent-soft)"
+                                : "var(--theme-accent)",
                             },
                           }}
                         />
@@ -608,29 +608,29 @@ const AddUser = ({
                 display: "flex",
                 justifyContent: "end",
                 "& .MuiPaginationItem-page": {
-                  color: "var(--secondary-color)",
-                  backgroundColor: "var(--tertiary-color)",
-                  border: "1px solid var(--primary-color)",
+                  color: "var(--theme-accent-soft)",
+                  backgroundColor: "var(--theme-panel)",
+                  border: "1px solid var(--theme-accent)",
                 },
                 "& .MuiPaginationItem-page:hover": {
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-accent)",
+                  color: "var(--theme-panel)",
                 },
                 "& .MuiPaginationItem-previousNext": {
-                  color: "var(--secondary-color)",
-                  backgroundColor: "var(--tertiary-color)",
-                  border: "1px solid var(--primary-color)",
+                  color: "var(--theme-accent-soft)",
+                  backgroundColor: "var(--theme-panel)",
+                  border: "1px solid var(--theme-accent)",
                 },
                 "& .MuiPaginationItem-previousNext:hover": {
-                  color: "var(--tertiary-color)",
-                  backgroundColor: "var(--primary-color)",
+                  color: "var(--theme-panel)",
+                  backgroundColor: "var(--theme-accent)",
                 },
                 "& .MuiPaginationItem-ellipsis": {
-                  color: "var(--tertiary-color)",
+                  color: "var(--theme-panel)",
                 },
                 "& .MuiPaginationItem-page.Mui-selected": {
-                  backgroundColor: "var(--primary-color-a80)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+                  color: "var(--theme-panel)",
                 },
               }}
               count={totalPages}
@@ -647,11 +647,11 @@ const AddUser = ({
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--tertiary-color)",
-                border: "1px solid var(--primary-color)",
-                color: "var(--primary-color)",
+                backgroundColor: "var(--theme-panel)",
+                border: "1px solid var(--theme-accent)",
+                color: "var(--theme-accent)",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color-a08)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
                 },
                 textTransform: "capitalize",
               }}
@@ -665,15 +665,15 @@ const AddUser = ({
               sx={{
                 width: 130,
                 height: 35,
-                backgroundColor: "var(--primary-color)",
-                color: "var(--tertiary-color)",
+                backgroundColor: "var(--theme-accent)",
+                color: "var(--theme-panel)",
                 "&:hover": {
-                  backgroundColor: "var(--primary-color-a80)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
                 },
                 textTransform: "capitalize",
                 "&.Mui-disabled": {
-                  backgroundColor: "var(--primary-color)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "var(--theme-accent)",
+                  color: "var(--theme-panel)",
                   opacity: 0.5,
                 },
               }}

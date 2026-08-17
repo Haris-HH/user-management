@@ -25,14 +25,14 @@ const MatrixRainingCode = ({ className = "" }: MatrixRainingCodeProps) => {
     ให้ลูป rAF เห็นค่าล่าสุดโดยไม่ต้องรีสตาร์ต animation ตอนเปลี่ยนธีม
   */
   const colorsRef = useRef({
-    primary: theme.colors["--primary-color"],
-    tertiaryRgb: theme.colors["--tertiary-color-rgb"],
+    primary: theme.accent,
+    tertiaryRgb: theme.panelRgb,
   });
 
   useEffect(() => {
     colorsRef.current = {
-      primary: theme.colors["--primary-color"],
-      tertiaryRgb: theme.colors["--tertiary-color-rgb"],
+      primary: theme.accent,
+      tertiaryRgb: theme.panelRgb,
     };
   }, [theme]);
 

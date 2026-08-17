@@ -72,7 +72,7 @@ const UpdateProfile = ({
       dialogTitle={t('dialog.update-profile')}
       width="600px"
     >
-      <Box className={`flex flex-col ${isShowToggle ? "gap-1": "gap-4"} text-(--primary-color)`}>
+      <Box className={`flex flex-col ${isShowToggle ? "gap-1": "gap-4"} text-(--theme-accent)`}>
         {
           isShowToggle ?
           (
@@ -128,11 +128,11 @@ const UpdateProfile = ({
             sx={{
               width: 130,
               height: 35,
-              backgroundColor: "var(--tertiary-color)",
-              border: "1px solid var(--primary-color)",
-              color: "var(--primary-color)",
+              backgroundColor: "var(--theme-panel)",
+              border: "1px solid var(--theme-accent)",
+              color: "var(--theme-accent)",
               "&:hover": {
-                backgroundColor: "var(--primary-color-a80)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
               },
               textTransform: "capitalize",
               boxShadow: "0px 3px 3px rgba(0, 0, 0, 0.2)",
@@ -145,10 +145,10 @@ const UpdateProfile = ({
             sx={{
               width: 130,
               height: 35,
-              backgroundColor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
               "&:hover": {
-                backgroundColor: "var(--primary-color-a80)",
+                backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
               },
               textTransform: "capitalize",
               boxShadow: "0px 3px 3px rgba(0, 0, 0, 0.2)",

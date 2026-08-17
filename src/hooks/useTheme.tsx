@@ -33,74 +33,88 @@ import {
     accentSoft     ≥  8:1 on bgBody / 6:1 on panel bg
 */
 
-function hex2rgb(hex: string): string {
+function hex2rgb(hex: string): [number, number, number] {
   return [
     parseInt(hex.slice(1, 3), 16),
     parseInt(hex.slice(3, 5), 16),
     parseInt(hex.slice(5, 7), 16),
-  ].join(", ");
+  ];
 }
 
-// Every opacity a color is actually used at across pages/components, baked
-// into a named variable (e.g. --primary-color-a35) so call sites reference
-// `var(--primary-color-a35)` instead of writing `rgba(var(--primary-color-rgb), 0.35)`
-// themselves. Keeps the same rendered colors, just names them once here.
-const PRIMARY_ALPHA_STEPS = [
-  3, 5, 6, 8, 10, 12, 15, 16, 18, 20, 25, 30, 35, 40, 45, 50, 58, 60, 70, 80,
-  85, 88,
-];
-const SECONDARY_ALPHA_STEPS = [5, 10, 15, 18, 20, 25, 30, 35, 50];
-const TERTIARY_ALPHA_STEPS = [10, 15, 18, 25, 60, 70, 80, 85, 90, 92, 100];
-
-function alphaVars(
-  varPrefix: string,
-  hex: string,
-  steps: number[]
-): Record<string, string> {
-  const rgb = hex2rgb(hex);
-  const out: Record<string, string> = {};
-  for (const pct of steps) {
-    out[`--${varPrefix}-a${String(pct).padStart(2, "0")}`] =
-      `rgba(${rgb}, ${pct / 100})`;
-  }
-  return out;
+function rgbStr([r, g, b]: [number, number, number]): string {
+  return `${r}, ${g}, ${b}`;
 }
 
 function buildTheme(
   name: string,
-  mainBgColor: string,
-  primaryColor: string,
-  secondaryColor: string,
-  tertiaryColor: string,
-  isDark = false
+  c1: string,
+  c2: string,
+  c3: string,
+  c4: string,
+  c5: string,
+  isDark = false,
+  customRed: string | null = null
 ) {
+  const rgb3 = hex2rgb(c3);
+  const rgb2 = hex2rgb(c2);
+  const rgb4 = hex2rgb(c4);
+  const rgb5 = hex2rgb(c5);
+  const [r, g, b] = rgb3;
+  const [r2, g2, b2] = rgb2;
+  const [r5, g5, b5] = rgb5;
+  const red = customRed || (isDark ? "#ff4466" : "#db2740");
+
   return {
     name,
     isDark,
-
-    colors: {
-      "--main-bg-color": mainBgColor,
-
-      "--primary-color": primaryColor,
-      "--primary-color-rgb": hex2rgb(primaryColor),
-      ...alphaVars("primary-color", primaryColor, PRIMARY_ALPHA_STEPS),
-
-      "--secondary-color": secondaryColor,
-      "--secondary-color-rgb": hex2rgb(secondaryColor),
-      ...alphaVars("secondary-color", secondaryColor, SECONDARY_ALPHA_STEPS),
-
-      "--tertiary-color": tertiaryColor,
-      "--tertiary-color-rgb": hex2rgb(tertiaryColor),
-      ...alphaVars("tertiary-color", tertiaryColor, TERTIARY_ALPHA_STEPS),
-
-      "--text-color": isDark ? "white" : "black",
-
-      // Fixed-severity color for warning/error copy shown on non-themed
-      // (semantic) backgrounds — needs its own light/dark variant since a
-      // single hue can't hit 4.5:1 against both a near-white and a
-      // near-black body bg.
-      "--danger-color": isDark ? "#FF6B6B" : "#9F0C0C",
-    },
+    palette: [c1, c2, c3, c4, c5],
+    accent: c3,
+    accentRgb: rgbStr(rgb3),
+    accentGlow: `rgba(${r}, ${g}, ${b}, 0.35)`,
+    accentBg: `rgba(${r}, ${g}, ${b}, 0.08)`,
+    accentBorder: `rgba(${r}, ${g}, ${b}, 0.25)`,
+    accentFill: `rgba(${r}, ${g}, ${b}, 0.55)`,
+    accentSoft: c4,
+    accentSoftRgb: rgbStr(rgb4),
+    red,
+    textPrimary: c5,
+    // Bumped from 0.78 → 0.85 for better legibility on translucent panel bgs
+    textSecondary: `rgba(${r5}, ${g5}, ${b5}, 0.85)`,
+    // Bumped from 0.65/0.70 → 0.70/0.75 — still de-emphasised but meets 4.5:1 on panels
+    textMuted: isDark
+      ? `rgba(${r5}, ${g5}, ${b5}, 0.75)`
+      : `rgba(${r5}, ${g5}, ${b5}, 0.70)`,
+    textOnAccent: isDark ? c1 : "#ffffff",
+    bgBody: c1,
+    bgSurface: isDark
+      ? `rgba(${r2}, ${g2}, ${b2}, 0.92)`
+      : `rgba(255, 255, 255, 0.88)`,
+    bgPanel: isDark
+      ? `rgba(${r2}, ${g2}, ${b2}, 0.9)`
+      : `rgba(${r2}, ${g2}, ${b2}, 0.9)`,
+    bgElevated: isDark
+      ? `rgba(${Math.min(r2 + 15, 255)}, ${Math.min(g2 + 15, 255)}, ${Math.min(b2 + 15, 255)}, 0.95)`
+      : `rgba(255, 255, 255, 0.95)`,
+    bgInput: isDark ? c2 : "#ffffff",
+    bgOverlay: isDark
+      ? "rgba(0, 0, 0, 0.65)"
+      : `rgba(${r5}, ${g5}, ${b5}, 0.4)`,
+    // Solid (opaque) panel color — for spots that need a flat fill/text-on-panel
+    // color rather than one of the translucent bgSurface/bgPanel/bgElevated composites.
+    panel: c2,
+    panelRgb: rgbStr(rgb2),
+    borderLight: `rgba(${r}, ${g}, ${b}, ${isDark ? 0.12 : 0.15})`,
+    borderMedium: `rgba(${r}, ${g}, ${b}, 0.25)`,
+    borderInput: c2,
+    shadowGlow: `0 0 12px rgba(${r}, ${g}, ${b}, 0.2)`,
+    tabBg: isDark
+      ? `rgba(${r2}, ${g2}, ${b2}, 0.6)`
+      : `rgba(${r2}, ${g2}, ${b2}, 0.3)`,
+    tabActive: `rgba(${r}, ${g}, ${b}, 0.1)`,
+    cardBg: isDark
+      ? `rgba(${r2}, ${g2}, ${b2}, 0.8)`
+      : "rgba(255, 255, 255, 0.9)",
+    counterBg: `rgba(${r}, ${g}, ${b}, 0.04)`,
   };
 }
 
@@ -109,173 +123,202 @@ const themes = {
 
   linen: buildTheme(
     // Warm neutral ivory — comfortable, editorial
-    'Linen',
-    '#F3F1EE',  // Warm Ivory
-    '#5E606E',  // Slate Blue
-    '#3D4470',  // Deep Slate-Blue (accentSoft — was washed Quick Silver #B1A6A4)
-    '#DDD6D2',  // Warm Gray
+    "Linen",
+    "#F3F1EE", // Warm Ivory
+    "#DDD6D2", // Warm Gray
+    "#5E606E", // Slate Blue
+    "#3D4470", // Deep Slate-Blue (accentSoft — was washed Quick Silver #B1A6A4)
+    "#1A1818" // Near-Black (was mid-dark #413F3D)
   ),
 
   arctic: buildTheme(
     // Cold ocean teal — professional, clear
-    'Arctic',
-    '#F4F7F6',  // White Smoke
-    '#2A7580',  // Deep Teal
-    '#144A52',  // Dark Teal (accentSoft — was washed Moonstone #6FB3B8)
-    '#B5DBDF',  // Powder Blue
+    "Arctic",
+    "#F4F7F6", // White Smoke
+    "#B5DBDF", // Powder Blue
+    "#2A7580", // Deep Teal
+    "#144A52", // Dark Teal (accentSoft — was washed Moonstone #6FB3B8)
+    "#0C2028" // Near-black Teal (was #1a2e35)
   ),
 
   rosewood: buildTheme(
     // Soft blush — bold deep rose
-    'Rosewood',
-    '#FEF3F3',  // Lavender Blush
-    '#A84C55',  // Deep Rose
-    '#5E2830',  // Dark Rose (accentSoft — was pale French Beige #D1A080)
-    '#E8CECE',  // Tea Rose
+    "Rosewood",
+    "#FEF3F3", // Lavender Blush
+    "#E8CECE", // Tea Rose
+    "#A84C55", // Deep Rose
+    "#5E2830", // Dark Rose (accentSoft — was pale French Beige #D1A080)
+    "#2A1215", // Near-black Rose (was #5a3035)
+    false,
+    "#F53163" // Radical Red
   ),
 
   amethyst: buildTheme(
     // Rich lavender — purple depth
-    'Amethyst',
-    '#EDEAF2',  // Soft Lavender Blush
-    '#6560B0',  // Toolbox Purple
-    '#3A2868',  // Deep Indigo (accentSoft — was bright Lavender #BD9DEA)
-    '#CFC7E2',  // Lavender Panel
+    "Amethyst",
+    "#EDEAF2", // Soft Lavender Blush
+    "#CFC7E2", // Lavender Panel
+    "#6560B0", // Toolbox Purple
+    "#3A2868", // Deep Indigo (accentSoft — was bright Lavender #BD9DEA)
+    "#1C1435", // Near-black Purple (was #3a3450)
+    false,
+    "#EA7186" // Tango Pink
   ),
 
   cerulean: buildTheme(
     // Deep ocean blue — bold water
-    'Cerulean',
-    '#E4EEF8',  // Glitter Blue
-    '#1C68B4',  // Deep Cerulean
-    '#0C3055',  // Dark Navy (accentSoft — was mid-blue #7aaed0)
-    '#A8D0E0',  // Powder Blue
+    "Cerulean",
+    "#E4EEF8", // Glitter Blue
+    "#A8D0E0", // Powder Blue
+    "#1C68B4", // Deep Cerulean
+    "#0C3055", // Dark Navy (accentSoft — was mid-blue #7aaed0)
+    "#071825", // Near-black Navy (was #1a3a5c)
+    false,
+    "#DF4C73" // Fandango Pink
   ),
 
   ember: buildTheme(
     // Warm orange fire — earthy heat
-    'Ember',
-    '#FFF0E6',  // Linen
-    '#E04A00',  // Orange Pantone
-    '#7A2500',  // Dark Burnt Orange (accentSoft — was pale Copper #CF8B64)
-    '#F3E5DC',  // Dust Storm, lightened (was #EAD0C0 — only 2.77:1 against primary, failed AA UI-contrast for on-primary button text)
+    "Ember",
+    "#FFF0E6", // Linen
+    "#EAD0C0", // Dust Storm
+    "#E04A00", // Orange Pantone
+    "#7A2500", // Dark Burnt Orange (accentSoft — was pale Copper #CF8B64)
+    "#2C1000" // Near-black Brown (was #692705)
   ),
 
   pacific: buildTheme(
     // Sky and sea blue — bold, energetic
-    'Pacific',
-    '#EEF4F8',  // Light Blue Tint
-    '#2E7EC0',  // Carolina Blue
-    '#0F3860',  // Deep Navy (accentSoft — was Sea Serpent #53BAC1)
-    '#D3E4F3',  // Light Blue, lightened (was #C0D8EE — only 2.94:1 against primary, failed AA UI-contrast for on-primary button text)
+    "Pacific",
+    "#EEF4F8", // Light Blue Tint
+    "#C0D8EE", // Light Blue
+    "#2E7EC0", // Carolina Blue
+    "#0F3860", // Deep Navy (accentSoft — was Sea Serpent #53BAC1)
+    "#081E35", // Near-black Navy (was #1e3248)
+    false,
+    "#DB0038" // Rich Carmine
   ),
 
   crimson: buildTheme(
     // English red on warm ivory — vivid and sharp
-    'Crimson',
-    '#F5F0F0',  // Warm Ivory
-    '#C03038',  // English Red
-    '#6A1818',  // Dark Crimson (accentSoft — was Spanish Gray #8C8C8C, ~2.7:1 fail)
-    '#EEC8C5',  // Orchid Pink
+    "Crimson",
+    "#F5F0F0", // Warm Ivory
+    "#EEC8C5", // Orchid Pink
+    "#C03038", // English Red
+    "#6A1818", // Dark Crimson (accentSoft — was Spanish Gray #8C8C8C, ~2.7:1 fail)
+    "#220C0C" // Near-black Wine (was #3a2020)
   ),
 
   cobalt: buildTheme(
     // Deep indigo — ocean monochrome authority
-    'Cobalt',
-    '#FAFAF8',  // Baby Powder
-    '#3840B0',  // Ocean Blue
-    '#181880',  // Deep Indigo (accentSoft — was mid Toolbox #6F7BC5)
-    '#BDC8E8',  // Pale Aqua
+    "Cobalt",
+    "#FAFAF8", // Baby Powder
+    "#BDC8E8", // Pale Aqua
+    "#3840B0", // Ocean Blue
+    "#181880", // Deep Indigo (accentSoft — was mid Toolbox #6F7BC5)
+    "#0A0A60" // Near-black Navy (was #15158F)
   ),
 
   royal: buildTheme(
     // Deep navy — authoritative command
-    'Royal',
-    '#F8F9FC',  // White
-    '#0D2E7F',  // Royal Blue
-    '#1A3A88',  // Medium-Dark Royal Blue (accentSoft — was Payne's Grey #535F80)
-    '#DBE3EF',  // Glitter
+    "Royal",
+    "#F8F9FC", // White
+    "#DBE3EF", // Glitter
+    "#0D2E7F", // Royal Blue
+    "#1A3A88", // Medium-Dark Royal Blue (accentSoft — was Payne's Grey #535F80)
+    "#040E28" // Near-black (was #051747)
   ),
 
   aura: buildTheme(
     // Cool lavender-gray bg + vibrant purple — matches the dribbble light palette
-    'Aura',
-    '#EDEEF5',  // Light lavender-gray (body bg — image primary bg)
-    '#5B4CF7',  // Vibrant purple (accent: buttons, glow, active)
-    '#2A15A0',  // Deep indigo (accentSoft: titles, nav labels — 10:1 on body bg)
-    '#CCCAE8',  // Soft lavender (panel bg, borders)
+    "Aura",
+    "#EDEEF5", // Light lavender-gray (body bg — image primary bg)
+    "#CCCAE8", // Soft lavender (panel bg, borders)
+    "#5B4CF7", // Vibrant purple (accent: buttons, glow, active)
+    "#2A15A0", // Deep indigo (accentSoft: titles, nav labels — 10:1 on body bg)
+    "#0C0A20" // Near-black indigo (text)
   ),
 
   // ── Dark Themes ──────────────────────────────────────────
 
   jungle: buildTheme(
     // Earthy dark green + warm gold — organic
-    'Jungle',
-    '#2A2115',  // Bistre
-    '#78B83C',  // Palm Leaf
-    '#E8CC5A',  // Bright Gold (accentSoft — brighter than #C7AB59)
-    '#3C3020',  // Dark Earth
-    true,
+    "Jungle",
+    "#2A2115", // Bistre
+    "#3C3020", // Dark Earth
+    "#78B83C", // Palm Leaf
+    "#E8CC5A", // Bright Gold (accentSoft — brighter than #C7AB59)
+    "#F2ECC8", // Bright Desert Cream (was #DED2A8)
+    true
   ),
 
   midnight: buildTheme(
     // Deep navy — authority in darkness
-    'Midnight',
-    '#08101E',  // Maastricht Blue
-    '#4E96E8',  // Steel Blue
-    '#B0C8E0',  // Light Steel Blue (accentSoft — was dim Shadow Blue #7b9cc0)
-    '#101C30',  // Oxford Blue
-    true,
+    "Midnight",
+    "#08101E", // Maastricht Blue
+    "#101C30", // Oxford Blue
+    "#4E96E8", // Steel Blue
+    "#B0C8E0", // Light Steel Blue (accentSoft — was dim Shadow Blue #7b9cc0)
+    "#E8F0F8", // Near-white (was dim #c8d6e5)
+    true
   ),
 
   slate: buildTheme(
     // Dark gray + teal — industrial precision
-    'Slate',
-    '#2E2E32',  // Onyx
-    '#3C9CB0',  // Queen Blue
-    '#C8C8C5',  // Bright Taupe (accentSoft — was dark Taupe Gray #8D8C8A)
-    '#3E3E42',  // Dim Gray, darkened slightly (was #404044 — only 3.23:1 against primary, just under AA UI-contrast for on-primary button text)
+    "Slate",
+    "#2E2E32", // Onyx
+    "#404044", // Dim Gray
+    "#3C9CB0", // Queen Blue
+    "#C8C8C5", // Bright Taupe (accentSoft — was dark Taupe Gray #8D8C8A)
+    "#F4F4F4", // Near-white (was #e8e8e8)
     true,
+    "#E9322E" // Geranium Lake
   ),
 
   cyber: buildTheme(
     // Dark navy + mint — cyberpunk glow
-    'Cyber',
-    '#262840',  // Gunmetal
-    '#2ECFA5',  // Keppel Mint
-    '#A8D8CC',  // Light Mint (accentSoft — was dim Rhythm #707793, wrong hue entirely)
-    '#32365C',  // Arsenic
-    true,
+    "Cyber",
+    "#262840", // Gunmetal
+    "#32365C", // Arsenic
+    "#2ECFA5", // Keppel Mint
+    "#A8D8CC", // Light Mint (accentSoft — was dim Rhythm #707793, wrong hue entirely)
+    "#EEF8F4", // Near-white Mint (was dim #d4e4df)
+    true
   ),
 
   onyx: buildTheme(
     // Near-black + red — maximum drama
-    'Onyx',
-    '#161418',  // Eerie Black
-    '#EE3530',  // Geranium Red
-    '#C8C7C5',  // Light Silver (accentSoft — was dim Spanish Gray #959794)
-    '#242228',  // Dark Gray
-    true,
+    "Onyx",
+    "#161418", // Eerie Black
+    "#242228", // Dark Gray
+    "#EE3530", // Geranium Red
+    "#C8C7C5", // Light Silver (accentSoft — was dim Spanish Gray #959794)
+    "#F2F2F2", // Near-white (was #e8e8e8)
+    true
   ),
 
   carbon: buildTheme(
     // Pure grayscale — minimal, typographic
-    'Carbon',
-    '#1A1A1A',  // Raisin Black
-    '#A0A0A0',  // Gray
-    '#D0D0D0',  // Bright Silver (accentSoft — was Dim Gray #6B6B6B, only ~3.1:1!)
-    '#2A2A2A',  // Dark Charcoal
+    "Carbon",
+    "#1A1A1A", // Raisin Black
+    "#2A2A2A", // Dark Charcoal
+    "#A0A0A0", // Gray
+    "#D0D0D0", // Bright Silver (accentSoft — was Dim Gray #6B6B6B, only ~3.1:1!)
+    "#ECECEC", // Near-white (was Silver #BFBFBF)
     true,
+    "#E9322E"
   ),
 
   spectra: buildTheme(
     // Deep indigo + vibrant purple + lime — maximum contrast
-    'Spectra',
-    '#1C1A2E',  // Very dark indigo (body bg)
-    '#5B4CF7',  // Vibrant purple (accent: buttons, active, glow)
-    '#C6F754',  // Bright lime (accentSoft: titles, nav labels — 14:1 on dark bg)
-    '#151323',  // Dark purple panel, darkened (was #272440 — only 2.71:1 against primary, failed AA UI-contrast for on-primary button text)
+    "Spectra",
+    "#1C1A2E", // Very dark indigo (body bg)
+    "#272440", // Dark purple panel
+    "#5B4CF7", // Vibrant purple (accent: buttons, active, glow)
+    "#C6F754", // Bright lime (accentSoft: titles, nav labels — 14:1 on dark bg)
+    "#E8E6F8", // Near-white with purple tint (text)
     true,
+    "#FF6B6B" // Coral red
   ),
 };
 
@@ -308,13 +351,41 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const theme = themes[themeName];
 
   useEffect(() => {
-    localStorage.setItem('wd2-theme', themeName);
+    localStorage.setItem("wd2-theme", themeName);
     const root = document.documentElement;
-    root.setAttribute('data-theme', themeName);
+    root.setAttribute("data-theme", themeName);
 
-    Object.entries(theme.colors).forEach(([key, value]) =>
-      root.style.setProperty(key, value)
-    );
+    Object.entries({
+      "--theme-accent": theme.accent,
+      "--theme-accent-rgb": theme.accentRgb,
+      "--theme-accent-glow": theme.accentGlow,
+      "--theme-accent-bg": theme.accentBg,
+      "--theme-accent-border": theme.accentBorder,
+      "--theme-accent-fill": theme.accentFill,
+      "--theme-accent-soft": theme.accentSoft,
+      "--theme-accent-soft-rgb": theme.accentSoftRgb,
+      "--theme-red": theme.red,
+      "--theme-text-primary": theme.textPrimary,
+      "--theme-text-secondary": theme.textSecondary,
+      "--theme-text-muted": theme.textMuted,
+      "--theme-text-on-accent": theme.textOnAccent,
+      "--theme-bg-body": theme.bgBody,
+      "--theme-bg-surface": theme.bgSurface,
+      "--theme-bg-panel": theme.bgPanel,
+      "--theme-bg-elevated": theme.bgElevated,
+      "--theme-bg-input": theme.bgInput,
+      "--theme-bg-overlay": theme.bgOverlay,
+      "--theme-panel": theme.panel,
+      "--theme-panel-rgb": theme.panelRgb,
+      "--theme-border-light": theme.borderLight,
+      "--theme-border-medium": theme.borderMedium,
+      "--theme-border-input": theme.borderInput,
+      "--theme-shadow-glow": theme.shadowGlow,
+      "--theme-tab-bg": theme.tabBg,
+      "--theme-tab-active": theme.tabActive,
+      "--theme-card-bg": theme.cardBg,
+      "--theme-counter-bg": theme.counterBg,
+    }).forEach(([key, value]) => root.style.setProperty(key, value));
   }, [themeName, theme]);
 
   return (

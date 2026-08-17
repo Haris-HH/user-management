@@ -63,7 +63,7 @@ const PermissionTree = ({
           sx={{
             pl: `${depth * 24}px`,
             "&:hover": {
-              backgroundColor: "var(--primary-color-a06)",
+              backgroundColor: "rgba(var(--theme-accent-rgb), 0.06)",
             },
           }}
         >
@@ -74,7 +74,7 @@ const PermissionTree = ({
               size="small"
               onClick={() => onToggleExpanded(node.key)}
               aria-label={isExpanded ? t("button.collapse") : t("button.expand")}
-              sx={{ color: "var(--primary-color)", width: "30px", flexShrink: 0 }}
+              sx={{ color: "var(--theme-accent)", width: "30px", flexShrink: 0 }}
             >
               {isExpanded ? (
                 <KeyboardArrowDownIcon fontSize="small" />
@@ -95,9 +95,9 @@ const PermissionTree = ({
               )
             }
             sx={{
-              color: "var(--primary-color)",
-              "&.Mui-checked": { color: "var(--primary-color)" },
-              "&.MuiCheckbox-indeterminate": { color: "var(--primary-color)" },
+              color: "var(--theme-accent)",
+              "&.Mui-checked": { color: "var(--theme-accent)" },
+              "&.MuiCheckbox-indeterminate": { color: "var(--theme-accent)" },
             }}
           />
 
@@ -110,7 +110,7 @@ const PermissionTree = ({
             }}
             sx={{
               fontSize: "14px",
-              color: "var(--primary-color)",
+              color: "var(--theme-accent)",
               cursor: disabled ? "not-allowed" : "pointer",
               fontWeight: leaf ? 400 : 600,
               userSelect: "none",
@@ -135,7 +135,7 @@ const PermissionTree = ({
   if (visibleNodes.length === 0) {
     return (
       <Typography
-        sx={{ fontSize: "14px", color: "var(--primary-color)", opacity: 0.7, p: 2 }}
+        sx={{ fontSize: "14px", color: "var(--theme-accent)", opacity: 0.7, p: 2 }}
       >
         {t("text.data-not-found")}
       </Typography>

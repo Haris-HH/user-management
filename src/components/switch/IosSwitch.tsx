@@ -49,13 +49,13 @@ const IosSwitch = styled((props: SwitchProps) => {
   "& .MuiSwitch-thumb": {
     width: 22,
     height: 22,
-    backgroundColor: "var(--tertiary-color)",
+    backgroundColor: "var(--theme-panel)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontSize: "10px",
     fontWeight: "bold",
-    color: "var(--secondary-color)",
+    color: "var(--theme-accent-soft)",
     "&:before": {
       content: '"Off"',
       position: "absolute",
@@ -64,15 +64,15 @@ const IosSwitch = styled((props: SwitchProps) => {
     },
   },
   "& .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb": {
-    backgroundColor: "var(--secondary-color)",
+    backgroundColor: "var(--theme-accent-soft)",
     "&:before": {
       content: '"On"',
-      color: "var(--tertiary-color)",
+      color: "var(--theme-panel)",
     },
   },
   "& .MuiSwitch-track": {
     borderRadius: 26 / 2,
-    backgroundColor: "var(--secondary-color)",
+    backgroundColor: "var(--theme-accent-soft)",
     opacity: 1,
     /* 500ms ช้าเกินไปสำหรับ toggle — สวิตช์ต้องตอบสนองทันทีที่กด ไม่อย่างนั้น
        ผู้ใช้จะไม่แน่ใจว่าการกดติดหรือไม่ */

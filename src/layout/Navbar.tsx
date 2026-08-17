@@ -63,7 +63,7 @@ const Navbar = () => {
   const { setNavPosition, sidebarOpen, setSidebarOpen, setMobileNavOpen } =
     useNavPosition();
   const { navPosition, showNav, isWideViewport, sidebarOffset } = useNavLayout();
-  const primaryColor = theme.colors["--primary-color"];
+  const primaryColor = theme.accent;
 
   // State
   const [isLoading, setIsLoading] = useState(false);
@@ -160,7 +160,7 @@ const Navbar = () => {
     isSelected: boolean
   ) => {
     const isVertical = item.key === "left" || item.key === "right";
-    const edgeColor = isSelected ? primaryColor : "var(--secondary-color)";
+    const edgeColor = isSelected ? primaryColor : "var(--theme-accent-soft)";
 
     return (
       <Box
@@ -265,11 +265,11 @@ const Navbar = () => {
       position="fixed"
       sx={{
         zIndex: (muiTheme) => muiTheme.zIndex.modal + 1,
-        backgroundColor: "var(--tertiary-color)",
+        backgroundColor: "var(--theme-panel)",
         background:
-          "linear-gradient(0deg, var(--tertiary-color-a90) 0%, var(--tertiary-color-a100) 100%)",
-        boxShadow: "1px 1px 5px var(--secondary-color-a10)",
-        color: "var(--primary-color)",
+          "linear-gradient(0deg, rgba(var(--theme-panel-rgb), 0.90) 0%, var(--theme-panel) 100%)",
+        boxShadow: "1px 1px 5px rgba(var(--theme-accent-soft-rgb), 0.10)",
+        color: "var(--theme-accent)",
         minHeight: "64px",
         /*
           The pinned sidebar runs the full height of the viewport, so the navbar
@@ -423,9 +423,9 @@ const Navbar = () => {
                 <div
                   className="w-4 h-4 rounded-full"
                   style={{
-                    backgroundColor: item.colors["--primary-color"],
+                    backgroundColor: item.accent,
                     boxShadow: isSelected
-                      ? `0 0 6px ${item.colors["--primary-color"]}`
+                      ? `0 0 6px ${item.accent}`
                       : "none",
                   }}
                 />
@@ -497,8 +497,8 @@ const Navbar = () => {
                   width: 34,
                   height: 34,
                   flexShrink: 0,
-                  backgroundColor: "var(--primary-color-a80)",
-                  color: "var(--tertiary-color)",
+                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+                  color: "var(--theme-panel)",
                 }}
               />
             </div>
@@ -520,7 +520,7 @@ const Navbar = () => {
                 variant="body1"
                 sx={{
                   fontSize: "0.6rem",
-                  color: "var(--secondary-color)",
+                  color: "var(--theme-accent-soft)",
                   opacity: 0.8,
                   textAlign: "right",
                 }}
@@ -547,15 +547,15 @@ const Navbar = () => {
             <Button
               variant="outlined"
               sx={{
-                border: "1px solid var(--danger-color)",
-                color: "var(--danger-color)",
+                border: "1px solid var(--theme-red)",
+                color: "var(--theme-red)",
                 fontSize: "14px",
                 width: "120px",
                 flexShrink: 0,
                 height: "30px",
                 textTransform: "capitalize",
                 "&:hover": {
-                  backgroundColor: "var(--danger-color)",
+                  backgroundColor: "var(--theme-red)",
                   color: "white",
                 },
               }}
@@ -587,8 +587,8 @@ const Navbar = () => {
             sx={{
               width: 34,
               height: 34,
-              backgroundColor: "var(--primary-color-a80)",
-              color: "var(--tertiary-color)",
+              backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+              color: "var(--theme-panel)",
             }}
           />
 
@@ -611,10 +611,10 @@ const Navbar = () => {
                   mt: 1,
                   minWidth: 240,
                   borderRadius: "16px",
-                  backgroundColor: "var(--tertiary-color)",
-                  boxShadow: "0 8px 24px var(--secondary-color-a15)",
-                  border: "1px solid var(--secondary-color-a18)",
-                  color: "var(--primary-color)",
+                  backgroundColor: "var(--theme-panel)",
+                  boxShadow: "0 8px 24px rgba(var(--theme-accent-soft-rgb), 0.15)",
+                  border: "1px solid rgba(var(--theme-accent-soft-rgb), 0.18)",
+                  color: "var(--theme-accent)",
                 },
               }
             }}
@@ -623,19 +623,19 @@ const Navbar = () => {
               disabled
               sx={{
                 opacity: "1 !important",
-                color: "var(--primary-color) !important",
+                color: "var(--theme-accent) !important",
 
                 "&.Mui-disabled": {
                   opacity: "1 !important",
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiTypography-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
               }}
             >
@@ -645,8 +645,8 @@ const Navbar = () => {
                   sx={{
                     width: 26,
                     height: 26,
-                    backgroundColor: "var(--primary-color-a80)",
-                    color: "var(--tertiary-color)",
+                    backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+                    color: "var(--theme-panel)",
                   }}
                 />
 
@@ -666,19 +666,19 @@ const Navbar = () => {
               disabled
               sx={{
                 opacity: "1 !important",
-                color: "var(--primary-color) !important",
+                color: "var(--theme-accent) !important",
 
                 "&.Mui-disabled": {
                   opacity: "1 !important",
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiTypography-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
               }}
             >
@@ -701,19 +701,19 @@ const Navbar = () => {
               disabled
               sx={{
                 opacity: "1 !important",
-                color: "var(--primary-color) !important",
+                color: "var(--theme-accent) !important",
 
                 "&.Mui-disabled": {
                   opacity: "1 !important",
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiTypography-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
               }}
             >
@@ -729,9 +729,9 @@ const Navbar = () => {
                 sx={{
                   pl: 4,
                   "&.Mui-selected": {
-                    border: "1px solid var(--primary-color)",
+                    border: "1px solid var(--theme-accent)",
                     borderRadius: "12px",
-                    backgroundColor: "var(--primary-color-a06)",
+                    backgroundColor: "rgba(var(--theme-accent-rgb), 0.06)",
                   },
                 }}
               >
@@ -761,19 +761,19 @@ const Navbar = () => {
               disabled
               sx={{
                 opacity: "1 !important",
-                color: "var(--primary-color) !important",
+                color: "var(--theme-accent) !important",
 
                 "&.Mui-disabled": {
                   opacity: "1 !important",
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiTypography-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
               }}
             >
@@ -789,9 +789,9 @@ const Navbar = () => {
                 sx={{
                   pl: 4,
                   "&.Mui-selected": {
-                    border: "1px solid var(--primary-color)",
+                    border: "1px solid var(--theme-accent)",
                     borderRadius: "12px",
-                    backgroundColor: "var(--primary-color-a06)",
+                    backgroundColor: "rgba(var(--theme-accent-rgb), 0.06)",
                   },
                 }}
               >
@@ -800,7 +800,7 @@ const Navbar = () => {
                     width: 14,
                     height: 14,
                     borderRadius: "50%",
-                    backgroundColor: themeItem.colors["--primary-color"],
+                    backgroundColor: themeItem.accent,
                     mr: 1,
                   }}
                 />
@@ -815,19 +815,19 @@ const Navbar = () => {
               disabled
               sx={{
                 opacity: "1 !important",
-                color: "var(--primary-color) !important",
+                color: "var(--theme-accent) !important",
 
                 "&.Mui-disabled": {
                   opacity: "1 !important",
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiSvgIcon-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
 
                 "& .MuiTypography-root": {
-                  color: "var(--primary-color) !important",
+                  color: "var(--theme-accent) !important",
                 },
               }}
             >
@@ -843,9 +843,9 @@ const Navbar = () => {
                 sx={{
                   pl: 4,
                   "&.Mui-selected": {
-                    border: "1px solid var(--primary-color)",
+                    border: "1px solid var(--theme-accent)",
                     borderRadius: "12px",
-                    backgroundColor: "var(--primary-color-a06)",
+                    backgroundColor: "rgba(var(--theme-accent-rgb), 0.06)",
                   },
                 }}
               >
@@ -865,7 +865,7 @@ const Navbar = () => {
                 handleLogout();
               }}
               sx={{
-                color: "var(--danger-color)",
+                color: "var(--theme-red)",
               }}
             >
               <LogoutIcon sx={{ mr: 1, fontSize: 18 }} />

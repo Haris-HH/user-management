@@ -66,13 +66,13 @@ const IntegrationSection = ({
       <Box
         sx={{
           overflow: "hidden",
-          border: "1px solid var(--primary-color-a25)",
+          border: "1px solid rgba(var(--theme-accent-rgb), 0.25)",
           borderRadius: "10px",
-          bgcolor: "var(--tertiary-color)",
+          bgcolor: "var(--theme-panel)",
           transition: "border-color 0.2s ease, box-shadow 0.2s ease",
           "&:focus-within": {
-            borderColor: "var(--primary-color)",
-            boxShadow: "0 0 0 3px var(--primary-color-a10)",
+            borderColor: "var(--theme-accent)",
+            boxShadow: "0 0 0 3px rgba(var(--theme-accent-rgb), 0.10)",
           },
         }}
       >
@@ -83,7 +83,7 @@ const IntegrationSection = ({
             gap: 1.25,
             px: 2,
             py: 1.5,
-            bgcolor: "var(--primary-color-a05)",
+            bgcolor: "rgba(var(--theme-accent-rgb), 0.05)",
           }}
         >
           <Box
@@ -95,8 +95,8 @@ const IntegrationSection = ({
               width: 36,
               height: 36,
               borderRadius: "9px",
-              color: "var(--primary-color)",
-              bgcolor: "var(--primary-color-a10)",
+              color: "var(--theme-accent)",
+              bgcolor: "rgba(var(--theme-accent-rgb), 0.10)",
               p: 1
             }}
           >
@@ -108,7 +108,7 @@ const IntegrationSection = ({
               component="legend"
               sx={{
                 p: 0,
-                color: "var(--primary-color)",
+                color: "var(--theme-accent)",
                 fontSize: "15px",
                 fontWeight: 600,
                 lineHeight: 1.4,
@@ -121,7 +121,7 @@ const IntegrationSection = ({
               <Typography
                 sx={{
                   mt: 0.25,
-                  color: "var(--primary-color-a60)",
+                  color: "rgba(var(--theme-accent-rgb), 0.60)",
                   fontSize: "13px",
                   lineHeight: 1.5,
                 }}
@@ -342,7 +342,7 @@ const AddGroup = ({
               </IntegrationSection>
 
               <IntegrationSection
-                icon={<DiscordIcon fontSize="small" style={{ color: "var(--primary-color)" }} />}
+                icon={<DiscordIcon fontSize="small" style={{ color: "var(--theme-accent)" }} />}
                 title={t("text.discord")}
                 description={t(
                   "text.discord-description"
@@ -378,14 +378,14 @@ const AddGroup = ({
                   py: 1.25,
                   borderRadius: "8px",
                   color: "text.secondary",
-                  bgcolor: "var(--primary-color-a05)",
+                  bgcolor: "rgba(var(--theme-accent-rgb), 0.05)",
                 }}
               >
                 <InfoOutlinedIcon
                   sx={{
                     mt: "1px",
                     flexShrink: 0,
-                    color: "var(--primary-color)",
+                    color: "var(--theme-accent)",
                     fontSize: "18px",
                   }}
                 />
@@ -394,7 +394,7 @@ const AddGroup = ({
                   sx={{
                     fontSize: "12px",
                     lineHeight: 1.5,
-                    color: "var(--primary-color-a60)",
+                    color: "rgba(var(--theme-accent-rgb), 0.60)",
                   }}
                 >
                   {t(
@@ -424,14 +424,14 @@ const AddGroup = ({
               minWidth: 110,
               height: 38,
               borderRadius: "8px",
-              borderColor: "var(--primary-color)",
-              color: "var(--primary-color)",
+              borderColor: "var(--theme-accent)",
+              color: "var(--theme-accent)",
               textTransform: "none",
               fontWeight: 500,
               boxShadow: "none",
               "&:hover": {
-                borderColor: "var(--primary-color)",
-                bgcolor: "var(--primary-color-a06)",
+                borderColor: "var(--theme-accent)",
+                bgcolor: "rgba(var(--theme-accent-rgb), 0.06)",
               },
             }}
           >
@@ -446,15 +446,15 @@ const AddGroup = ({
               minWidth: 120,
               height: 38,
               borderRadius: "8px",
-              bgcolor: "var(--primary-color)",
-              color: "var(--tertiary-color)",
+              bgcolor: "var(--theme-accent)",
+              color: "var(--theme-panel)",
               textTransform: "none",
               fontWeight: 600,
-              boxShadow: "0 4px 10px var(--primary-color-a20)",
+              boxShadow: "0 4px 10px rgba(var(--theme-accent-rgb), 0.20)",
               "&:hover": {
-                bgcolor: "var(--primary-color-a88)",
+                bgcolor: "rgba(var(--theme-accent-rgb), 0.88)",
                 boxShadow:
-                  "0 6px 14px var(--primary-color-a25)",
+                  "0 6px 14px rgba(var(--theme-accent-rgb), 0.25)",
               },
             }}
           >

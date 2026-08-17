@@ -125,10 +125,10 @@ const HeaderCell = ({
         minHeight: 36,
         px: 1,
         justifyContent: "flex-start",
-        color: "var(--primary-color)",
+        color: "var(--theme-accent)",
         opacity: disabled ? 0.5 : 1,
         ":hover": {
-          backgroundColor: "var(--primary-color-a10)",
+          backgroundColor: "rgba(var(--theme-accent-rgb), 0.10)",
         }
       }}
     >
@@ -141,8 +141,8 @@ const HeaderCell = ({
       align="center"
       sx={{
         width,
-        backgroundColor: "var(--primary-color)",
-        color: "var(--tertiary-color)",
+        backgroundColor: "var(--theme-accent)",
+        color: "var(--theme-panel)",
       }}
     >
       <Box className="flex justify-center items-center gap-1">
@@ -155,8 +155,8 @@ const HeaderCell = ({
             sx={{
               color:
                 selectedValues.length > 0
-                  ? "var(--secondary-color)"
-                  : "var(--tertiary-color)",
+                  ? "var(--theme-accent-soft)"
+                  : "var(--theme-panel)",
               padding: "4px",
             }}
           >
@@ -184,18 +184,18 @@ const HeaderCell = ({
                 width: 200,
                 borderRadius: 2,
                 overflow: "hidden",
-                backgroundColor: "var(--tertiary-color)",
-                color: "var(--primary-color)",
+                backgroundColor: "var(--theme-panel)",
+                color: "var(--theme-accent)",
               }}
             >
               <ClickAwayListener onClickAway={handleCloseFilter}>
                 <Box>
-                  <Box sx={{ px: 1, py: 1, borderBottom: "1px solid var(--primary-color)" }}>
+                  <Box sx={{ px: 1, py: 1, borderBottom: "1px solid var(--theme-accent)" }}>
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        border: "1px solid var(--primary-color)",
+                        border: "1px solid var(--theme-accent)",
                         borderRadius: "4px",
                         px: 1,
                         height: 36,
@@ -208,11 +208,11 @@ const HeaderCell = ({
                         sx={{ 
                           flex: 1, 
                           fontSize: 14,
-                          color: "var(--primary-color)",
+                          color: "var(--theme-accent)",
                         }}
                       />
 
-                      <SearchIcon sx={{ color: "var(--primary-color)", fontSize: 20 }} />
+                      <SearchIcon sx={{ color: "var(--theme-accent)", fontSize: 20 }} />
                     </Box>
                   </Box>
 
@@ -220,7 +220,7 @@ const HeaderCell = ({
                     {filteredOptions.length > 0 ? (
                       <>
                         <FilterItem onClick={handleSelectAll}>
-                          <Checkbox checked={allSelected} size="small" sx={{ color: "var(--primary-color)" }} />
+                          <Checkbox checked={allSelected} size="small" sx={{ color: "var(--theme-accent)" }} />
                           <ListItemText
                             primary={t("text.select-all")}
                             sx={{ "& .MuiTypography-root": { fontSize: 14 } }}
@@ -232,7 +232,7 @@ const HeaderCell = ({
                             <Checkbox
                               checked={selectedValues.includes(item.value)}
                               size="small"
-                              sx={{ color: "var(--primary-color)" }}
+                              sx={{ color: "var(--theme-accent)" }}
                             />
                             <ListItemText
                               primary={item.label}

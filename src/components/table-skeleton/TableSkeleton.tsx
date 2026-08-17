@@ -18,7 +18,7 @@ const TableSkeleton = ({
         key={rowIndex}
         sx={{
           "& .MuiTableCell-root": {
-            borderBottom: "1px solid var(--primary-color)",
+            borderBottom: "1px solid var(--theme-accent)",
           }
         }}
       >
@@ -27,7 +27,7 @@ const TableSkeleton = ({
             <Skeleton
               animation="wave"
               height={30}
-              sx={{ backgroundColor: "var(--secondary-color-a50)" }}
+              sx={{ backgroundColor: "rgba(var(--theme-accent-soft-rgb), 0.50)" }}
             />
           </TableCell>
         ))}
