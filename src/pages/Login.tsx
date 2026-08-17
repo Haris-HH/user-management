@@ -27,7 +27,7 @@ import { useReducedMotion } from "../hooks/useReducedMotion";
 import { MOTION_DURATION } from "../constants/motion";
 
 // API
-import { loginApi } from "../features/login/api/LoginApi";
+import { loginApi, logoutApi } from "../features/login/api/LoginApi";
 import { getUserApi } from "../features/users/api/UsersApi";
 import { setAuthUser } from "../features/auth-user/api/AuthUserSlice";
 import { getTitle, getAgency } from "../features/dropdown/api/DropdownApi";
@@ -137,9 +137,30 @@ const Login = () => {
 
       if (result.userId) {
         const userResponse = await getUserApi({ filter: `user_id=${result.userId}` });
+        const permission = userResponse.data[0]?.permissions;
+
+        /*
+          สิทธิ์ ui["user-management"].enabled คือสวิตช์เปิด/ปิดระบบนี้ทั้งระบบ
+          สำหรับผู้ใช้คนนั้น ปิดสิทธิ์แต่ยังปล่อยให้ login สำเร็จไปแล้ว จะได้ผู้ใช้
+          ที่มี token แต่เปิดหน้าไหนไม่ได้เลย จึงต้องเช็คและตัดสิทธิ์ตั้งแต่ตรงนี้
+        */
+        if (permission?.ui?.["user-management"]?.enabled !== true) {
+          localStorage.removeItem("accessToken");
+
+          try {
+            await logoutApi();
+          }
+          catch (error) {
+            console.error("Logout request failed:", error);
+          }
+
+          await PopupMessage(t("popup.account-disabled-title"), t("popup.account-disabled-message"), "warning");
+          return;
+        }
+
         const titleData = await getTitle({ filter: `id=${userResponse.data[0]?.title_id}` });
         const nsbOuData = await getAgency({ filter: `ou_code=${userResponse.data[0]?.ou_code}` });
-        
+
         dispatch(
           setAuthUser({
             user_id: userResponse.data[0]?.user_id ?? "-",

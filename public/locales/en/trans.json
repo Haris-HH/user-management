@@ -443,6 +443,8 @@
   "popup": {
     "login-failed-title": "Login Failed",
     "login-failed-message": "Please check your PID and password, then try again",
+    "account-disabled-title": "Unable to Sign In",
+    "account-disabled-message": "Your account does not have access to this system. Please contact your administrator.",
     "logout-failed-title": "Logout Failed",
     "logout-failed-message": "Logout failed, please try again",
     "logout-title": "Confirm Logout",
