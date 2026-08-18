@@ -32,12 +32,12 @@ import FindInPageOutlinedIcon from '@mui/icons-material/FindInPageOutlined';
 import { useTranslation } from 'react-i18next';
 
 // Types
-import type { Camera, CameraInGroup, PoliceStation } from "../../types/common";
+import type { Camera, CameraInGroup } from "../../types/common";
 
 // API
-import { getPoliceStation } from "../../features/dropdown/api/DropdownApi";
+import { getPoliceStationMap } from "../../features/dropdown/api/DropdownApi";
 import {
-  searchCameras,
+  getCamerasByIds,
   addCameraInGroup,
   removeCameraInGroup,
 } from "../../features/core-data/api/CoreDataApi";
@@ -116,63 +116,54 @@ const CheckpointList = ({
     });
   }, [formData.search, selectedCheckpoints]);
 
+  /* Provinces and regions come from the dropdown slice, so their lookup
+     maps only have to be rebuilt when those lists change — not on every
+     fetch, and never per row (`.find()` inside the row loop was O(rows ×
+     list)). */
+  const provinceMap = useMemo(
+    () => new Map(province.map((item) => [item.province_code, item])),
+    [province]
+  );
+
+  const areaMap = useMemo(
+    () => new Map(area.map((item) => [item.id, item])),
+    [area]
+  );
+
   const mapCameraRows = useCallback(
     async (cameras: Camera[]) => {
-      const stationCache = new Map<string, PoliceStation | undefined>();
-
-      await Promise.all(
-        cameras.map(async (item) => {
-          const stationKey = String(item.police_station_id);
-
-          if (!stationCache.has(stationKey)) {
-            const res = await getPoliceStation({
-              filter: `id=${item.police_station_id}`,
-            });
-            stationCache.set(stationKey, res.data?.[0]);
-          }
-        })
+      /* Station names are the only part that needs the network. One
+         deduped, cached, chunked lookup for the whole page — this used to
+         be one GET per camera. */
+      const stationMap = await getPoliceStationMap(
+        cameras.map((item) => item.police_station_id)
       );
 
-      // Build lookup maps once instead of calling `.find()` per row.
-      const provinceMap = new Map(
-        province.map((p) => [p.province_code, p])
-      );
-      const areaMap = new Map(
-        area.map((a) => [a.id, a])
-      );
-
-      const updated = cameras.map((item) => {
-        const station =
-          stationCache.get(
-            String(item.police_station_id)
-          );
+      return cameras.map((item) => {
+        const station = stationMap.get(String(item.police_station_id));
 
         const provinceData = provinceMap.get(item.province_code);
 
         const areaData = areaMap.get(Number(item.police_region_id));
 
+        const isThai = i18n.language === "th";
+
         return {
           ...item,
           province_name:
-            i18n.language === "th"
-              ? provinceData?.name_th ?? "-"
-              : provinceData?.name_en ?? "-",
+            (isThai ? provinceData?.name_th : provinceData?.name_en) ?? "-",
 
           police_region_name:
-            i18n.language === "th"
-              ? areaData?.title_abbr_th ?? "-"
-              : areaData?.title_abbr_en ?? "-",
+            (isThai ? areaData?.title_abbr_th : areaData?.title_abbr_en) ?? "-",
 
           police_station_name:
             station?.station_name ?? "-",
         };
       });
-
-      return updated;
     },
     [
-      area,
-      province,
+      areaMap,
+      provinceMap,
       i18n.language,
     ]
   );
@@ -195,19 +186,16 @@ const CheckpointList = ({
     try {
       setIsDataLoading(true);
 
-      const response = await searchCameras({
-        page: "1",
-        limit: "100",
-        filter: `camera_id=${checkpointList.join("|")},deleted=false`,
-      });
-
-      const cameras = response.data ?? [];
+      /* `getCamerasByIds` chunks the id list and pages each chunk, so a
+         group larger than one page no longer loses its tail rows the way
+         the old fixed `limit: 100` did. */
+      const cameras = await getCamerasByIds(checkpointList, ["deleted=false"]);
       const mappedCameras = await mapCameraRows(cameras);
 
       if (requestId !== fetchRequestIdRef.current) return;
 
       setSelectedCheckpoints(mappedCameras);
-      setTotalCheckpoint(response.pagination?.countAll ?? 0);
+      setTotalCheckpoint(mappedCameras.length);
     } catch {
       if (requestId !== fetchRequestIdRef.current) return;
 

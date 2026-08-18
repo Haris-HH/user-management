@@ -135,7 +135,15 @@ function App() {
     dispatch(fetchLprRegion({ limit: "100" }));
     dispatch(fetchPosition({ limit: "100", filter: `category=police`  }));
     dispatch(fetchUserGroup({ limit: "100" }));
-    dispatch(fetchPoliceStation({ limit: "100" }));
+    /*
+      Police stations are the one reference list that does not fit in a
+      100-row page — there are 1,484 of them against the endpoint's 2,000-row
+      cap. At 100 the station filter in AddCheckpoint offered 7% of the
+      force, and every camera table had to re-resolve names over the network
+      because the slice could not answer for them. One full page here fills
+      DropdownApi's station cache for the whole session instead.
+    */
+    dispatch(fetchPoliceStation({ limit: "2000" }));
     dispatch(fetchStatus());
   }, [userId, dispatch]);
 

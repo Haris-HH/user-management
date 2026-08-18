@@ -28,7 +28,7 @@ import TableSkeleton from '../table-skeleton/TableSkeleton';
 import { useTranslation } from 'react-i18next';
 
 // API
-import { getPoliceStation } from "../../features/dropdown/api/DropdownApi";
+import { getPoliceStationMap } from "../../features/dropdown/api/DropdownApi";
 import { searchCameras } from "../../features/core-data/api/CoreDataApi";
 
 // Utils
@@ -38,7 +38,7 @@ import {
 import { buildUniqueOptions } from "../../utils/commonFunctions";
 
 // Types
-import type { Camera, OptionType, PoliceStation } from "../../types/common";
+import type { Camera, OptionType } from "../../types/common";
 
 interface FormData {
   search: string;
@@ -60,39 +60,6 @@ type Props = {
 // "Select all" pulls every page for the active search, so it asks for far
 // bigger pages than the table itself uses.
 const SELECT_ALL_PAGE_LIMIT = 1500;
-
-// Police stations are resolved by id list; chunk it so the GET query string
-// cannot grow past what the gateway accepts.
-const POLICE_STATION_ID_CHUNK_SIZE = 200;
-
-const fetchPoliceStations = async (stationIds: string[]) => {
-  const uniqueIds = [...new Set(stationIds.filter((id) => id && id !== "null"))];
-
-  if (uniqueIds.length === 0) {
-    return new Map<string, PoliceStation>();
-  }
-
-  const chunks: string[][] = [];
-
-  for (let i = 0; i < uniqueIds.length; i += POLICE_STATION_ID_CHUNK_SIZE) {
-    chunks.push(uniqueIds.slice(i, i + POLICE_STATION_ID_CHUNK_SIZE));
-  }
-
-  const responses = await Promise.all(
-    chunks.map((chunk) =>
-      getPoliceStation({
-        filter: `id=${chunk.join("|")}`,
-        limit: String(chunk.length),
-      })
-    )
-  );
-
-  return new Map(
-    responses
-      .flatMap((res) => res.data ?? [])
-      .map((station) => [String(station.id), station])
-  );
-};
 
 const AddCheckpoint = ({
   open,
@@ -228,8 +195,8 @@ const AddCheckpoint = ({
     async (cameras: Camera[]) => {
       // Resolved in a couple of chunked requests rather than one per camera —
       // "select all" feeds thousands of rows through here.
-      const stationCache = await fetchPoliceStations(
-        cameras.map((item) => String(item.police_station_id))
+      const stationCache = await getPoliceStationMap(
+        cameras.map((item) => item.police_station_id)
       );
 
       // Build lookup maps once instead of calling `.find()` per row.

@@ -18,7 +18,8 @@ import type {
   CreateTitleResponse,
 } from "../../../types/response";
 import type {
-  Dropdown
+  Dropdown,
+  PoliceStation
 } from "../../../types/common";
 
 // Api
@@ -127,10 +128,90 @@ export const getUserGroup = createGetter<UserGroupResponse>(
   mockUserGroup
 );
 
-export const getPoliceStation = createGetter<PoliceStationResponse>(
+const policeStationCache = new Map<string, PoliceStation>();
+
+const requestPoliceStation = createGetter<PoliceStationResponse>(
   "/masterdata/police-stations/get",
   mockPoliceStation
 );
+
+/*
+  Every police-station response seeds `policeStationCache`, whoever asked for
+  it. The whole table is 1,484 rows against a 2,000-row page limit, so the
+  login-time load in `App.tsx` pulls all of it in one request and every later
+  id lookup is then answered from memory. Names are cached for the life of
+  the tab; a station renamed mid-session needs a reload.
+*/
+export const getPoliceStation = async (
+  param?: Record<string, string>
+): Promise<PoliceStationResponse> => {
+  const res = await requestPoliceStation(param);
+
+  (res.data ?? []).forEach((station) =>
+    policeStationCache.set(String(station.id), station)
+  );
+
+  return res;
+};
+
+/*
+  Cameras only carry `police_station_id`, so every camera table has to turn
+  ids into names. Resolving them one request per row is what made those
+  tables slow — a group of 200 cameras fired 200 GETs. Ids are deduped and
+  answered from the cache above, which the login-time load has normally
+  already filled; the network is touched only for ids it does not hold (a
+  station created after login, or a lookup that beat the login request).
+  Those go out chunked, so the query string cannot grow past what the
+  gateway accepts, and with an explicit `limit` because the endpoint pages
+  at 10 rows by default.
+*/
+const POLICE_STATION_ID_CHUNK_SIZE = 200;
+
+export const getPoliceStationMap = async (
+  stationIds: Array<string | number | null | undefined>
+): Promise<Map<string, PoliceStation>> => {
+  const wantedIds = [
+    ...new Set(
+      stationIds
+        .map((id) => (id === null || id === undefined ? "" : String(id)))
+        .filter((id) => id !== "" && id !== "null" && id !== "undefined")
+    ),
+  ];
+
+  const missingIds = wantedIds.filter((id) => !policeStationCache.has(id));
+
+  if (missingIds.length > 0) {
+    const chunks: string[][] = [];
+
+    for (let i = 0; i < missingIds.length; i += POLICE_STATION_ID_CHUNK_SIZE) {
+      chunks.push(missingIds.slice(i, i + POLICE_STATION_ID_CHUNK_SIZE));
+    }
+
+    // getPoliceStation fills the cache with whatever comes back.
+    await Promise.all(
+      chunks.map((chunk) =>
+        getPoliceStation({
+          filter: `id=${chunk.join("|")}`,
+          limit: String(chunk.length),
+        })
+      )
+    );
+  }
+
+  /* Only the ids that were asked for — the dev fixtures answer every filter
+     with the whole list, and callers key their rows off this map. */
+  const resolved = new Map<string, PoliceStation>();
+
+  wantedIds.forEach((id) => {
+    const station = policeStationCache.get(id);
+
+    if (station) {
+      resolved.set(id, station);
+    }
+  });
+
+  return resolved;
+};
 
 export const createTitle = async (
   body?: Record<string, string>
