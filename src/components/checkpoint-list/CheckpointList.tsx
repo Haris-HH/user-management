@@ -223,31 +223,77 @@ const CheckpointList = ({
     fetchData();
   }, [fetchData]);
 
+  /* The dialog hands back the full checked set, not just the new rows, so
+     the diff against the current list is what says which cameras the user
+     added and which they unchecked. Each side has its own endpoint —
+     sending the whole set to /cameras/add re-added existing members and
+     silently dropped the removals. */
   const handleSaveCheckpoint = async (checkpoint: Camera[]) => {
+    setIsAddCheckpointOpen(false);
+
+    const nextIds = new Set(checkpoint.map((camera) => camera.camera_id));
+    const currentIds = new Set(
+      selectedCheckpoints.map((camera) => camera.camera_id)
+    );
+
+    const addedIds = checkpoint
+      .map((camera) => camera.camera_id)
+      .filter((cameraId) => !currentIds.has(cameraId));
+
+    const removedIds = selectedCheckpoints
+      .map((camera) => camera.camera_id)
+      .filter((cameraId) => !nextIds.has(cameraId));
+
+    // Nothing changed — no request, no popup.
+    if (addedIds.length === 0 && removedIds.length === 0) return;
+
+    const isAdding = addedIds.length > 0;
+
     try {
-      setIsAddCheckpointOpen(false);
       setIsLoading(true);
-      await addListOfCamera(checkpoint);
-      await PopupMessage(t("popup.add-checkpoint-success"), "", "success");
+
+      if (removedIds.length > 0) {
+        await removeListOfCamera(removedIds);
+      }
+
+      if (isAdding) {
+        await addListOfCamera(addedIds);
+      }
+
+      await PopupMessage(
+        isAdding
+          ? t("popup.add-checkpoint-success")
+          : t("popup.delete-checkpoint-success"),
+        "",
+        "success"
+      );
+
       setSelectedCheckpoints(checkpoint);
+      setTotalCheckpoint(checkpoint.length);
       onDataChange();
     }
     catch {
-      await PopupMessage(t("popup.add-checkpoint-failed"), "", "error");
+      await PopupMessage(
+        isAdding
+          ? t("popup.add-checkpoint-failed")
+          : t("popup.delete-checkpoint-failed"),
+        "",
+        "error"
+      );
     }
     finally {
       setIsLoading(false);
     }
   };
 
-  const addListOfCamera = async (cameras: Camera[]) => {
+  const addListOfCamera = async (cameraIds: string[]) => {
     // No group selected means there is nothing to attach cameras to;
     // without this the request went out with group_id: null.
     if (!group_id) return;
 
     const body: CameraInGroup = {
       group_id: group_id,
-      camera_id_list: cameras.map((camera) => camera.camera_id),
+      camera_id_list: cameraIds,
     };
 
     await addCameraInGroup(body);
@@ -267,6 +313,8 @@ const CheckpointList = ({
   };
 
   const handleDeleteAllCheckpoints = async () => {
+    if (selectedCheckpoints.length === 0) return;
+
     try {
       await deleteCheckpoint(selectedCheckpoints.map((checkpoint) => checkpoint.camera_id));
     } catch {
@@ -283,7 +331,7 @@ const CheckpointList = ({
       await PopupMessage(t("popup.delete-checkpoint-success"), "", "success");
     }
     catch (error) {
-      await PopupMessage(t("popup.delete-checkpoint-failed"), "", "success");
+      await PopupMessage(t("popup.delete-checkpoint-failed"), "", "error");
       throw error;
     }
     finally {

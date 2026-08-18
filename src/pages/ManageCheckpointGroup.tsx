@@ -97,6 +97,11 @@ const ManageCheckpointGroup = () => {
     setRefreshGroupListKey((previous) => previous + 1);
   }, []);
 
+  // Project select text color (muted while the project list is loading)
+  const projectSelectColor = isProjectLoading
+    ? "var(--theme-text-muted)"
+    : "var(--theme-accent)";
+
   return (
     <section id="manage-checkpoint-group">
       <Box className="flex flex-col gap-4 p-6">
@@ -117,9 +122,13 @@ const ManageCheckpointGroup = () => {
                 return (
                   <Box className="flex items-center gap-2">
                     <FolderOutlinedIcon
-                      sx={{ fontSize: 20, color: "var(--theme-accent)" }}
+                      sx={{ fontSize: 20, color: projectSelectColor }}
                     />
-                    <span>
+                    <span
+                      style={{
+                        color: projectSelectColor,
+                      }}
+                    >
                       {selected
                         ? selected.project_name
                         : t("text.select-project-placeholder")}
@@ -128,12 +137,15 @@ const ManageCheckpointGroup = () => {
                 );
               }}
               sx={{
-                color: "var(--theme-accent)",
-                border: "1px solid var(--theme-accent)",
+                color: projectSelectColor,
+                border: `1px solid ${projectSelectColor}`,
                 borderRadius: "8px",
                 backgroundColor: "var(--theme-panel)",
                 "& .MuiSvgIcon-root": {
-                  color: "var(--theme-accent)",
+                  color: projectSelectColor,
+                },
+                "&.Mui-disabled .MuiSelect-select": {
+                  WebkitTextFillColor: "var(--theme-text-muted)",
                 },
               }}
               MenuProps={{
@@ -144,7 +156,7 @@ const ManageCheckpointGroup = () => {
                       border: "1px solid var(--theme-accent)",
 
                       "& .MuiMenuItem-root": {
-                        color: "var(--theme-accent)",
+                        color: projectSelectColor,
                         backgroundColor: "var(--theme-panel)",
 
                         "&:hover": {
@@ -167,7 +179,9 @@ const ManageCheckpointGroup = () => {
               }}
             >
               <MenuItem value="">
-                <em>{t("text.select-project-placeholder")}</em>
+                <em>
+                  {t("text.select-project-placeholder")}
+                </em>
               </MenuItem>
               {projects.map((project) => (
                 <MenuItem key={project.project_id} value={project.project_id}>

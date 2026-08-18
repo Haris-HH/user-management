@@ -191,55 +191,59 @@ const AddCheckpoint = ({
     // the user had ticked on other pages back to just the incoming selection.
   }, [open, selectedCheckpoints]);
 
+  // Province/area labels are resolved through maps of *already localised*
+  // strings, built once per masterdata or language change rather than once
+  // per mapCameraRows call — "select all" feeds thousands of rows through the
+  // mapper, and rebuilding both maps (plus re-testing the language) for every
+  // row was the bulk of its cost.
+  const provinceNameMap = useMemo(() => {
+    const isThai = i18n.language === "th";
+    const map = new Map<string, string>();
+
+    province.forEach((item) => {
+      map.set(item.province_code, (isThai ? item.name_th : item.name_en) ?? "-");
+    });
+
+    return map;
+  }, [province, i18n.language]);
+
+  const areaNameMap = useMemo(() => {
+    const isThai = i18n.language === "th";
+    const map = new Map<number, string>();
+
+    area.forEach((item) => {
+      map.set(
+        item.id,
+        (isThai ? item.title_abbr_th : item.title_abbr_en) ?? "-"
+      );
+    });
+
+    return map;
+  }, [area, i18n.language]);
+
   const mapCameraRows = useCallback(
     async (cameras: Camera[]) => {
+      if (cameras.length === 0) return [];
+
       // Resolved in a couple of chunked requests rather than one per camera —
       // "select all" feeds thousands of rows through here.
       const stationCache = await getPoliceStationMap(
         cameras.map((item) => item.police_station_id)
       );
 
-      // Build lookup maps once instead of calling `.find()` per row.
-      const provinceMap = new Map(
-        province.map((p) => [p.province_code, p])
-      );
-      const areaMap = new Map(
-        area.map((a) => [a.id, a])
-      );
+      return cameras.map((item) => ({
+        ...item,
+        province_name: provinceNameMap.get(item.province_code) ?? "-",
 
-      const updated = cameras.map((item) => {
-        const station =
-          stationCache.get(
-            String(item.police_station_id)
-          );
+        police_region_name: areaNameMap.get(item.police_region_id) ?? "-",
 
-        const provinceData = provinceMap.get(item.province_code);
-
-        const areaData = areaMap.get(Number(item.police_region_id));
-
-        return {
-          ...item,
-          province_name:
-            i18n.language === "th"
-              ? provinceData?.name_th ?? "-"
-              : provinceData?.name_en ?? "-",
-
-          police_region_name:
-            i18n.language === "th"
-              ? areaData?.title_abbr_th ?? "-"
-              : areaData?.title_abbr_en ?? "-",
-
-          police_station_name:
-            station?.station_name ?? "-",
-        };
-      });
-
-      return updated;
+        police_station_name:
+          stationCache.get(String(item.police_station_id))?.station_name ?? "-",
+      }));
     },
     [
-      area,
-      province,
-      i18n.language,
+      areaNameMap,
+      provinceNameMap,
     ]
   )
 
