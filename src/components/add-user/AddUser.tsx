@@ -1,5 +1,11 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useSelector } from "react-redux";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -26,13 +32,15 @@ import { searchUserApi } from "../../features/users/api/UsersApi";
 // Types
 import type { User } from "../../types/common";
 import type { FormData } from "../search-filter/SearchFilter";
-import type { RootState } from "../../store/store";
+import type { DisplayUser } from "../../hooks/useUserDisplayMapper";
+
+// Hooks
+import { useUserDisplayMapper } from "../../hooks/useUserDisplayMapper";
 
 // i18n
 import { useTranslation } from "react-i18next";
 
 // Utils
-import { capitalizeWords, formatPhone, formatThaiID } from "../../utils/commonFunctions";
 import { PopupMessage } from "../../utils/popupMessage";
 
 const initialFormData: FormData = {
@@ -59,6 +67,160 @@ type Props = {
 // bigger pages than the table itself uses.
 const SELECT_ALL_PAGE_LIMIT = 1500;
 
+const ROWS_PER_PAGE = 100;
+
+/*
+  Static `sx` objects live at module scope: a hundred rows each carrying a
+  freshly built style object is a hundred cache misses in MUI's style engine
+  on every render, and this table re-renders on every checkbox toggle.
+*/
+const containerSx = {
+  height: "65vh",
+  borderRadius: 0,
+  border: "none",
+  boxShadow: "none",
+  backgroundImage: "none",
+  backgroundColor: "var(--theme-panel)",
+
+  "&.MuiPaper-root": {
+    border: "none",
+    boxShadow: "none",
+    backgroundImage: "none",
+  },
+
+  "& .MuiTableCell-root": {
+    borderBottom: "none",
+  },
+} as const;
+
+const headRowSx = {
+  "& th": {
+    height: "56.5px",
+    fontSize: "16px",
+    backgroundColor: "var(--theme-accent)",
+    color: "var(--theme-panel)",
+  },
+} as const;
+
+const headCheckboxSx = {
+  color: "var(--theme-panel)",
+  "&.Mui-checked": {
+    color: "var(--theme-panel)",
+  },
+} as const;
+
+/*
+  Two row variants rather than one built inline, so the already-a-member
+  highlight does not have to be recomputed into a new `sx` per render.
+*/
+const rowSx = {
+  "&:hover td": {
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
+  },
+  "& .MuiTableCell-root": {
+    backgroundColor: "var(--theme-panel)",
+    color: "var(--theme-accent-soft)",
+    borderBottom: "1px solid var(--theme-accent)",
+  },
+} as const;
+
+const selectedRowSx = {
+  ...rowSx,
+  "& .MuiTableCell-root": {
+    ...rowSx["& .MuiTableCell-root"],
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.12)",
+  },
+} as const;
+
+const rowCheckboxSx = {
+  color: "var(--theme-accent)",
+  "&.Mui-checked": {
+    color: "var(--theme-accent)",
+  },
+} as const;
+
+const selectedRowCheckboxSx = {
+  color: "var(--theme-accent-soft)",
+  "&.Mui-checked": {
+    color: "var(--theme-accent-soft)",
+  },
+} as const;
+
+const checkboxCellSx = { padding: 0 } as const;
+
+const paginationSx = {
+  display: "flex",
+  justifyContent: "end",
+  "& .MuiPaginationItem-page": {
+    color: "var(--theme-accent-soft)",
+    backgroundColor: "var(--theme-panel)",
+    border: "1px solid var(--theme-accent)",
+  },
+  "& .MuiPaginationItem-page:hover": {
+    backgroundColor: "var(--theme-accent)",
+    color: "var(--theme-panel)",
+  },
+  "& .MuiPaginationItem-previousNext": {
+    color: "var(--theme-accent-soft)",
+    backgroundColor: "var(--theme-panel)",
+    border: "1px solid var(--theme-accent)",
+  },
+  "& .MuiPaginationItem-previousNext:hover": {
+    color: "var(--theme-panel)",
+    backgroundColor: "var(--theme-accent)",
+  },
+  "& .MuiPaginationItem-ellipsis": {
+    color: "var(--theme-panel)",
+  },
+  "& .MuiPaginationItem-page.Mui-selected": {
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+    color: "var(--theme-panel)",
+  },
+} as const;
+
+type RowProps = {
+  user: DisplayUser;
+  rowNumber: number;
+  isAlreadySelected: boolean;
+  isChecked: boolean;
+  onToggle: (user: DisplayUser, checked: boolean) => void;
+};
+
+/*
+  Memoised so ticking one checkbox re-renders that row alone. Without it every
+  toggle re-rendered all hundred rows and their ten cells each.
+*/
+const AddUserRow = memo(
+  ({ user, rowNumber, isAlreadySelected, isChecked, onToggle }: RowProps) => (
+    <TableRow sx={isAlreadySelected ? selectedRowSx : rowSx}>
+      <TableCell>{rowNumber}</TableCell>
+      <TableCell>{user.full_name || "-"}</TableCell>
+      <TableCell>{user.idcard_display || "-"}</TableCell>
+      <TableCell>{user.ou_name || "-"}</TableCell>
+      <TableCell>
+        {user.is_internal_police ? user.bh_name ?? "-" : user.sub_unit?.[0] ?? "-"}
+      </TableCell>
+      <TableCell>
+        {user.is_internal_police ? user.bk_name ?? "-" : user.sub_unit?.[1] ?? "-"}
+      </TableCell>
+      <TableCell>
+        {user.is_internal_police ? user.org_name ?? "-" : user.sub_unit?.[2] ?? "-"}
+      </TableCell>
+      <TableCell>{user.phone_display || "-"}</TableCell>
+      <TableCell>{user.user_group_name || "-"}</TableCell>
+      <TableCell align="center" sx={checkboxCellSx}>
+        <Checkbox
+          checked={isChecked}
+          onChange={(event) => onToggle(user, event.target.checked)}
+          sx={isAlreadySelected ? selectedRowCheckboxSx : rowCheckboxSx}
+        />
+      </TableCell>
+    </TableRow>
+  )
+);
+
+AddUserRow.displayName = "AddUserRow";
+
 const AddUser = ({
   open,
   onClose,
@@ -66,7 +228,7 @@ const AddUser = ({
   onSave,
 }: Props) => {
   // i18n
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   // State
   const [isSearchFilterOpen, setIsSearchFilterOpen] = useState(false);
@@ -76,8 +238,13 @@ const AddUser = ({
   // ticked while the user pages through the result.
   const [allPagesSelected, setAllPagesSelected] = useState(false);
 
-  // Data
-  const [userData, setUserData] = useState<User[]>([]);
+  /*
+    The page exactly as the API returned it. Display values are derived from
+    it, so a masterdata list resolving while the dialog is open - or a
+    language switch - re-maps the rows in memory instead of re-running the
+    search request.
+  */
+  const [userRows, setUserRows] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
 
   // Checked users are kept as whole rows keyed by id rather than as a list of
@@ -90,50 +257,13 @@ const AddUser = ({
   // Pagination
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
-  const rowsPerPage = 100;
 
   // Form Data
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  // Redux
-  // One selector per field so this dialog doesn't re-render on every
-  // unrelated dropdown slice update (a burst of thunks fires on login).
-  const title = useSelector((state: RootState) => state.dropdown.title);
-  const agency = useSelector((state: RootState) => state.dropdown.agency);
-  const bh = useSelector((state: RootState) => state.dropdown.bh);
-  const bk = useSelector((state: RootState) => state.dropdown.bk);
-  const org = useSelector((state: RootState) => state.dropdown.org);
-  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
+  const mapUsers = useUserDisplayMapper();
 
-  const titleMap = useMemo(
-    () => new Map(title.map((item) => [item.id, item])),
-    [title]
-  );
-
-  const agencyMap = useMemo(
-    () => new Map(agency.map((item) => [item.ou_code, item])),
-    [agency]
-  );
-
-  const bhMap = useMemo(
-    () => new Map(bh.map((item) => [item.bh_code, item])),
-    [bh]
-  );
-
-  const bkMap = useMemo(
-    () => new Map(bk.map((item) => [item.bk_code, item])),
-    [bk]
-  );
-
-  const orgMap = useMemo(
-    () => new Map(org.map((item) => [item.org_code, item])),
-    [org]
-  );
-
-  const userGroupMap = useMemo(
-    () => new Map(userGroup.map((item) => [item.group_id, item])),
-    [userGroup]
-  );
+  const userData = useMemo(() => mapUsers(userRows), [mapUsers, userRows]);
 
   const selectedUserIdSet = useMemo(
     () => new Set(selectedUsers.map((user) => user.user_id)),
@@ -186,61 +316,12 @@ const AddUser = ({
     []
   );
 
-  const mapUserDataRows = useCallback(
-    (data: User[]) => {
-      return data.map((item) => {
-        const titleData = item.title_id ? titleMap.get(item.title_id) : null;
-        const agencyData = item.ou_code ? agencyMap.get(item.ou_code) : null;
-        const bhData = item.bh_code ? bhMap.get(item.bh_code) : null;
-        const bkData = item.bk_code ? bkMap.get(item.bk_code) : null;
-        const orgData = item.org_code ? orgMap.get(item.org_code) : null;
-        const userGroupData = item.user_group_id ? userGroupMap.get(item.user_group_id) : null;
-
-        return {
-          ...item,
-          title:
-            titleData
-              ? (i18n.language === "th"
-                ? titleData.title_abbr_th
-                : titleData.title_abbr_en) ?? "-"
-              : "-",
-          ou_name:
-            agencyData
-              ? (i18n.language === "th"
-                ? agencyData.ou_abbr_th
-                : agencyData.ou_abbr_en) ?? "-"
-              : "-",
-          bh_name:
-            bhData
-              ? (i18n.language === "th"
-                ? bhData.bh_abbr_th
-                : bhData.bh_abbr_en) ?? "-"
-              : "-",
-          bk_name:
-            bkData
-              ? (i18n.language === "th"
-                ? bkData.bk_abbr_th
-                : bkData.bk_abbr_en) ?? "-"
-              : "-",
-          org_name:
-            orgData
-              ? (i18n.language === "th"
-                ? orgData.org_abbr_th
-                : orgData.org_abbr_en) ?? "-"
-              : "-",
-          user_group_name: capitalizeWords(userGroupData?.group_name ?? ""),
-        };
-      });
-    },
-    [titleMap, agencyMap, bhMap, bkMap, orgMap, userGroupMap, i18n.language]
-  );
-
   // Guards against a slow, stale search/page response overwriting a newer
   // one when the user changes the filter or page again before it resolves.
   const fetchRequestRef = useRef(0);
 
   const fetchData = useCallback(
-    async (filterData: FormData, pageData: number, limit: number = rowsPerPage) => {
+    async (filterData: FormData, pageData: number, limit: number = ROWS_PER_PAGE) => {
       const requestId = ++fetchRequestRef.current;
 
       try {
@@ -252,13 +333,13 @@ const AddUser = ({
 
         if (fetchRequestRef.current !== requestId) return;
 
-        setUserData(mapUserDataRows(res.data ?? []));
+        setUserRows(res.data ?? []);
         setTotalPages(res.pagination?.maxPage ?? 1);
         setTotalUsers(res.pagination?.countAll ?? 0);
       }
       catch {
         if (fetchRequestRef.current !== requestId) return;
-        setUserData([]);
+        setUserRows([]);
         setTotalPages(1);
         setTotalUsers(0);
       }
@@ -266,7 +347,7 @@ const AddUser = ({
         if (fetchRequestRef.current === requestId) setIsDataLoading(false);
       }
     },
-    [rowsPerPage, getFilters, mapUserDataRows]
+    [getFilters]
   );
 
   useEffect(() => {
@@ -332,8 +413,8 @@ const AddUser = ({
       currentPage++;
     }
 
-    return mapUserDataRows(collected);
-  }, [formData, getFilters, mapUserDataRows]);
+    return collected;
+  }, [formData, getFilters]);
 
   const handleSelectAll = async (checked: boolean) => {
     // Unticking clears the whole selection, not just this page — the box
@@ -367,7 +448,11 @@ const AddUser = ({
     }
   };
 
-  const handleCheckMember = (user: User, checked: boolean) => {
+  /*
+    Stable across renders so a toggle only invalidates the row it belongs to,
+    not every memoised row in the table.
+  */
+  const handleCheckMember = useCallback((user: User, checked: boolean) => {
     // Any manual untick means the selection is no longer "everything".
     if (!checked) {
       setAllPagesSelected(false);
@@ -384,12 +469,12 @@ const AddUser = ({
 
       return next;
     });
-  };
+  }, []);
 
   const resetAddUser = () => {
     setFormData(initialFormData);
     setPage(1);
-    setUserData([]);
+    setUserRows([]);
     setTotalUsers(0);
     setTotalPages(1);
     setAllPagesSelected(false);
@@ -450,39 +535,10 @@ const AddUser = ({
           </Button>
         </div>
 
-        <TableContainer
-          component={Paper}
-          sx={{
-            height: "65vh",
-            borderRadius: 0,
-            border: "none",
-            boxShadow: "none",
-            backgroundImage: "none",
-            backgroundColor: "var(--theme-panel)",
-
-            "&.MuiPaper-root": {
-              border: "none",
-              boxShadow: "none",
-              backgroundImage: "none",
-            },
-
-            "& .MuiTableCell-root": {
-              borderBottom: "none",
-            },
-          }}
-        >
+        <TableContainer component={Paper} sx={containerSx}>
           <Table stickyHeader>
             <TableHead>
-              <TableRow
-                sx={{
-                  "& th": {
-                    height: "56.5px",
-                    fontSize: "16px",
-                    backgroundColor: "var(--theme-accent)",
-                    color: "var(--theme-panel)",
-                  },
-                }}
-              >
+              <TableRow sx={headRowSx}>
                 <TableCell sx={{ width: "4%" }}>
                   {t("table.header.no")}
                 </TableCell>
@@ -516,12 +572,7 @@ const AddUser = ({
                     indeterminate={isIndeterminate}
                     disabled={isSelectingAll}
                     onChange={(event) => void handleSelectAll(event.target.checked)}
-                    sx={{
-                      color: "var(--theme-panel)",
-                      "&.Mui-checked": {
-                        color: "var(--theme-panel)",
-                      },
-                    }}
+                    sx={headCheckboxSx}
                   />
                 </TableCell>
               </TableRow>
@@ -531,65 +582,16 @@ const AddUser = ({
               {isDataLoading || isSelectingAll ? (
                 <TableSkeleton headerColumn={10} />
               ) : userData.length > 0 ? (
-                userData.map((item, index) => {
-                  const fullName = capitalizeWords(
-                    `${item.title ?? ""} ${item.firstname ?? ""} ${
-                      item.lastname ?? ""
-                    }`
-                  );
-
-                  const isAlreadySelected = selectedUserIdSet.has(item.user_id);
-                  const isChecked = memberChecked.has(item.user_id);
-                  const agencyData = item.ou_code ? agencyMap.get(item.ou_code) : undefined;
-                  const internalPolice = agencyData?.ou_codename === "police" || false;
-                  return (
-                    <TableRow
-                      key={item.user_id}
-                      sx={{
-                        "&:hover td": {
-                          backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
-                        },
-                        "& .MuiTableCell-root": {
-                          backgroundColor: isAlreadySelected
-                            ? "rgba(var(--theme-accent-rgb), 0.12)"
-                            : "var(--theme-panel)",
-                          color: "var(--theme-accent-soft)",
-                          borderBottom: "1px solid var(--theme-accent)",
-                        },
-                      }}
-                    >
-                      <TableCell>
-                        {(page - 1) * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell>{fullName || "-"}</TableCell>
-                      <TableCell>{formatThaiID(item.idcard) || "-"}</TableCell>
-                      <TableCell>{item.ou_name || "-"}</TableCell>
-                      <TableCell>{internalPolice ? item.bh_name ?? "-" : item.sub_unit?.[0] ?? "-" }</TableCell>
-                      <TableCell>{internalPolice ? item.bk_name ?? "-" : item.sub_unit?.[1] ?? "-"}</TableCell>
-                      <TableCell>{internalPolice ? item.org_name ?? "-" : item.sub_unit?.[2] ?? "-"}</TableCell>
-                      <TableCell>{formatPhone(item.phone) || "-"}</TableCell>
-                      <TableCell>{item.user_group_name || "-"}</TableCell>
-                      <TableCell align="center" sx={{ padding: 0 }}>
-                        <Checkbox
-                          checked={isChecked}
-                          onChange={(event) =>
-                            handleCheckMember(item, event.target.checked)
-                          }
-                          sx={{
-                            color: isAlreadySelected
-                              ? "var(--theme-accent-soft)"
-                              : "var(--theme-accent)",
-                            "&.Mui-checked": {
-                              color: isAlreadySelected
-                                ? "var(--theme-accent-soft)"
-                                : "var(--theme-accent)",
-                            },
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                userData.map((item, index) => (
+                  <AddUserRow
+                    key={item.user_id}
+                    user={item}
+                    rowNumber={(page - 1) * ROWS_PER_PAGE + index + 1}
+                    isAlreadySelected={selectedUserIdSet.has(item.user_id)}
+                    isChecked={memberChecked.has(item.user_id)}
+                    onToggle={handleCheckMember}
+                  />
+                ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={10} align="center" sx={{ height: 200 }}>
@@ -604,35 +606,7 @@ const AddUser = ({
         <div className="flex w-full justify-between items-center">
           <Stack spacing={2}>
             <Pagination
-              sx={{
-                display: "flex",
-                justifyContent: "end",
-                "& .MuiPaginationItem-page": {
-                  color: "var(--theme-accent-soft)",
-                  backgroundColor: "var(--theme-panel)",
-                  border: "1px solid var(--theme-accent)",
-                },
-                "& .MuiPaginationItem-page:hover": {
-                  backgroundColor: "var(--theme-accent)",
-                  color: "var(--theme-panel)",
-                },
-                "& .MuiPaginationItem-previousNext": {
-                  color: "var(--theme-accent-soft)",
-                  backgroundColor: "var(--theme-panel)",
-                  border: "1px solid var(--theme-accent)",
-                },
-                "& .MuiPaginationItem-previousNext:hover": {
-                  color: "var(--theme-panel)",
-                  backgroundColor: "var(--theme-accent)",
-                },
-                "& .MuiPaginationItem-ellipsis": {
-                  color: "var(--theme-panel)",
-                },
-                "& .MuiPaginationItem-page.Mui-selected": {
-                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
-                  color: "var(--theme-panel)",
-                },
-              }}
+              sx={paginationSx}
               count={totalPages}
               variant="outlined"
               shape="rounded"

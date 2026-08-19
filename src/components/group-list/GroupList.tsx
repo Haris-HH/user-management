@@ -1,6 +1,8 @@
 import {
+  memo,
   useState,
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -44,11 +46,121 @@ import {
 // Utils
 import { PopupMessage } from "../../utils/popupMessage";
 
+/*
+  Static `sx` objects live at module scope so MUI's style engine sees the same
+  object identity on every render instead of re-serialising a fresh one per
+  row.
+*/
+const containerSx = {
+  height: "70vh",
+  borderRadius: 0,
+  backgroundColor: "var(--theme-panel)",
+} as const;
+
+const headRowSx = {
+  "& td, & th": {
+    height: "56.5px",
+    padding: 0,
+    fontSize: "15px",
+  },
+  "& .MuiTableCell-root": {
+    backgroundColor: "var(--theme-panel)",
+    color: "var(--theme-accent-soft)",
+    borderBottom: "1px solid var(--theme-accent)",
+  },
+} as const;
+
+const bodyRowSx = {
+  cursor: "pointer",
+  "&:hover td": {
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.08)",
+  },
+  "&.Mui-selected td": {
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.20)",
+  },
+  "&.Mui-selected:hover td": {
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.25)",
+  },
+  "& .MuiTableCell-root": {
+    color: "var(--theme-accent-soft)",
+    borderBottom: "1px solid var(--theme-accent)",
+  },
+} as const;
+
+const emptyCellSx = {
+  color: "var(--theme-accent-soft)",
+  borderBottom: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
+} as const;
+
+const deleteIconSx = {
+  fontSize: 20,
+  color: "var(--trash-active-icon)",
+  "&:hover": {
+    transform: "scale(1.3)",
+  },
+} as const;
+
 interface FormData {
   search: string;
 }
 
 type GroupType = "watchlist" | "plate" | "checkpoint";
+
+/*
+  A group row with the values the table reads already resolved: the member
+  count and the lowercased name the search filters on are derived once per
+  fetch rather than per row per keystroke.
+*/
+type GroupRowData = {
+  group: WatchlistGroup;
+  memberCount: number;
+  searchIndex: string;
+};
+
+type RowProps = {
+  row: GroupRowData;
+  index: number;
+  isSelected: boolean;
+  canEdit: boolean;
+  onSelect: (group: WatchlistGroup) => void;
+  onDelete: (groupId: string) => void;
+};
+
+/*
+  Memoised so selecting a group re-renders the two rows whose selected state
+  changed, not the whole list.
+*/
+const GroupRow = memo(
+  ({ row, index, isSelected, canEdit, onSelect, onDelete }: RowProps) => (
+    <TableRow
+      hover
+      selected={isSelected}
+      onClick={() => onSelect(row.group)}
+      sx={bodyRowSx}
+    >
+      <TableCell align="center">{index + 1}</TableCell>
+
+      <TableCell align="center">{row.group.group_name || "-"}</TableCell>
+
+      <TableCell align="center">{row.memberCount}</TableCell>
+
+      {canEdit && (
+        <TableCell align="center">
+          <IconButton
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete(row.group.group_id);
+            }}
+          >
+            <DeleteIcon sx={deleteIconSx} />
+          </IconButton>
+        </TableCell>
+      )}
+    </TableRow>
+  )
+);
+
+GroupRow.displayName = "GroupRow";
 
 type Props = {
   group_type: GroupType;
@@ -74,7 +186,7 @@ const GroupList = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Data
-  const [groupList, setGroupList] = useState<WatchlistGroup[]>([]);
+  const [groupList, setGroupList] = useState<GroupRowData[]>([]);
   const [totalGroup, setTotalGroup] = useState(0);
 
   // Form
@@ -97,15 +209,19 @@ const GroupList = ({
      empty-state row have to follow it. */
   const columnCount = canEdit ? 4 : 3;
 
+  /*
+    Filtering trails typing by a frame under load, so keystrokes stay
+    responsive while a long group list re-filters and re-renders.
+  */
+  const deferredSearch = useDeferredValue(formData.search);
+
   const filteredGroups = useMemo(() => {
-    const keyword = formData.search.trim().toLowerCase();
+    const keyword = deferredSearch.trim().toLowerCase();
 
     if (!keyword) return groupList;
 
-    return groupList.filter((group) =>
-      group.group_name?.toLowerCase().includes(keyword)
-    );
-  }, [formData.search, groupList]);
+    return groupList.filter((row) => row.searchIndex.includes(keyword));
+  }, [deferredSearch, groupList]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -119,7 +235,13 @@ const GroupList = ({
 
       const groups = response.data ?? [];
 
-      setGroupList(groups);
+      setGroupList(
+        groups.map((group) => ({
+          group,
+          memberCount: Array.isArray(group.members) ? group.members.length : 0,
+          searchIndex: group.group_name?.toLowerCase() ?? "",
+        }))
+      );
       setTotalGroup(response.pagination?.countAll ?? 0);
 
       const currentSelectedGroupId = selectedGroupIdRef.current;
@@ -142,7 +264,12 @@ const GroupList = ({
   }, [group_type]);
 
   useEffect(() => {
-    void fetchData();
+    // fetchData sets state after its own internal `await`, not synchronously
+    // in the effect body; the IIFE keeps that async boundary explicit for the
+    // compiler's effect lint.
+    void (async () => {
+      await fetchData();
+    })();
   }, [fetchData, refreshKey]);
 
   const handleTextChange = (
@@ -155,36 +282,54 @@ const GroupList = ({
     }));
   };
 
-  const handleDeleteGroup = async (groupId: string) => {
-    try {
-      setIsLoading(true);
+  const handleDeleteGroup = useCallback(
+    async (groupId: string) => {
+      try {
+        setIsLoading(true);
 
-      await deleteWatchListGroups({
-        group_ids: [groupId],
-      });
+        await deleteWatchListGroups({
+          group_ids: [groupId],
+        });
 
-      if (selectedGroupIdRef.current === groupId) {
-        selectedGroupIdRef.current = null;
-        onSelectChangedRef.current(null);
+        if (selectedGroupIdRef.current === groupId) {
+          selectedGroupIdRef.current = null;
+          onSelectChangedRef.current(null);
+        }
+
+        await PopupMessage(
+          t("popup.deleted-success"),
+          "",
+          "success"
+        );
+
+        await fetchData();
+      } catch {
+        await PopupMessage(
+          t("popup.deleted-failed"),
+          "",
+          "error"
+        );
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [fetchData, t]
+  );
 
-      await PopupMessage(
-        t("popup.deleted-success"),
-        "",
-        "success"
-      );
+  /*
+    Stable handlers so a selection change or a keystroke does not invalidate
+    every memoised row.
+  */
+  const handleSelectRow = useCallback((group: WatchlistGroup) => {
+    onSelectChangedRef.current(group);
+  }, []);
 
-      await fetchData();
-    } catch {
-      await PopupMessage(
-        t("popup.deleted-failed"),
-        "",
-        "error"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleDeleteRow = useCallback(
+    (groupId: string) => {
+      void handleDeleteGroup(groupId);
+    },
+    [handleDeleteGroup]
+  );
 
   const handleCreateGroup = async (data: AddGroupFormData) => {
     try {
@@ -277,31 +422,10 @@ const GroupList = ({
             />
           </Box>
 
-          <TableContainer
-            component={Paper}
-            sx={{
-              height: "70vh",
-              borderRadius: 0,
-              backgroundColor: "var(--theme-panel)",
-            }}
-          >
+          <TableContainer component={Paper} sx={containerSx}>
             <Table stickyHeader>
               <TableHead>
-                <TableRow
-                  sx={{
-                    "& td, & th": {
-                      height: "56.5px",
-                      padding: 0,
-                      fontSize: "15px",
-                    },
-                    "& .MuiTableCell-root": {
-                      backgroundColor: "var(--theme-panel)",
-                      color: "var(--theme-accent-soft)",
-                      borderBottom:
-                        "1px solid var(--theme-accent)",
-                    },
-                  }}
-                >
+                <TableRow sx={headRowSx}>
                   <TableCell align="center" sx={{ width: "10%" }}>
                     {t("table.header.no")}
                   </TableCell>
@@ -326,79 +450,23 @@ const GroupList = ({
                 {isDataLoading ? (
                   <TableSkeleton headerColumn={columnCount} />
                 ) : filteredGroups.length > 0 ? (
-                  filteredGroups.map((group, index) => (
-                    <TableRow
-                      key={group.group_id}
-                      hover
-                      selected={selectedGroupId === group.group_id}
-                      onClick={() => onSelectChanged(group)}
-                      sx={{
-                        cursor: "pointer",
-                        "&:hover td": {
-                          backgroundColor:
-                            "rgba(var(--theme-accent-rgb), 0.08)",
-                        },
-                        "&.Mui-selected td": {
-                          backgroundColor:
-                            "rgba(var(--theme-accent-rgb), 0.20)",
-                        },
-                        "&.Mui-selected:hover td": {
-                          backgroundColor:
-                            "rgba(var(--theme-accent-rgb), 0.25)",
-                        },
-                        "& .MuiTableCell-root": {
-                          color: "var(--theme-accent-soft)",
-                          borderBottom:
-                            "1px solid var(--theme-accent)",
-                        },
-                      }}
-                    >
-                      <TableCell align="center">
-                        {index + 1}
-                      </TableCell>
-
-                      <TableCell align="center">
-                        {group.group_name || "-"}
-                      </TableCell>
-
-                      <TableCell align="center">
-                        {Array.isArray(group.members)
-                          ? group.members.length
-                          : 0}
-                      </TableCell>
-
-                      {canEdit && (
-                        <TableCell align="center">
-                          <IconButton
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleDeleteGroup(group.group_id);
-                            }}
-                          >
-                            <DeleteIcon
-                              sx={{
-                                fontSize: 20,
-                                color: "var(--trash-active-icon)",
-                                "&:hover": {
-                                  transform: "scale(1.3)",
-                                },
-                              }}
-                            />
-                          </IconButton>
-                        </TableCell>
-                      )}
-                    </TableRow>
+                  filteredGroups.map((row, index) => (
+                    <GroupRow
+                      key={row.group.group_id}
+                      row={row}
+                      index={index}
+                      isSelected={selectedGroupId === row.group.group_id}
+                      canEdit={canEdit}
+                      onSelect={handleSelectRow}
+                      onDelete={handleDeleteRow}
+                    />
                   ))
                 ) : (
                   <TableRow>
                     <TableCell
                       colSpan={columnCount}
                       align="center"
-                      sx={{
-                        color: "var(--theme-accent-soft)",
-                        borderBottom:
-                          "1px solid rgba(var(--theme-accent-rgb), 0.50)",
-                      }}
+                      sx={emptyCellSx}
                     >
                       {t("text.no-data")}
                     </TableCell>

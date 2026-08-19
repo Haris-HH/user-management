@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useSelector } from 'react-redux';
-
-// Store
-import type { RootState } from "../../store/store";
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 // Material UI
 import Box from "@mui/material/Box";
@@ -33,22 +37,118 @@ import { useTranslation } from "react-i18next";
 // Types
 import type {
   User,
-  NsbBk,
-  NsbOrg,
   MembersWatchListGroupRequest,
 } from "../../types/common";
+import type { DisplayUser } from "../../hooks/useUserDisplayMapper";
+
+// Hooks
+import { useUserDisplayMapper } from "../../hooks/useUserDisplayMapper";
 
 // Utils
-import { capitalizeWords, formatPhone } from "../../utils/commonFunctions";
 import { PopupMessage } from "../../utils/popupMessage";
 
 // API
 import { getUserApi } from "../../features/users/api/UsersApi";
-import { getBk, getOrg } from "../../features/dropdown/api/DropdownApi";
 import {
   addMembersWatchListGroups,
   deleteMembersWatchListGroups,
 } from "../../features/core-data/api/CoreDataApi";
+
+// The member list is fetched as a single page, same cap the group editor uses.
+const MEMBER_PAGE_LIMIT = "100";
+
+/*
+  Static `sx` objects live at module scope so MUI's style engine sees the same
+  object identity on every render instead of re-serialising a fresh one per
+  row.
+*/
+const containerSx = {
+  height: "70vh",
+  borderRadius: 0,
+  backgroundColor: "var(--theme-panel)",
+} as const;
+
+const headRowSx = {
+  "& td, & th": {
+    padding: "0px",
+    height: "56.5px",
+    fontSize: "15px",
+    borderBottom: "1px solid var(--theme-accent)",
+  },
+  "& .MuiTableCell-root": {
+    backgroundColor: "var(--theme-panel)",
+    color: "var(--theme-accent-soft)",
+    borderBottom: "1px solid var(--theme-accent)",
+  },
+} as const;
+
+const bodyRowSx = {
+  "& .MuiTableCell-root": {
+    color: "var(--theme-accent-soft)",
+    borderBottom: "1px solid var(--theme-accent)",
+  },
+} as const;
+
+const emptyRowSx = {
+  "& .MuiTableCell-root": {
+    borderBottom: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
+  },
+} as const;
+
+const deleteIconSx = {
+  fontSize: 20,
+  color: "var(--trash-active-icon)",
+  "&:hover": {
+    scale: 1.3,
+  },
+} as const;
+
+const addButtonSx = {
+  width: 140,
+  height: 35,
+  backgroundColor: "var(--theme-accent)",
+  color: "var(--theme-panel)",
+  "&:hover": {
+    backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
+  },
+  textTransform: "capitalize",
+  "&.Mui-disabled": {
+    backgroundColor: "var(--theme-accent)",
+    color: "var(--theme-panel)",
+    opacity: 0.5,
+    cursor: "not-allowed",
+  },
+} as const;
+
+type RowProps = {
+  user: DisplayUser;
+  index: number;
+  canEdit: boolean;
+  onDelete: (userId: string) => void;
+};
+
+/*
+  Memoised so typing in the search box, or removing one member, re-renders only
+  the rows that actually changed rather than every MUI cell on the page.
+*/
+const UserRow = memo(({ user, index, canEdit, onDelete }: RowProps) => (
+  <TableRow sx={bodyRowSx}>
+    <TableCell align="center">{index + 1}</TableCell>
+    <TableCell align="center">{user.full_name || "-"}</TableCell>
+    <TableCell align="center">{user.ou_name || "-"}</TableCell>
+    <TableCell align="center">{user.phone_display || "-"}</TableCell>
+    <TableCell align="center">{user.user_group_name || "-"}</TableCell>
+    {canEdit && (
+      <TableCell align="center">
+        <IconButton onClick={() => onDelete(user.user_id)}>
+          <DeleteIcon sx={deleteIconSx} />
+        </IconButton>
+      </TableCell>
+    )}
+  </TableRow>
+));
+
+UserRow.displayName = "UserRow";
 
 interface FormData {
   search: string;
@@ -72,117 +172,62 @@ const UserList = ({
   onDataChange,
 }: Prop) => {
   // i18n
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   // State
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Data
-  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  /*
+    The member rows exactly as the API returned them. Everything the table
+    shows is derived from these, so a language switch or a masterdata list
+    that resolves after mount re-maps what is already in memory instead of
+    re-issuing the request.
+  */
+  const [members, setMembers] = useState<User[]>([]);
   const [totalUser, setTotalUser] = useState(0);
-  const [bk, setBk] = useState<NsbBk[]>([]);
-  const [org, setOrg] = useState<NsbOrg[]>([]);
 
   // Form Data
   const [formData, setFormData] = useState<FormData>({
     search: "",
   });
 
-  // Slice
-  // Select only the fields this component reads (not the whole `dropdown`
-  // slice) so it doesn't re-render on every unrelated dropdown thunk.
-  const agency = useSelector((state: RootState) => state.dropdown.agency);
-  const bh = useSelector((state: RootState) => state.dropdown.bh);
-  const title = useSelector((state: RootState) => state.dropdown.title);
-  const userGroup = useSelector((state: RootState) => state.dropdown.userGroup);
+  const mapUsers = useUserDisplayMapper();
+
+  const selectedUsers = useMemo(() => mapUsers(members), [mapUsers, members]);
+
+  /*
+    Filtering trails typing by a frame under load, so keystrokes stay
+    responsive while a long member list re-filters and re-renders.
+  */
+  const deferredSearch = useDeferredValue(formData.search);
 
   const filterSelectedUsers = useMemo(() => {
-    const keyword = formData.search.trim().toLowerCase();
+    const keyword = deferredSearch.trim().toLowerCase();
 
     if (!keyword) return selectedUsers;
 
-    return selectedUsers.filter((user) => {
-      const searchable = [
-        capitalizeWords(
-          `${user.title ?? ""} ${user.firstname ?? ""} ${user.lastname ?? ""}`
-        ),
-        user.org_name,
-        user.phone,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+    return selectedUsers.filter((user) => user.search_index.includes(keyword));
+  }, [deferredSearch, selectedUsers]);
 
-      return searchable.includes(keyword);
-    });
-  }, [formData.search, selectedUsers]);
+  /*
+    `t` is only needed for the popups; keeping it out of the callbacks'
+    dependencies stops a language switch from re-requesting the member list
+    and from invalidating the memoised rows.
+  */
+  const tRef = useRef(t);
 
-  // Maps are memoized so their identity is stable across renders that don't
-  // change the underlying lists (e.g. typing in the search box), which lets
-  // fetchData below depend on them safely.
-  const agencyMap = useMemo(
-    () => new Map(agency.map((item) => [item.ou_code, item])),
-    [agency]
-  );
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
-  const bhMap = useMemo(
-    () => new Map(bh.map((item) => [item.bh_code, item])),
-    [bh]
-  );
-
-  const bkMap = useMemo(
-    () => new Map(bk.map((item) => [item.bk_code, item])),
-    [bk]
-  );
-
-  const orgMap = useMemo(
-    () => new Map(org.map((item) => [item.org_code, item])),
-    [org]
-  );
-
-  const titleMap = useMemo(
-    () => new Map(title.map((item) => [item.id, item])),
-    [title]
-  );
-
-  const userGroupMap = useMemo(
-    () => new Map(userGroup.map((item) => [item.group_id, item])),
-    [userGroup]
-  );
-
-  const fetchBkList = useCallback(async (bhCode?: string) => {
-    try {
-      const params: Record<string, string> = {
-        limit: "100",
-        ...(bhCode && bhCode !== "0"
-          ? { bh_code: bhCode }
-          : {}),
-      };
-
-      const res = await getBk(params);
-      setBk(res.data ?? []);
-    } catch {
-      setBk([]);
-    }
-  }, []);
-
-  const fetchOrgList = useCallback(async (bkCode?: string) => {
-    try {
-      const params: Record<string, string> = {
-        limit: "100",
-        ...(bkCode && bkCode !== "0"
-          ? { bk_code: bkCode }
-          : {}),
-      };
-
-      const res = await getOrg(params);
-      setOrg(res.data ?? []);
-    } catch {
-      setOrg([]);
-    }
-  }, []);
+  /*
+    The member ids in the shape the API filter wants, and at the same time the
+    fetch's cache key: the same member set arriving as a fresh array (a group
+    list refresh re-creates it) no longer triggers a refetch.
+  */
+  const memberFilter = useMemo(() => userList.join("|"), [userList]);
 
   // Guards against a slow, stale request overwriting a newer one when
   // group_id/userList change again before the previous fetch resolves.
@@ -191,8 +236,8 @@ const UserList = ({
   const fetchData = useCallback(async () => {
     const requestId = ++fetchRequestRef.current;
 
-    if (!group_id || userList.length === 0) {
-      setSelectedUsers([]);
+    if (!group_id || !memberFilter) {
+      setMembers([]);
       setTotalUser(0);
       setIsDataLoading(false);
       return;
@@ -203,77 +248,58 @@ const UserList = ({
 
       const response = await getUserApi({
         page: "1",
-        limit: "100",
-        filter: `user_id=${userList.join("|")}`,
+        limit: MEMBER_PAGE_LIMIT,
+        filter: `user_id=${memberFilter}`,
       });
 
       if (fetchRequestRef.current !== requestId) return;
 
       setTotalUser(response?.pagination?.countAll ?? 0);
-      const updated = response.data.map((data) => {
-        const titleData = data.title_id ? titleMap.get(data.title_id) : null;
-        const titleName = titleData ?
-                            (i18n.language === "th" ? titleData.title_abbr_th : titleData.title_abbr_en) ?? "-"
-                            : "-";
-        const agencyData = data.ou_code ? agencyMap.get(data.ou_code) : null;
-        const agencyName = agencyData ?
-                            (i18n.language === "th" ? agencyData.ou_abbr_th : agencyData.ou_abbr_en) ?? "-"
-                            : "-";
-        const bhData = data.bh_code ? bhMap.get(data.bh_code) : null;
-        const bhName = bhData ?
-                            (i18n.language === "th" ? bhData.bh_abbr_th : bhData.bh_abbr_en) ?? "-"
-                            : "-";
-        const bkData = data.bk_code ? bkMap.get(data.bk_code) : null;
-        const bkName = bkData ?
-                            (i18n.language === "th" ? bkData.bk_abbr_th : bkData.bk_abbr_en) ?? "-"
-                            : "-";
-        const orgData = data.org_code ? orgMap.get(data.org_code) : null;
-        const orgName = orgData ?
-                            (i18n.language === "th" ? orgData.org_abbr_th : orgData.org_abbr_en) ?? "-"
-                            : "-";
-        const userGroupData = data.user_group_id ? userGroupMap.get(data.user_group_id) : null;
-        return {
-          ...data,
-          title: titleName,
-          ou_name: agencyName,
-          bh_name: bhName,
-          bk_name: bkName,
-          org_name: orgName,
-          user_group_name: capitalizeWords(userGroupData?.group_name ?? ""),
-        }
-      })
-      setSelectedUsers(updated);
+      setMembers(response.data ?? []);
     }
     catch {
       if (fetchRequestRef.current !== requestId) return;
-      setSelectedUsers([]);
+      setMembers([]);
       setTotalUser(0);
-      await PopupMessage(t("popup.fetch-error"), "", "error");
+      await PopupMessage(tRef.current("popup.fetch-error"), "", "error");
     } finally {
       if (fetchRequestRef.current === requestId) setIsDataLoading(false);
     }
-  }, [group_id, userList, titleMap, agencyMap, bhMap, bkMap, orgMap, userGroupMap, i18n.language, t]);
+  }, [group_id, memberFilter]);
 
   useEffect(() => {
-    // fetchBkList/fetchOrgList set state after their own internal `await`,
-    // not synchronously in the effect body; the IIFE keeps that async
-    // boundary explicit for the compiler's effect lint.
-    void (async () => {
-      await fetchBkList();
-    })();
-  }, [fetchBkList]);
-
-  useEffect(() => {
-    void (async () => {
-      await fetchOrgList();
-    })();
-  }, [fetchOrgList]);
-
-  useEffect(() => {
+    // fetchData sets state after its own internal `await`, not synchronously
+    // in the effect body; the IIFE keeps that async boundary explicit for the
+    // compiler's effect lint.
     void (async () => {
       await fetchData();
     })();
   }, [fetchData]);
+
+  const deleteUser = useCallback(
+    async (userId: string[]): Promise<boolean> => {
+      if (!group_id) return false;
+
+      try {
+        setIsLoading(true);
+        const body: MembersWatchListGroupRequest = {
+          group_id: group_id,
+          member_list: userId,
+        }
+        await deleteMembersWatchListGroups(body);
+        await PopupMessage(tRef.current("popup.delete-user-success"), "", "success");
+        return true;
+      }
+      catch {
+        await PopupMessage(tRef.current("popup.delete-user-failed"), "", "success");
+        return false;
+      }
+      finally {
+        setIsLoading(false);
+      }
+    },
+    [group_id]
+  );
 
   const handleSaveUsers = async (users: User[]) => {
     // No group selected means there is nothing to add members to; without
@@ -289,7 +315,7 @@ const UserList = ({
       }
       await addMembersWatchListGroups(body);
       await PopupMessage(t("popup.add-user-success"), "", "success");
-      setSelectedUsers(users);
+      setMembers(users);
       onDataChange();
     }
     catch {
@@ -300,41 +326,28 @@ const UserList = ({
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    const success = await deleteUser([userId]);
-    if (!success) return;
-    setSelectedUsers((prev) => prev.filter((user) => user.user_id !== userId));
-    onDataChange();
-  };
+  /*
+    Stable across renders so a new handler identity does not invalidate every
+    memoised row on each keystroke.
+  */
+  const handleDeleteUser = useCallback(
+    (userId: string) => {
+      void (async () => {
+        const success = await deleteUser([userId]);
+        if (!success) return;
+        setMembers((prev) => prev.filter((user) => user.user_id !== userId));
+        onDataChange();
+      })();
+    },
+    [deleteUser, onDataChange]
+  );
 
   const handleDeleteAllUsers = async () => {
-    const success = await deleteUser(selectedUsers.map((user) => user.user_id));
+    const success = await deleteUser(members.map((user) => user.user_id));
     if (!success) return;
-    setSelectedUsers([]);
+    setMembers([]);
     onDataChange();
   }
-
-  const deleteUser = async (userId: string[]): Promise<boolean> => {
-    if (!group_id) return false;
-
-    try {
-      setIsLoading(true);
-      const body: MembersWatchListGroupRequest = {
-        group_id: group_id,
-        member_list: userId,
-      }
-      await deleteMembersWatchListGroups(body);
-      await PopupMessage(t("popup.delete-user-success"), "", "success");
-      return true;
-    }
-    catch {
-      await PopupMessage(t("popup.delete-user-failed"), "", "success");
-      return false;
-    }
-    finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleTextChange = (key: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -359,22 +372,7 @@ const UserList = ({
           {canEdit && (
             <Button
               variant="contained"
-              sx={{
-                width: 140,
-                height: 35,
-                backgroundColor: "var(--theme-accent)",
-                color: "var(--theme-panel)",
-                "&:hover": {
-                  backgroundColor: "rgba(var(--theme-accent-rgb), 0.80)",
-                },
-                textTransform: "capitalize",
-                "&.Mui-disabled": {
-                  backgroundColor: "var(--theme-accent)",
-                  color: "var(--theme-panel)",
-                  opacity: 0.5,
-                  cursor: "not-allowed"
-                },
-              }}
+              sx={addButtonSx}
               startIcon={<AddIcon />}
               onClick={() => setIsAddUserOpen(true)}
               disabled={isDisable}
@@ -389,7 +387,7 @@ const UserList = ({
             <p className="text-[14px] text-(--theme-accent-soft) font-medium">
               {`${totalUser} ${t("text.list")}`}
             </p>
-            <SearchInput 
+            <SearchInput
               value={formData.search}
               onChange={(event) =>
                 handleTextChange("search", event.target.value)
@@ -397,31 +395,10 @@ const UserList = ({
             />
           </Box>
 
-          <TableContainer
-            component={Paper}
-            sx={{
-              height: "70vh",
-              borderRadius: 0,
-              backgroundColor: "var(--theme-panel)",
-            }}
-          >
+          <TableContainer component={Paper} sx={containerSx}>
             <Table stickyHeader>
               <TableHead>
-                <TableRow
-                  sx={{
-                    "& td, & th": {
-                      padding: "0px",
-                      height: "56.5px",
-                      fontSize: "15px",
-                      borderBottom: "1px solid var(--theme-accent)",
-                    },
-                    "& .MuiTableCell-root": {
-                      backgroundColor: "var(--theme-panel)",
-                      color: "var(--theme-accent-soft)",
-                      borderBottom: "1px solid var(--theme-accent)",
-                    },
-                  }}
-                >
+                <TableRow sx={headRowSx}>
                   <TableCell sx={{ width: "10%", textAlign: "center" }}>
                     {t("table.header.no")}
                   </TableCell>
@@ -443,7 +420,7 @@ const UserList = ({
                         <DeleteIcon
                           sx={{
                             fontSize: 20,
-                            color: selectedUsers.length > 0 ? "var(--trash-active-icon)" : "var(--trash-icon)",
+                            color: members.length > 0 ? "var(--trash-active-icon)" : "var(--trash-icon)",
                             "&:hover": {
                               scale: 1.3,
                             }
@@ -459,52 +436,17 @@ const UserList = ({
                 {isDataLoading ? (
                   <TableSkeleton headerColumn={columnCount} />
                 ) : filterSelectedUsers.length > 0 ? (
-                  filterSelectedUsers.map((user, index) => {
-                    const fullName = capitalizeWords(
-                      `${user.title ?? ""} ${user.firstname ?? ""} ${user.lastname ?? ""}`
-                    );
-
-                    return (
-                      <TableRow
-                        key={user.user_id}
-                        sx={{
-                          "& .MuiTableCell-root": {
-                            color: "var(--theme-accent-soft)",
-                            borderBottom: "1px solid var(--theme-accent)",
-                          },
-                        }}
-                      >
-                        <TableCell align="center">{index + 1}</TableCell>
-                        <TableCell align="center">{fullName || "-"}</TableCell>
-                        <TableCell align="center">{user.ou_name || "-"}</TableCell>
-                        <TableCell align="center">{formatPhone(user.phone) || "-"}</TableCell>
-                        <TableCell align="center">{user.user_group_name || "-"}</TableCell>
-                        {canEdit && (
-                          <TableCell align="center">
-                            <IconButton onClick={() => handleDeleteUser(user.user_id)}>
-                              <DeleteIcon
-                                sx={{
-                                  fontSize: 20,
-                                  color: "var(--trash-active-icon)",
-                                  "&:hover": {
-                                    scale: 1.3,
-                                  }
-                                }}
-                              />
-                            </IconButton>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    );
-                  })
+                  filterSelectedUsers.map((user, index) => (
+                    <UserRow
+                      key={user.user_id}
+                      user={user}
+                      index={index}
+                      canEdit={canEdit}
+                      onDelete={handleDeleteUser}
+                    />
+                  ))
                 ) : (
-                  <TableRow
-                    sx={{
-                      "& .MuiTableCell-root": {
-                        borderBottom: "1px solid rgba(var(--theme-accent-rgb), 0.50)",
-                      }
-                    }}
-                  >
+                  <TableRow sx={emptyRowSx}>
                     <TableCell colSpan={columnCount} align="center" sx={{ color: "var(--theme-accent-soft)" }}>
                       {t("text.no-data")}
                     </TableCell>
@@ -519,7 +461,7 @@ const UserList = ({
       {isAddUserOpen && (
         <AddUser
           open={isAddUserOpen}
-          selectedUsers={selectedUsers}
+          selectedUsers={members}
           onSave={handleSaveUsers}
           onClose={() => setIsAddUserOpen(false)}
         />
