@@ -53,7 +53,9 @@ function buildTheme(
   c4: string,
   c5: string,
   isDark = false,
-  customRed: string | null = null
+  customRed: string | null = null,
+  customSuccess: string | null = null,
+  customWarning: string | null = null
 ) {
   const rgb3 = hex2rgb(c3);
   const rgb2 = hex2rgb(c2);
@@ -63,6 +65,12 @@ function buildTheme(
   const [r2, g2, b2] = rgb2;
   const [r5, g5, b5] = rgb5;
   const red = customRed || (isDark ? "#ff4466" : "#db2740");
+  // Same idea as `red`: a status hue every theme shares, nudged per-theme only
+  // when the default would clash with that theme's own accent (e.g. Ember's
+  // orange accent vs. amber warning).
+  const success = customSuccess || (isDark ? "#4ade80" : "#2e7d32");
+  const warning = customWarning || (isDark ? "#ffb020" : "#ed6c02");
+  const redRgb = rgbStr(hex2rgb(red));
 
   return {
     name,
@@ -77,6 +85,11 @@ function buildTheme(
     accentSoft: c4,
     accentSoftRgb: rgbStr(rgb4),
     red,
+    redRgb,
+    success,
+    successRgb: rgbStr(hex2rgb(success)),
+    warning,
+    warningRgb: rgbStr(hex2rgb(warning)),
     textPrimary: c5,
     // Bumped from 0.78 → 0.85 for better legibility on translucent panel bgs
     textSecondary: `rgba(${r5}, ${g5}, ${b5}, 0.85)`,
@@ -184,7 +197,11 @@ const themes = {
     "#EAD0C0", // Dust Storm
     "#E04A00", // Orange Pantone
     "#7A2500", // Dark Burnt Orange (accentSoft — was pale Copper #CF8B64)
-    "#2C1000" // Near-black Brown (was #692705)
+    "#2C1000", // Near-black Brown (was #692705)
+    false,
+    null,
+    null,
+    "#B8860B" // Dark Goldenrod — accent is already orange, keep "warning" visually distinct
   ),
 
   pacific: buildTheme(
@@ -365,6 +382,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       "--theme-accent-soft": theme.accentSoft,
       "--theme-accent-soft-rgb": theme.accentSoftRgb,
       "--theme-red": theme.red,
+      "--theme-red-rgb": theme.redRgb,
+      "--theme-success": theme.success,
+      "--theme-success-rgb": theme.successRgb,
+      "--theme-warning": theme.warning,
+      "--theme-warning-rgb": theme.warningRgb,
       "--theme-text-primary": theme.textPrimary,
       "--theme-text-secondary": theme.textSecondary,
       "--theme-text-muted": theme.textMuted,

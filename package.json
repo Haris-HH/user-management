@@ -36,7 +36,6 @@
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.15.1",
     "redux-persist": "^6.0.0",
-    "sweetalert2": "^11.26.25",
     "tailwindcss": "^4.3.0",
     "vite-plugin-svgr": "^5.2.0"
   },

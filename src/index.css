@@ -9,30 +9,30 @@
   --theme-panel: #FFFFFF;
   --theme-panel-rgb: 255, 255, 255;
   --theme-red: #DB2740;
-  --danger-color-hover: #AF1F33;
+  --theme-red-rgb: 219, 39, 64;
+  --theme-success: #2e7d32;
+  --theme-success-rgb: 46, 125, 50;
+  --theme-warning: #ed6c02;
+  --theme-warning-rgb: 237, 108, 2;
   --theme-text-primary: #1A2E35;
-  --current-date-highlight-bg-color: #E9E9E9;
-  --hyper-text-color: #9799CD;
-  --has-filter-color: #FFF7ED;
-  --has-filter-bg-color: #F59E0B;
-  --percent-text-color: #4A4A4A;
-  --text-chart-table-color: #124692;
-  --total-bg-color: #F0F2F5;
-  --border-chart-color: #DBDCDE;
-  --waiting-approve-bg-color: #FEBE43;
-  --waiting-approve-bg-color-rgb: 254, 190, 67;
-  --waiting-approve-bg-color-a50: rgba(254, 190, 67, 0.5);
-  --waiting-approve-bg-color-a80: rgba(254, 190, 67, 0.8);
-  --not-approve-bg-color: #9f0c0c;
-  --not-approve-bg-color-rgb: 159, 12, 12;
-  --not-approve-bg-color-a50: rgba(159, 12, 12, 0.5);
-  --not-approve-bg-color-a80: rgba(159, 12, 12, 0.8);
-  --approve-bg-color: #2fa534;
-  --approve-bg-color-rgb: 46, 165, 52;
-  --approve-bg-color-a50: rgba(46, 165, 52, 0.5);
-  --approve-bg-color-a80: rgba(46, 165, 52, 0.8);
-  --trash-icon: #555555;
-  --trash-active-icon: #9F0C0C;
+
+  /* Status badges follow the active theme's harmonized success/warning/red
+     (see useTheme.tsx) instead of a fixed hue, so they stay legible and
+     on-brand across all themes while keeping their semantic meaning. */
+  --waiting-approve-bg-color: var(--theme-warning);
+  --waiting-approve-bg-color-rgb: var(--theme-warning-rgb);
+  --waiting-approve-bg-color-a50: rgba(var(--theme-warning-rgb), 0.5);
+  --waiting-approve-bg-color-a80: rgba(var(--theme-warning-rgb), 0.8);
+  --not-approve-bg-color: var(--theme-red);
+  --not-approve-bg-color-rgb: var(--theme-red-rgb);
+  --not-approve-bg-color-a50: rgba(var(--theme-red-rgb), 0.5);
+  --not-approve-bg-color-a80: rgba(var(--theme-red-rgb), 0.8);
+  --approve-bg-color: var(--theme-success);
+  --approve-bg-color-rgb: var(--theme-success-rgb);
+  --approve-bg-color-a50: rgba(var(--theme-success-rgb), 0.5);
+  --approve-bg-color-a80: rgba(var(--theme-success-rgb), 0.8);
+  --trash-icon: var(--theme-text-muted);
+  --trash-active-icon: var(--theme-red);
 }
 
 * {

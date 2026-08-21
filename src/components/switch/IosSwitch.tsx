@@ -41,7 +41,7 @@ const IosSwitch = styled((props: SwitchProps) => {
       transform: "translateX(19px)",
       color: "#fff",
       "& + .MuiSwitch-track": {
-        backgroundColor: "#65C466",
+        backgroundColor: "var(--theme-success)",
         opacity: 1,
       },
     },

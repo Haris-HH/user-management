@@ -710,19 +710,25 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
       case WAITING_STATE:
         return { color: "var(--theme-accent-soft)", bgColor: "var(--theme-panel-rgb)" };
       case SUCCESS_STATE:
-        return { color: "#1A1A1A", bgColor: "#F1FBE4" };
+        return {
+          color: "var(--theme-success)",
+          bgColor: "rgba(var(--theme-success-rgb), 0.12)",
+        };
       case SAVE_BUT_NOT_APPROVE_STATE:
-        return { color: "#1A1A1A", bgColor: "#F9DFDF" };
+        return {
+          color: "var(--theme-red)",
+          bgColor: "rgba(var(--theme-red-rgb), 0.12)",
+        };
       case SUSPEND_STATE:
-        return { color: "#1A1A1A", bgColor: "#FEBE43" };
+        return { color: "var(--theme-text-primary)", bgColor: "var(--theme-warning)" };
       default:
-        return { color: "#1A1A1A", bgColor: "#BDBDBD" };
+        return { color: "var(--theme-text-primary)", bgColor: "var(--theme-border-medium)" };
     }
   };
 
   const renderStatusIcon = (row: ImportRow, originalIndex: number) => {
     if (row.status === SUCCESS_STATE) {
-      return <FaRegCheckCircle color="green" size={18} />;
+      return <FaRegCheckCircle color="var(--theme-success)" size={18} />;
     }
 
     if (
@@ -730,7 +736,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     ) {
       return (
         <IoIosInformationCircleOutline
-          color="blue"
+          color="var(--theme-accent)"
           size={21}
           title={row.error}
         />
@@ -740,7 +746,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     if (row.status === SUSPEND_STATE) {
       return (
         <IoIosInformationCircleOutline
-          color="red"
+          color="var(--theme-red)"
           size={21}
           title={row.error}
         />
@@ -750,7 +756,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
     if (!uploadData) {
       return (
         <FaRegCircleXmark
-          color="red"
+          color="var(--theme-red)"
           size={18}
           className="cursor-pointer"
           onClick={() => handleRemoveData(originalIndex)}
@@ -1025,7 +1031,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                 <Box className="absolute top-10.5 right-3 cursor-pointer"
                 >
                   <FaX
-                    color="#777777"
+                    color="var(--theme-text-muted)"
                     size={15}
                     className={isUploading ? `cursor-not-allowed` : `cursor-pointer`}
                     onClick={isUploading ? undefined : handleDeleteFile}
@@ -1052,7 +1058,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   </Typography>
 
                   <Box className="flex space-x-1">
-                    <Box className="w-5 h-5 bg-[#F1FBE4]" />
+                    <Box className="w-5 h-5 bg-[var(--theme-success)]" />
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "var(--theme-accent)" }}
@@ -1062,7 +1068,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   </Box>
 
                   <Box className="flex space-x-1">
-                    <Box className="w-5 h-5 bg-[#F9DFDF]" />
+                    <Box className="w-5 h-5 bg-[var(--theme-red)]" />
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "var(--theme-accent)" }}
@@ -1072,7 +1078,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   </Box>
 
                   <Box className="flex space-x-1">
-                    <Box className="w-5 h-5 bg-[#BDBDBD]" />
+                    <Box className="w-5 h-5 bg-[var(--theme-border-medium)]" />
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "var(--theme-accent)" }}
@@ -1082,7 +1088,7 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
                   </Box>
 
                   <Box className="flex space-x-1">
-                    <Box className="w-5 h-5 bg-[#FEBE43]" />
+                    <Box className="w-5 h-5 bg-[var(--theme-warning)]" />
                     <Typography
                       variant="subtitle2"
                       sx={{ color: "var(--theme-accent)" }}
@@ -1206,9 +1212,15 @@ const UploadFile = ({ open, onClose, onUploadComplete }: Props) => {
           </Box>
         ) : (
           <Box className="w-full px-20 pt-5 flex flex-col gap-5">
-            <Box className="w-full h-17.5 flex justify-between items-center p-3 gap-3 border rounded-lg border-red-400 bg-red-50 hover:scale-[1.01] transition-transform duration-150">
+            <Box
+              className="w-full h-17.5 flex justify-between items-center p-3 gap-3 border rounded-lg hover:scale-[1.01] transition-transform duration-150"
+              sx={{
+                borderColor: "var(--theme-red)",
+                backgroundColor: "rgba(var(--theme-red-rgb), 0.08)",
+              }}
+            >
               <Box className="flex justify-start items-center gap-2">
-                <FaRegCircleXmark color="red" size={18} />
+                <FaRegCircleXmark color="var(--theme-red)" size={18} />
                 <Typography
                   variant="subtitle1"
                   sx={{ color: "var(--theme-accent)" }}

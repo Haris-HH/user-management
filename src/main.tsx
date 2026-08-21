@@ -6,6 +6,7 @@ import { NavPositionProvider } from './hooks/useNavPosition';
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./store/store";
+import ConfirmationDialog from "./components/confirmation-dialog/ConfirmationDialog";
 import './index.css'
 import App from './App.tsx'
 import './i18n';
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')!).render(
           </PersistGate>
         </Provider>
       </BrowserRouter>
+      <ConfirmationDialog />
     </NavPositionProvider>
   </ThemeProvider>
 )
