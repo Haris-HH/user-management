@@ -843,7 +843,7 @@ const UserForm = () => {
           ...(permissions && { permissions }),
           ...(formData.sub_unit && { sub_unit: formData.sub_unit }),
           account_expire: accountExpire,
-          user_lifetime: Number(formData.life_date) ?? 0,
+          user_lifetime: Number(formData.life_date) || 0,
         };
 
         await createUserApi(createPayload);

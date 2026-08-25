@@ -7,6 +7,8 @@
     "logout": "Logout",
     "language": "Language",
     "theme": "Theme",
+    "mode-light": "Light",
+    "mode-dark": "Dark",
     "nav-position": "Menu Position"
   },
   "nav-position": {

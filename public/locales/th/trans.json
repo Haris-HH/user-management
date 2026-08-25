@@ -7,6 +7,8 @@
     "logout": "ออกจากระบบ",
     "language": "ภาษา",
     "theme": "ธีม",
+    "mode-light": "โหมดสว่าง",
+    "mode-dark": "โหมดมืด",
     "nav-position": "ตำแหน่งเมนู"
   },
   "nav-position": {

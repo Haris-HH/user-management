@@ -105,6 +105,14 @@ const AddCheckpoint = ({
     search: "",
   });
 
+  // `fetchData` reads this instead of `formData` directly so that typing in
+  // the search box (which updates `formData` on every keystroke) doesn't
+  // recreate `fetchData` — and with it, retrigger the fetch effect — on
+  // every keystroke. Only Enter (via `searchTrigger`) or an explicit filter
+  // change should cause a re-fetch.
+  const formDataRef = useRef(formData);
+  formDataRef.current = formData;
+
   // Slice
   const area = useSelector((state: RootState) => state.dropdown.area);
   const province = useSelector((state: RootState) => state.dropdown.province);
@@ -326,7 +334,7 @@ const AddCheckpoint = ({
   // searches again before the first request finishes.
   const fetchRequestIdRef = useRef(0);
 
-  const fetchData = useCallback(async (filterData: FormData = formData) => {
+  const fetchData = useCallback(async (filterData: FormData = formDataRef.current) => {
     const requestId = ++fetchRequestIdRef.current;
     setIsDataLoading(true);
     try {
@@ -365,8 +373,9 @@ const AddCheckpoint = ({
   }, [
     page,
     rowsPerPage,
-    searchTrigger,
     getFilters,
+    mapCameraRows,
+    t,
   ]);
 
   useEffect(() => {
