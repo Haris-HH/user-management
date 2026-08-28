@@ -46,6 +46,7 @@ import { useUserDisplayMapper } from "../../hooks/useUserDisplayMapper";
 
 // Utils
 import { PopupMessage } from "../../utils/popupMessage";
+import { showSuccessToast } from "../../utils/toast";
 
 // API
 import { getUserApi } from "../../features/users/api/UsersApi";
@@ -287,11 +288,11 @@ const UserList = ({
           member_list: userId,
         }
         await deleteMembersWatchListGroups(body);
-        await PopupMessage(tRef.current("popup.delete-user-success"), "", "success");
+        showSuccessToast(tRef.current("popup.delete-user-success"));
         return true;
       }
       catch {
-        await PopupMessage(tRef.current("popup.delete-user-failed"), "", "success");
+        await PopupMessage(tRef.current("popup.delete-user-failed"), "", "error");
         return false;
       }
       finally {
@@ -314,7 +315,7 @@ const UserList = ({
         member_list: users.map((user) => user.user_id),
       }
       await addMembersWatchListGroups(body);
-      await PopupMessage(t("popup.add-user-success"), "", "success");
+      showSuccessToast(t("popup.add-user-success"));
       setMembers(users);
       onDataChange();
     }

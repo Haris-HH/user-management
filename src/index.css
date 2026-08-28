@@ -67,3 +67,53 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+  react-toastify — repoint its "light" palette (the variant we use) at the
+  active theme's own CSS vars instead of the library's fixed colors, so
+  toasts stay on-brand across all ~18 palettes and re-theme live.
+*/
+/*
+  !important is required here: react-toastify's own stylesheet also declares
+  these on `:root`, and Vite's dev-server module graph doesn't guarantee this
+  file's <style> tag lands after react-toastify's, so a plain override loses
+  the specificity tie unpredictably.
+*/
+:root {
+  --toastify-color-light: var(--theme-panel) !important;
+  --toastify-text-color-light: var(--theme-text-primary) !important;
+  --toastify-color-success: var(--theme-success) !important;
+  --toastify-color-progress-success: var(--theme-success) !important;
+  --toastify-icon-color-success: var(--theme-success) !important;
+  --toastify-color-error: var(--theme-red) !important;
+  --toastify-color-progress-error: var(--theme-red) !important;
+  --toastify-icon-color-error: var(--theme-red) !important;
+  --toastify-color-warning: var(--theme-warning) !important;
+  --toastify-color-progress-warning: var(--theme-warning) !important;
+  --toastify-icon-color-warning: var(--theme-warning) !important;
+  --toastify-toast-bd-radius: 12px !important;
+  --toastify-font-family: "Noto Sans Thai", sans-serif !important;
+}
+
+.Toastify__toast {
+  border: 1px solid rgba(var(--theme-accent-rgb), 0.35) !important;
+  box-shadow: 0 12px 40px rgba(var(--theme-panel-rgb), 0.35) !important;
+}
+
+/*
+  `.Toastify__close-button--light` (the modifier react-toastify adds for the
+  "light" variant we use) is more specific than the bare `.Toastify__close-button`
+  and hard-codes color:#000/opacity:0.3, so it has to be targeted directly.
+*/
+.Toastify__close-button,
+.Toastify__close-button--light {
+  color: var(--theme-text-primary) !important;
+  opacity: 0.7 !important;
+}
+
+.Toastify__close-button:hover,
+.Toastify__close-button--light:hover,
+.Toastify__close-button:focus,
+.Toastify__close-button--light:focus {
+  opacity: 1 !important;
+}

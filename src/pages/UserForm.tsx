@@ -62,6 +62,7 @@ import {
   normalizeText,
 } from "../utils/commonFunctions";
 import { PopupMessage, PopupMessageWithCancelAndDeny, PopupMessageWithCancel } from "../utils/popupMessage";
+import { showSuccessToast } from "../utils/toast";
 
 // API
 import { getBk, getOrg, getPoliceStation } from "../features/dropdown/api/DropdownApi";
@@ -816,7 +817,7 @@ const UserForm = () => {
           }
         }
 
-        await PopupMessage(t("popup.update-success"), "", "success");
+        showSuccessToast(t("popup.update-success"));
       } 
       else {
         const date = new Date();
@@ -847,7 +848,7 @@ const UserForm = () => {
         };
 
         await createUserApi(createPayload);
-        await PopupMessage(t("popup.create-success"), "", "success");
+        showSuccessToast(t("popup.create-success"));
       }
 
       const unusedTempImages = tempUploadedUrls.filter((image) => image !== imageUrl);

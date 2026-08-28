@@ -7,6 +7,8 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "./store/store";
 import ConfirmationDialog from "./components/confirmation-dialog/ConfirmationDialog";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import './index.css'
 import App from './App.tsx'
 import './i18n';
@@ -30,6 +32,12 @@ createRoot(document.getElementById('root')!).render(
         </Provider>
       </BrowserRouter>
       <ConfirmationDialog />
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        closeButton
+        newestOnTop
+      />
     </NavPositionProvider>
   </ThemeProvider>
 )

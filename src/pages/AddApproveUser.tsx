@@ -66,6 +66,7 @@ import EditIcon from "../assets/icons/pen.png";
 // Utils
 import { buildOptions, formatPhone, formatThaiID, capitalizeWords, validateUserImportData } from "../utils/commonFunctions";
 import { PopupMessage } from "../utils/popupMessage";
+import { showSuccessToast } from "../utils/toast";
 
 // Store
 import type { RootState } from "../store/store";
@@ -612,7 +613,7 @@ const AddApproveUser = () => {
       }
       await deleteUserApi(param);
       setUserSelected([]);
-      await PopupMessage(t("popup.deleted-success"), "", "success");
+      showSuccessToast(t("popup.deleted-success"));
       await fetchData();
     }
     catch {

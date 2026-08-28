@@ -60,6 +60,7 @@ import {
 
 // Utils
 import { PopupMessage, PopupMessageWithCancelAndDeny } from "../utils/popupMessage";
+import { showSuccessToast } from "../utils/toast";
 import { buildOptions, groupCameraGroupIdsByProject } from "../utils/commonFunctions";
 
 interface AddGroupFormData {
@@ -466,7 +467,7 @@ const UserGroupManagement = () => {
         })
       );
 
-      await PopupMessage(t("popup.save-success"), "", "success");
+      showSuccessToast(t("popup.save-success"));
       await fetchUserGroups();
     }
     catch {
@@ -531,11 +532,7 @@ const UserGroupManagement = () => {
       await deleteUserGroup([groupId]);
       await fetchUserGroups();
 
-      await PopupMessage(
-        "",
-        t("popup.deleted-success"),
-        "success"
-      );
+      showSuccessToast(t("popup.deleted-success"));
     }
     catch {
       await PopupMessage(

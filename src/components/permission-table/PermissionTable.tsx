@@ -621,7 +621,7 @@ const PermissionTable = ({
                           <>
                             {activePermissionCount > 0 && (
                               <div className="bg-(--approve-bg-color) px-2 py-1 rounded-sm">
-                                <p className="text-xs text-(--theme-accent-soft)">
+                                <p className="text-xs text-black">
                                   {`${t(
                                     "table.header.can-visit"
                                   )} : ${activePermissionCount}`}
@@ -641,7 +641,7 @@ const PermissionTable = ({
 
                             {noPermissionCount > 0 && (
                               <div className="bg-(--not-approve-bg-color) px-2 py-1 rounded-sm">
-                                <p className="text-xs text-(--theme-accent-soft)">
+                                <p className="text-xs text-black">
                                   {`${t(
                                     "text.no-permission"
                                   )} : ${noPermissionCount}`}
@@ -665,7 +665,7 @@ const PermissionTable = ({
                             : "bg-(--not-approve-bg-color)"
                         }`}
                       >
-                        <p className="text-sm text-(--theme-accent-soft)">
+                        <p className="text-sm text-black">
                           {uiIsEnabled ? t("text.active") : t("text.inactive")}
                         </p>
                       </div>

@@ -40,6 +40,7 @@ import {
 
 // Utils
 import { PopupMessage } from "../../utils/popupMessage";
+import { showSuccessToast } from "../../utils/toast";
 
 interface FormData {
   search: string;
@@ -168,7 +169,7 @@ const GroupList = ({
         project_id: projectId,
       }
       await createCameraGroup(body);
-      await PopupMessage(t("popup.create-watchlist-group-success"), "", "success");
+      showSuccessToast(t("popup.create-watchlist-group-success"));
       await fetchData();
     }
     catch {
@@ -190,11 +191,7 @@ const GroupList = ({
         onSelectChangedRef.current(null);
       }
 
-      await PopupMessage(
-        t("popup.deleted-success"),
-        "",
-        "success"
-      );
+      showSuccessToast(t("popup.deleted-success"));
 
       await fetchData();
     } catch {

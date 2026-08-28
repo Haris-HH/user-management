@@ -24,6 +24,7 @@ import type { UserGroup } from "../../types/common";
 // Utils
 import { capitalizeWords } from "../../utils/commonFunctions";
 import { PopupMessage, PopupMessageWithCancel } from "../../utils/popupMessage";
+import { showSuccessToast } from "../../utils/toast";
 
 // API
 import { createUserGroup, deleteUserGroup } from "../../features/users/api/UsersApi";
@@ -100,7 +101,7 @@ const ManageGroupsDialog = ({
 
       setNewName("");
       await onChanged();
-      await PopupMessage(t("popup.create-group-success"), "", "success");
+      showSuccessToast(t("popup.create-group-success"));
     }
     catch (error) {
       console.error("Failed to create group:", error);
@@ -130,7 +131,7 @@ const ManageGroupsDialog = ({
       await deleteUserGroup([group.group_id]);
 
       await onChanged();
-      await PopupMessage(t("popup.delete-group-success"), "", "success");
+      showSuccessToast(t("popup.delete-group-success"));
     }
     catch (error) {
       console.error("Failed to delete group:", error);

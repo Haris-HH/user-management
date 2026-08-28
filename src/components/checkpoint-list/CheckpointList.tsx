@@ -46,6 +46,7 @@ import {
 import {
   PopupMessage,
 } from "../../utils/popupMessage";
+import { showSuccessToast } from "../../utils/toast";
 
 interface FormData {
   search: string;
@@ -260,12 +261,10 @@ const CheckpointList = ({
         await addListOfCamera(addedIds);
       }
 
-      await PopupMessage(
+      showSuccessToast(
         isAdding
           ? t("popup.add-checkpoint-success")
-          : t("popup.delete-checkpoint-success"),
-        "",
-        "success"
+          : t("popup.delete-checkpoint-success")
       );
 
       setSelectedCheckpoints(checkpoint);
@@ -328,7 +327,7 @@ const CheckpointList = ({
     try {
       setIsLoading(true);
       await removeListOfCamera(checkpointId);
-      await PopupMessage(t("popup.delete-checkpoint-success"), "", "success");
+      showSuccessToast(t("popup.delete-checkpoint-success"));
     }
     catch (error) {
       await PopupMessage(t("popup.delete-checkpoint-failed"), "", "error");

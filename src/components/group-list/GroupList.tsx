@@ -45,6 +45,7 @@ import {
 
 // Utils
 import { PopupMessage } from "../../utils/popupMessage";
+import { showSuccessToast } from "../../utils/toast";
 
 /*
   Static `sx` objects live at module scope so MUI's style engine sees the same
@@ -296,11 +297,7 @@ const GroupList = ({
           onSelectChangedRef.current(null);
         }
 
-        await PopupMessage(
-          t("popup.deleted-success"),
-          "",
-          "success"
-        );
+        showSuccessToast(t("popup.deleted-success"));
 
         await fetchData();
       } catch {
@@ -351,11 +348,7 @@ const GroupList = ({
 
       await createWatchListGroups(body);
 
-      await PopupMessage(
-        t("popup.create-watchlist-group-success"),
-        "",
-        "success"
-      );
+      showSuccessToast(t("popup.create-watchlist-group-success"));
 
       setIsAddGroupOpen(false);
       await fetchData();
