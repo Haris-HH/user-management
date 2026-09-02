@@ -79,7 +79,7 @@ type EditableUserGroup = UserGroup & {
 // every render.
 const isBaseUserGroup = (groupName: string) => {
   const normalized = groupName.toLowerCase();
-  return normalized === "admin" || normalized === "user";
+  return normalized === "admin" || normalized === "user" || normalized === "super user" || normalized === "developer" || normalized === "super admin" || normalized === "temporary";
 };
 
 // Matches camera-group names for police regions 1-9 ("ภาค1".."ภาค9", also
@@ -97,7 +97,7 @@ const normalizeUserGroups = (rows: UserGroup[]): EditableUserGroup[] => {
       locked: ug.locked ?? isBaseUserGroup(ug.group_name),
       isNew: false,
     }))
-    .sort((a, b) => a.group_id.localeCompare(b.group_id));
+    .sort((a, b) => a.group_name.localeCompare(b.group_name));
 };
 
 const UserGroupManagement = () => {
