@@ -373,20 +373,25 @@ export const combineURL = (url: string, endpoint: string) => {
   A hard reload clears the in-memory access token along with everything
   else in JS, but the refresh token survives it in an httpOnly cookie. This
   trades that cookie for a fresh access token on app boot so a reload
-  doesn't read as a logout - callers should treat a `false` return as "no
-  valid session" and route to /login.
+  doesn't read as a logout.
+
+  Routed through handleAuthError rather than calling refreshTokenRequest
+  directly so it shares the same single-flight guard as the in-request 401
+  retry path - only one refresh is ever in flight per tab, however it was
+  triggered.
+
+  A `false` return is NOT a confirmed "no session" - it also covers a
+  transient network/CORS hiccup on this one call. Callers must not treat it
+  as license to wipe a persisted profile; let a real API request's own
+  401 -> refresh -> force-logout cycle be the source of truth for that.
 */
 export const restoreSession = async (): Promise<boolean> => {
   try {
-    const { accessToken } = await refreshTokenRequest();
-
-    setAccessToken(accessToken);
+    await handleAuthError();
 
     return true;
   }
   catch {
-    setAccessToken(null);
-
     return false;
   }
 };

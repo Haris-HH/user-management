@@ -95,6 +95,7 @@ function App() {
 
   // Redux
   const userId = useSelector((state: RootState) => state.authUser.user?.user_id);
+  const hasPersistedUser = useSelector((state: RootState) => Boolean(state.authUser.user));
 
   /*
     The access token now lives only in memory (see tokenStore.ts), so a hard
@@ -178,10 +179,18 @@ function App() {
   useEffect(() => {
     if (!sessionChecked) return;
 
-    if (!getAccessToken() && location.pathname !== "/login") {
+    /*
+      No in-memory token here doesn't necessarily mean the session is dead -
+      restoreSession's one boot-time attempt can also fail on a transient
+      network hiccup. When PersistGate has already rehydrated a profile,
+      trust it and let a real API call's own 401 -> refresh -> force-logout
+      cycle (fetchClient.ts) confirm the session is actually gone, instead
+      of speculatively wiping a still-good profile on a boot blip.
+    */
+    if (!getAccessToken() && !hasPersistedUser && location.pathname !== "/login") {
       forceLogout(false);
     }
-  }, [sessionChecked, location.pathname, forceLogout]);
+  }, [sessionChecked, hasPersistedUser, location.pathname, forceLogout]);
 
   useEffect(() => {
     const handleForceLogout = () => {
