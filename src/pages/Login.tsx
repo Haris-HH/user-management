@@ -28,6 +28,7 @@ import { MOTION_DURATION } from "../constants/motion";
 
 // API
 import { loginApi, logoutApi } from "../features/login/api/LoginApi";
+import { setAccessToken } from "../api/tokenStore";
 import { getUserApi } from "../features/users/api/UsersApi";
 import { setAuthUser } from "../features/auth-user/api/AuthUserSlice";
 import { getTitle, getAgency } from "../features/dropdown/api/DropdownApi";
@@ -133,7 +134,7 @@ const Login = () => {
         password: data.password,
       });
 
-      localStorage.setItem("accessToken", result.accessToken);
+      setAccessToken(result.accessToken);
 
       if (result.userId) {
         const userResponse = await getUserApi({ filter: `user_id=${result.userId}` });
@@ -145,7 +146,7 @@ const Login = () => {
           ที่มี token แต่เปิดหน้าไหนไม่ได้เลย จึงต้องเช็คและตัดสิทธิ์ตั้งแต่ตรงนี้
         */
         if (permission?.ui?.["user-management"]?.enabled !== true) {
-          localStorage.removeItem("accessToken");
+          setAccessToken(null);
 
           try {
             await logoutApi();

@@ -1,6 +1,9 @@
 // Class
 import { ApiError } from "../types/class";
 
+// Store
+import { getAccessToken, setAccessToken } from "./tokenStore";
+
 /*
   Arrays are permitted because some endpoints take repeated ids; they are
   serialised by String(), i.e. comma-joined, which is exactly what
@@ -48,9 +51,14 @@ const buildQueryString = (
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const SERVICE_CHANNEL = import.meta.env.VITE_API_SERVICE_CHANNEL;
 
-const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
-const USER_UID_KEY = "userUid";
+/*
+  Legacy keys from when the tokens lived in localStorage. Nothing writes
+  them any more, but a browser that still has them from before this change
+  must not keep leaking an access token to every script on the page.
+*/
+const LEGACY_ACCESS_TOKEN_KEY = "accessToken";
+const LEGACY_REFRESH_TOKEN_KEY = "refreshToken";
+const LEGACY_USER_UID_KEY = "userUid";
 
 let isRefreshing = false;
 
@@ -60,9 +68,11 @@ let failedQueue: Array<{
 }> = [];
 
 const clearAuthStorage = () => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
-  localStorage.removeItem(USER_UID_KEY);
+  setAccessToken(null);
+
+  localStorage.removeItem(LEGACY_ACCESS_TOKEN_KEY);
+  localStorage.removeItem(LEGACY_REFRESH_TOKEN_KEY);
+  localStorage.removeItem(LEGACY_USER_UID_KEY);
 };
 
 const redirectToLogin = () => {
@@ -232,7 +242,7 @@ const handleAuthError = async (): Promise<string> => {
 
     const newAccessToken = result.accessToken;
 
-    localStorage.setItem(ACCESS_TOKEN_KEY, newAccessToken);
+    setAccessToken(newAccessToken);
 
     processQueue(null, newAccessToken);
 
@@ -298,7 +308,7 @@ export const fetchClient = async <T>(
     catch (error) {
       console.error("Network error:", error);
 
-      if (!skipAuth && localStorage.getItem(ACCESS_TOKEN_KEY)) {
+      if (!skipAuth && getAccessToken()) {
         redirectToLogin();
       }
 
@@ -350,12 +360,33 @@ export const fetchClient = async <T>(
     return response.json();
   };
 
-  const accessToken =
-    localStorage.getItem(ACCESS_TOKEN_KEY) || undefined;
+  const accessToken = getAccessToken() || undefined;
 
   return makeRequest(accessToken);
 };
 
 export const combineURL = (url: string, endpoint: string) => {
   return `${url}${endpoint}`;
+};
+
+/*
+  A hard reload clears the in-memory access token along with everything
+  else in JS, but the refresh token survives it in an httpOnly cookie. This
+  trades that cookie for a fresh access token on app boot so a reload
+  doesn't read as a logout - callers should treat a `false` return as "no
+  valid session" and route to /login.
+*/
+export const restoreSession = async (): Promise<boolean> => {
+  try {
+    const { accessToken } = await refreshTokenRequest();
+
+    setAccessToken(accessToken);
+
+    return true;
+  }
+  catch {
+    setAccessToken(null);
+
+    return false;
+  }
 };

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 
 // Components
 import PermissionRoute from "./components/permission-route/PermissionRoute";
+import LoadingScreen from "./components/loading-screen/LoadingScreen";
 
 // Constants
 import { USER_MANAGEMENT_UI_KEY } from "./constants/permissions";
@@ -40,6 +41,8 @@ import {
   fetchPoliceStation,
   fetchStatus,
 } from "./features/dropdown/api/DropdownSlice";
+import { restoreSession } from "./api/fetchClient";
+import { getAccessToken } from "./api/tokenStore";
 
 // Store
 import { useAppDispatch } from "./store/hooks";
@@ -93,7 +96,33 @@ function App() {
   // Redux
   const userId = useSelector((state: RootState) => state.authUser.user?.user_id);
 
-  const enabled = Boolean(localStorage.getItem("accessToken"));
+  /*
+    The access token now lives only in memory (see tokenStore.ts), so a hard
+    reload always starts with none - restoreSession trades the httpOnly
+    refresh cookie for a fresh one before anything below decides whether
+    this is an authenticated session. Everything that depends on that
+    decision (routing, the dropdown burst, the SSE connection) waits on
+    sessionChecked so it never races the outcome.
+  */
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      if (!getAccessToken()) {
+        await restoreSession();
+      }
+
+      if (!cancelled) setSessionChecked(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const enabled = sessionChecked && Boolean(getAccessToken());
 
   /*
     Restore the persisted language. Theme restoration used to live here too,
@@ -122,7 +151,7 @@ function App() {
     all twelve reference-data requests.
   */
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !sessionChecked) return;
 
     dispatch(fetchArea({ limit: "100" }));
     dispatch(fetchAgency({ limit: "100" }));
@@ -144,15 +173,15 @@ function App() {
     */
     dispatch(fetchPoliceStation({ limit: "2000" }));
     dispatch(fetchStatus());
-  }, [userId, dispatch]);
+  }, [userId, sessionChecked, dispatch]);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
+    if (!sessionChecked) return;
 
-    if (!token && location.pathname !== "/login") {
+    if (!getAccessToken() && location.pathname !== "/login") {
       forceLogout(false);
     }
-  }, [location.pathname, forceLogout]);
+  }, [sessionChecked, location.pathname, forceLogout]);
 
   useEffect(() => {
     const handleForceLogout = () => {
@@ -184,6 +213,10 @@ function App() {
     enabled,
     { closeOnEvent: true }
   );
+
+  if (!sessionChecked) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Routes>

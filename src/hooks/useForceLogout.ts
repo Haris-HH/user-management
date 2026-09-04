@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../store/hooks";
 import { clearAuthUser } from "../features/auth-user/api/AuthUserSlice";
 import { logoutApi } from "../features/login/api/LoginApi";
+import { setAccessToken } from "../api/tokenStore";
 
 export const useForceLogout = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export const useForceLogout = () => {
       finally {
         dispatch(clearAuthUser());
 
-        localStorage.removeItem("accessToken");
+        setAccessToken(null);
         localStorage.removeItem("persist:root");
 
         navigate("/login", { replace: true });
